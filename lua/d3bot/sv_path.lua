@@ -13,7 +13,7 @@ local Distance = FindMetaTable("Vector").Distance
 function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuristicCostFunction, abilities)
 	if not abilities then return nil end
 
-	local a_Walk, a_Pounce, a_Climb = abilities.Walk, abilities.Pounce, abilities.Climb
+	local a_Walk, a_Pounce, a_Climb, a_Jump = abilities.Walk, abilities.Pounce, abilities.Climb, abilities.Jump
 	local wave = GAMEMODE:GetWave()
 	-- See: https://en.wikipedia.org/wiki/A*_search_algorithm
 
@@ -52,6 +52,13 @@ function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuris
 			local linkedNodeParams = linkedNode.Params
 			local linkParams = link.Params
 
+			-- The height difference between the nodes that this link connects.
+			local linkZDiff = link.CachedZDiff
+			if not linkZDiff then
+				linkZDiff = link.Nodes[2].Pos.Z - link.Nodes[1].Pos.Z -- A positive value means that we have to jump. This is in regards to the forward direction of the link.
+				link.CachedZDiff = linkZDiff -- The cache will be invalidated on any navmesh change.
+			end
+
 			local blocked = false
 			if linkedNodeParams.Condition == "Unblocked" or linkedNodeParams.Condition == "Blocked" then
 				local ents = ents.FindInBox(linkedNode.Pos + D3bot.NodeBlocking.mins, linkedNode.Pos + D3bot.NodeBlocking.maxs)
@@ -70,20 +77,24 @@ function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuris
 				-- TODO: Invert logic when BlockBeforeWave > BlockAfterWave. This way it's possible to describe a interval of blocked waves, instead of unblocked waves
 			end
 
+			-- Check how we traverse the current link. It's forwards if we go from link.Nodes[1] to link.Nodes[2].
+			local forwards = link.Nodes[1] == node
+
 			-- Check if the bot is able to use certain paths.
 			local able = true
 			if not a_Walk and linkParams.Walking == "Needed" then able = false end
 			if not a_Pounce and linkParams.Pouncing == "Needed" then able = false end
 			if not a_Climb and linkedNodeParams.Climbing == "Needed" then able = false end
+			if linkParams.Jumping == "Needed" and a_Jump < linkZDiff * (forwards and 1 or -1) then able = false end
 
-			local blockedForward = (linkParams.Direction == "Forward" and link.Nodes[2] == node)
-			local blockedBackward = (linkParams.Direction == "Backward" and link.Nodes[1] == node)
+			local blockedForward = (linkParams.Direction == "Forward" and not forwards)
+			local blockedBackward = (linkParams.Direction == "Backward" and forwards)
 
 			if able and not blocked and not blockedForward and not blockedBackward then
 				local linkDist = link.CachedDist
 				if not linkDist then
 					linkDist = Distance(node.Pos, linkedNode.Pos)
-					link.CachedDist = linkDist
+					link.CachedDist = linkDist -- The cache will be invalidated on any navmesh change.
 				end
 				local linkedNodePathCost = minimalPathCostByNode[node] + mathMax(linkDist + (linkedNodeParams.Cost or 0) + (linkParams.Cost or 0) + (pathCostFunction and pathCostFunction(node, linkedNode, link) or 0), 0) -- Prevent negative change of the link costs, otherwise it will get stuck decreasing forever.
 				if linkedNodePathCost < (minimalPathCostByNode[linkedNode] or mathHuge) then

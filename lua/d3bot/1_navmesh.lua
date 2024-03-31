@@ -65,6 +65,7 @@ return function(lib)
 			Walking = { "Needed" },
 			Pouncing = { "Needed" },
 			Climbing = { "Needed" },
+			Jumping = { "Needed" },
 			DMGPerSecond = {},
 			BotMod = {}
 		},

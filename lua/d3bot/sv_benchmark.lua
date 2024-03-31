@@ -34,7 +34,7 @@ local function benchmarkGetBestMeshPathOrNil()
 		return linkPenalty * 1
 	end
 
-	local abilities = {Walk = true}
+	local abilities = {Walk = true, Jump = 250}
 
 	local navMesh = D3bot.MapNavMesh
 	local startNode = navMesh.NodeById[32]

@@ -250,7 +250,7 @@ return function(lib)
 			local navMesh = lib.MapNavMesh
 			local nodeA = navMesh:GetNearestNodeOrNil(entA:GetPos())
 			local nodeB = navMesh:GetNearestNodeOrNil(entB:GetPos())
-			local abilities = {Walk = true}
+			local abilities = {Walk = true, Jump = 250}
 			lib.ShowMapNavMeshPath(pl, nodeA and nodeB and lib.GetBestMeshPathOrNil(nodeA, nodeB, nil, nil, abilities) or {}) -- Can't use any additional costs here, as they differ for each class
 		end)
 	end
