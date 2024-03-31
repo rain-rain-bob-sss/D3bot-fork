@@ -241,6 +241,8 @@ function meta:D3bot_InitializeOrReset()
 	---@field public AntiStuckTime number?
 	---@field public AttackTgtOrNil GPlayer? -- Specific to survivor bots: The target player to attack.
 	---@field public MaxShootingDistance number? -- Specific to survivor bots: Maximum shooting distance.
+	---@field public JumpHeight number -- The possible crouch-jump height of this bot.
+	---@field public Height number -- The cached crouching height.
 	self.D3bot_Mem = self.D3bot_Mem or {}
 	local mem = self.D3bot_Mem
 	
@@ -264,8 +266,8 @@ function meta:D3bot_InitializeOrReset()
 	mem.MajorStuckCounter = nil								-- 
 
 	local myClass = self:GetZombieClassTable()
-    	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 72) * (myClass.ModelScale or 1)
-    	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
+	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 72) * (myClass.ModelScale or 1)
+	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
 end
 
 function meta:D3bot_Deinitialize()
