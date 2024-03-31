@@ -262,6 +262,10 @@ function meta:D3bot_InitializeOrReset()
 	mem.PosTgtProximity = nil								-- 
 	mem.NextCheckStuck = nil								-- 
 	mem.MajorStuckCounter = nil								-- 
+
+	local myClass = self:GetZombieClassTable()
+    	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 72) * (myClass.ModelScale or 1)
+    	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
 end
 
 function meta:D3bot_Deinitialize()
@@ -295,7 +299,7 @@ function meta:D3bot_UpdatePath(pathCostFunction, heuristicCostFunction)
 	local node = mapNavMesh:GetNearestNodeOrNil(self:GetPos())
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or mapNavMesh:GetNearestNodeOrNil(mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil)
 	if not node or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = 250}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.Height}
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
 	if weapon then
@@ -400,7 +404,7 @@ function meta:D3bot_UpdatePath( pathCostFunction, heuristicCostFunction )
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or navmesh.GetNearestNavArea( mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil )
 	
 	if not area or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = 250}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.Height}
 
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
