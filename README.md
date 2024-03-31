@@ -28,6 +28,7 @@ Here is a list of notable changes compared to the original version:
 - Ability to use source navmeshes, and option to convert those navmeshes into D3bot ones. (Thanks to [Bagellll])
 - Code optimizations. (Thanks to [Antizombie])
 - Support for ZS sub-gamemodes such as Pants Mode, Baby Mode & Classic Mode. (Thanks to [Sigilmare])
+- Parameters for restricting paths based on the bot's jump and crouching height. (Thanks to [bol])
 - Translations:
   - Chinese Simplified (Thanks to [XY]EvansFix)
   - Chinese Traditional (Thanks to [Half1569])
@@ -160,11 +161,13 @@ Be sure to follow all the other necessary steps as described in [#Installation](
     - BlockAfterWave: Bots will not use this node for pathfinding if the current wave is greater than the given value.
     - DMGPerSecond: Apply damage to human players and entities located on this node. Can be disabled globally in `sv_config.lua` by setting `D3bot.DisableNodeDamage = true`.
     - BotMod: Once a non bot player passes this node, the given offset will be applied to the zombie count target. Useful to adjust the bot count on objective maps.
+    - MaxHeight: Prevents bots that are taller than the provided value from passing through this node. This is using the bot's crouching height.
   - Link parameters:
     - Cost: Add a penalty for paths using this link. Higher values makes it less likely for bots to use a path containing this link.
     - Direction = Forward: Only allow paths from the first to the second element of the link. `!bot setparam 1-2 Direction Forward` will only allow the bot to move from 1 to 2.
     - Direction = Backward: Same as above, but backwards.
     - Pouncing = Needed: Only classes with the ability to pounce/leap can use this link.
+    - Jumping = "Needed": Only bots that can jump high enough can pass this link. The needed jump height is automatically determined from the height difference of the two nodes.
 - Use `!bot reloadmesh` to discard changes.
 - Use `!bot savemesh` to save the changes to `garrysmod/data/d3bot/navmesh/map/<mapname>.txt`.
 - Use `!bot setmapparam <name> <value>` (example: `!bot setmapparam botmod 5`) to set or unset (by omitting \<value\>) map specific parameters:
@@ -212,14 +215,15 @@ Starting with highest public priority:
 - Equipment upgrading behavior for survivor bots.
 - Caching of non-branching paths as a single node to optimize the pathfinding performance.
 
-[Sigilmare]: https://github.com/Sigilmare
 [Antizombie]: https://github.com/Antizombie
 [Bagellll]: https://github.com/Bagellll
 [Blueberryy]: https://github.com/Blueberryy
+[bol]: https://github.com/b0ls
 [delstre]: https://github.com/delstre
 [ErickMaksimets]: https://github.com/ErickMaksimets
 [Fafy2801]: https://github.com/Fafy2801
 [Halamix2]: https://github.com/Halamix2
 [Half1569]: https://github.com/Half1569
 [orecros]: https://github.com/orecros
+[Sigilmare]: https://github.com/Sigilmare
 [Wolfaloo]: https://github.com/Wolfaloo
