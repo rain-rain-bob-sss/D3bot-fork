@@ -66,6 +66,11 @@ function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuris
 					if D3bot.NodeBlocking.classes[ent:GetClass()] then blocked = true; break end
 				end
 				if linkedNodeParams.Condition == "Blocked" then blocked = not blocked end
+			elseif linkedNodeParams.Condition == "MapUnblocked" then
+				local ents = ents.FindInBox(linkedNode.Pos + D3bot.NodeBlocking.mins, linkedNode.Pos + D3bot.NodeBlocking.maxs)
+				for _, ent in ipairs(ents) do
+					if D3bot.NodeBlockingMap.classes[ent:GetClass()] then blocked = true; break end
+				end
 			end
 
 			-- Block pathing if the wave is outside of the interval [BlockBeforeWave, BlockAfterWave].

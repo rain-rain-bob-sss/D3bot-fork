@@ -58,7 +58,7 @@ return function(lib)
 			Aim = { "Straight" },
 			AimTo = { "Straight" },
 			Cost = {},
-			Condition = { "Unblocked", "Blocked" },
+			Condition = { "Unblocked", "Blocked", "MapUnblocked" },
 			BlockBeforeWave = {},
 			BlockAfterWave = {},
 			Direction = { "Forward", "Backward" },
