@@ -242,7 +242,8 @@ function meta:D3bot_InitializeOrReset()
 	---@field public AttackTgtOrNil GPlayer? -- Specific to survivor bots: The target player to attack.
 	---@field public MaxShootingDistance number? -- Specific to survivor bots: Maximum shooting distance.
 	---@field public JumpHeight number -- The possible crouch-jump height of this bot.
-	---@field public Height number -- The cached crouching height.
+	---@field public Height number -- The cached "standing" height of the bot.
+	---@field public CrouchHeight number -- The cached crouching height of the bot.
 	---@field public CanSeeTargetCache table? -- 
 	self.D3bot_Mem = self.D3bot_Mem or {}
 	local mem = self.D3bot_Mem
@@ -270,6 +271,7 @@ function meta:D3bot_InitializeOrReset()
 	local myClass = self:GetZombieClassTable()
 	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 72) * (myClass.ModelScale or 1)
 	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
+	mem.CrouchHeight = myClass.HullDuck and myClass.HullDuck[2].z or 72
 end
 
 function meta:D3bot_Deinitialize()
@@ -303,7 +305,7 @@ function meta:D3bot_UpdatePath(pathCostFunction, heuristicCostFunction)
 	local node = mapNavMesh:GetNearestNodeOrNil(self:GetPos())
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or mapNavMesh:GetNearestNodeOrNil(mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil)
 	if not node or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.Height}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight}
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
 	if weapon then
@@ -408,7 +410,7 @@ function meta:D3bot_UpdatePath( pathCostFunction, heuristicCostFunction )
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or navmesh.GetNearestNavArea( mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil )
 	
 	if not area or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.Height}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight}
 
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
