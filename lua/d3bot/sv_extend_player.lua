@@ -243,11 +243,12 @@ function meta:D3bot_InitializeOrReset()
 	---@field public MaxShootingDistance number? -- Specific to survivor bots: Maximum shooting distance.
 	---@field public JumpHeight number -- The possible crouch-jump height of this bot.
 	---@field public Height number -- The cached crouching height.
+	---@field public CanSeeTargetCache table? -- 
 	self.D3bot_Mem = self.D3bot_Mem or {}
 	local mem = self.D3bot_Mem
-	
+
 	local considerPathLethality = math.random(1, D3bot.BotConsideringDeathCostAntichance) == 1
-	
+
 	mem.TgtOrNil = nil										-- Target entity to walk to and attack.
 	mem.PosTgtOrNil = nil									-- Target position to walk to.
 	mem.NodeTgtOrNil = nil									-- Target node.
@@ -258,7 +259,8 @@ function meta:D3bot_InitializeOrReset()
 	mem.ConsidersPathLethality = considerPathLethality		-- If true, the bot will consider lethality of the paths.
 	mem.Angs = angle_zero									-- Current angle, used to smooth out movement.
 	mem.AngsOffshoot = angle_zero							-- Offshoot angle, to make bots movement more random.
-	
+	mem.CanSeeTargetCache = nil								-- Cached result of visibility trace to current target.
+
 	mem.DontAttackTgt = nil									-- 
 	mem.TgtProximity = nil									-- 
 	mem.PosTgtProximity = nil								-- 
