@@ -66,6 +66,7 @@ return function(lib)
 			Pouncing = { "Needed" },
 			Climbing = { "Needed" },
 			Jumping = { "Needed" },
+			MaxHeight = {},
 			DMGPerSecond = {},
 			BotMod = {}
 		},
