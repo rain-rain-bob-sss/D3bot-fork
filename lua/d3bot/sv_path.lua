@@ -13,7 +13,7 @@ local Distance = FindMetaTable("Vector").Distance
 function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuristicCostFunction, abilities)
 	if not abilities then return nil end
 
-	local a_Walk, a_Pounce, a_Climb, a_Jump = abilities.Walk, abilities.Pounce, abilities.Climb, abilities.Jump
+	local a_Walk, a_Pounce, a_Climb, a_Jump, a_Height = abilities.Walk, abilities.Pounce, abilities.Climb, abilities.Jump, abilities.Height
 	local wave = GAMEMODE:GetWave()
 	-- See: https://en.wikipedia.org/wiki/A*_search_algorithm
 
@@ -86,6 +86,7 @@ function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuris
 			if not a_Pounce and linkParams.Pouncing == "Needed" then able = false end
 			if not a_Climb and linkedNodeParams.Climbing == "Needed" then able = false end
 			if linkParams.Jumping == "Needed" and a_Jump < linkZDiff * (forwards and 1 or -1) then able = false end
+			if (linkedNodeParams.MaxHeight or 999) < a_Height then able = false end
 
 			local blockedForward = (linkParams.Direction == "Forward" and not forwards)
 			local blockedBackward = (linkParams.Direction == "Backward" and forwards)
