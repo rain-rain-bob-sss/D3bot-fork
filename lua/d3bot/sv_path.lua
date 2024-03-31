@@ -86,7 +86,7 @@ function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuris
 			if not a_Pounce and linkParams.Pouncing == "Needed" then able = false end
 			if not a_Climb and linkedNodeParams.Climbing == "Needed" then able = false end
 			if linkParams.Jumping == "Needed" and a_Jump < linkZDiff * (forwards and 1 or -1) then able = false end
-			if (linkedNodeParams.MaxHeight or 999) < a_Height then able = false end
+			if linkedNodeParams.MaxHeight and linkedNodeParams.MaxHeight < a_Height then able = false end
 
 			local blockedForward = (linkParams.Direction == "Forward" and not forwards)
 			local blockedBackward = (linkParams.Direction == "Backward" and forwards)
