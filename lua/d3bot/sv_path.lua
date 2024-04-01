@@ -67,7 +67,7 @@ function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuris
 				end
 				if linkedNodeParams.Condition == "Blocked" then blocked = not blocked end
 			elseif linkedNodeParams.Condition == "MapUnblocked" then
-				local ents = ents.FindInBox(linkedNode.Pos + D3bot.NodeBlocking.mins, linkedNode.Pos + D3bot.NodeBlocking.maxs)
+				local ents = ents.FindInBox(linkedNode.Pos + D3bot.NodeBlockingMap.mins, linkedNode.Pos + D3bot.NodeBlockingMap.maxs)
 				for _, ent in ipairs(ents) do
 					if D3bot.NodeBlockingMap.classes[ent:GetClass()] then blocked = true; break end
 				end
