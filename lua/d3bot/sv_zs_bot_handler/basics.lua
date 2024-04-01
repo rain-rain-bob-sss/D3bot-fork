@@ -91,8 +91,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		end
 	end
 
-	local duckParam, duckToParam
-	local jumpParam, jumpToParam
+	local duckParam, duckToParam, jumpParam, jumpToParam
 	local maxHeightParam, nextMaxHeightParam
 
 	if D3bot.UsingSourceNav then
@@ -108,7 +107,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		jumpParam = nodeOrNil and nodeOrNil.Params.Jump
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
 		maxHeightParam = nodeOrNil and nodeOrNil.Params.MaxHeight
-		nextMaxHeightParam = nextNodeOrNil and nextNodeOrNil:GetMetaData().Params.MaxHeight
+		nextMaxHeightParam = nextNodeOrNil and nextNodeOrNil.Params.MaxHeight
 	end
 
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
@@ -337,6 +336,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	end
 
 	local duckParam, duckToParam, jumpParam, jumpToParam
+	local maxHeightParam, nextMaxHeightParam
 
 	if D3bot.UsingSourceNav then
 		duckParam = nodeOrNil and nodeOrNil:GetMetaData().Params.Duck
@@ -381,8 +381,27 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		mem.lastNoHindrance = CurTime()
 	end
 
+	-- Special case: We are walking towards a node with MaxHeight set, and the bot's standing height is larger than that.
+	-- This means we need to duck/crouch. Exception: If the navmesh has any other duck or jump parameters set, we do nothing.
+	if not duckParam and not duckToParam and not jumpParam and not jumpToParam then
+		if nextMaxHeightParam and nextMaxHeightParam < mem.Height then
+			actions.Duck = true
+		end
+	end
 	if duckParam == "Always" or duckToParam == "Always" then
 		actions.Duck = true
+	end
+	if duckToParam == "Close" and nextNodeOrNil then
+		local _, hullTop = bot:GetHull() -- Assume the hull is symmetrical.
+		local hullX, hullY, _ = hullTop:Unpack()
+		local halfHullWidth = math.max(hullX, hullY) + 5 -- Just add a small margin to let the bot duck/crouch before it "touches" the next node's area.
+
+		---@type GVector
+		local closestDiff = origin - nextNodeOrNil:GetClosestPointOnArea(origin)
+		local closestDistSqr = closestDiff:Length2DSqr()
+		if closestDistSqr <= halfHullWidth*halfHullWidth then
+			actions.Duck = true
+		end
 	end
 
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
