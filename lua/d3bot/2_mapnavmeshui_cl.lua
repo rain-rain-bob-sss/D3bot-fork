@@ -389,26 +389,34 @@ return function(lib)
 				local maxDrawingDistanceSqr = math.pow(math.min(D3bot.Convar_Navmeshing_DrawDistance:GetInt(), 500), 2)
 				if maxDrawingDistanceSqr <= 0 then maxDrawingDistanceSqr = 500*500 end
 				for id, node in pairs(lib.MapNavMesh.NodeById) do
-					if node.HasArea and node.Pos:DistToSqr(eyePos) <= maxDrawingDistanceSqr and (not smartDraw or isNodeIdVisible(id)) then
-						local z = node.Pos.z + 0.2
-						local params = node.Params
-						local color = getOutlineColor(node)
-						local vec1 = Vector(params.AreaXMin, params.AreaYMin, z)
-						local vec2 = Vector(params.AreaXMin, params.AreaYMax, z)
-						local vec3 = Vector(params.AreaXMax, params.AreaYMax, z)
-						local vec4 = Vector(params.AreaXMax, params.AreaYMin, z)
-						render.DrawLine(vec1, vec2, color, true)
-						render.DrawLine(vec2, vec3, color, true)
-						render.DrawLine(vec3, vec4, color, true)
-						render.DrawLine(vec4, vec1, color, true)
-						render.DrawLine(vec1, vec1 + Vector(0, 0, 10), color, true)
-						render.DrawLine(vec2, vec2 + Vector(0, 0, 10), color, true)
-						render.DrawLine(vec3, vec3 + Vector(0, 0, 10), color, true)
-						render.DrawLine(vec4, vec4 + Vector(0, 0, 10), color, true)
-						render.DrawLine(vec1, node.Pos + Vector(0, 0, 0.2), color, true)
-						render.DrawLine(vec2, node.Pos + Vector(0, 0, 0.2), color, true)
-						render.DrawLine(vec3, node.Pos + Vector(0, 0, 0.2), color, true)
-						render.DrawLine(vec4, node.Pos + Vector(0, 0, 0.2), color, true)
+					if node.Pos:DistToSqr(eyePos) <= maxDrawingDistanceSqr and (not smartDraw or isNodeIdVisible(id)) then
+						if node.HasArea then
+							local z = node.Pos.z + 0.2
+							local params = node.Params
+							local color = getOutlineColor(node)
+							local vec1 = Vector(params.AreaXMin, params.AreaYMin, z)
+							local vec2 = Vector(params.AreaXMin, params.AreaYMax, z)
+							local vec3 = Vector(params.AreaXMax, params.AreaYMax, z)
+							local vec4 = Vector(params.AreaXMax, params.AreaYMin, z)
+							render.DrawLine(vec1, vec2, color, true)
+							render.DrawLine(vec2, vec3, color, true)
+							render.DrawLine(vec3, vec4, color, true)
+							render.DrawLine(vec4, vec1, color, true)
+							render.DrawLine(vec1, vec1 + Vector(0, 0, 10), color, true)
+							render.DrawLine(vec2, vec2 + Vector(0, 0, 10), color, true)
+							render.DrawLine(vec3, vec3 + Vector(0, 0, 10), color, true)
+							render.DrawLine(vec4, vec4 + Vector(0, 0, 10), color, true)
+							render.DrawLine(vec1, node.Pos + Vector(0, 0, 0.2), color, true)
+							render.DrawLine(vec2, node.Pos + Vector(0, 0, 0.2), color, true)
+							render.DrawLine(vec3, node.Pos + Vector(0, 0, 0.2), color, true)
+							render.DrawLine(vec4, node.Pos + Vector(0, 0, 0.2), color, true)
+						end
+						if node.Params.MaxHeight then
+							local color = getOutlineColor(node)
+							local vec1 = node.Pos
+							local vec2 = vec1 + Vector(0, 0, node.Params.MaxHeight)
+							render.DrawLine(vec1, vec2, color, true)
+						end
 					end
 				end
 			end)
