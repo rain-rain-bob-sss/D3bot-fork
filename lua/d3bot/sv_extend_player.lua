@@ -50,8 +50,8 @@ function meta:D3bot_CanPounceToPos(pos)
 	local weapon = self:GetActiveWeapon()
 
 	local initVel
-	if weapon and weapon.PounceVelocity then
-		initVel = (1 - 0.5 * (self:GetLegDamage() / GAMEMODE.MaxLegDamage)) * weapon.PounceVelocity
+	if weapon then
+		initVel = (1 - 0.5 * (self:GetLegDamage() / GAMEMODE.MaxLegDamage)) * (weapon.PounceVelocity or 400) -- good for crabs
 	else
 		return
 	end
@@ -231,6 +231,20 @@ function meta:D3bot_InitializeOrReset()
 	---@field public Angs GAngle -- Current angle, used to smooth out movement.
 	---@field public AngsOffshoot GAngle -- Offshoot angle, to make bots movement more random.
 	---@field public DontAttackTgt boolean -- If set to true, the bot will not attack the given target, but only walk towards it.
+	---@field public NextPounce number? -- Point in time when to start the next pounce. Based on CurTime().
+	---@field public nextUpdateSurroundingPlayers number? -- Point in time when to check the surrounding for other players to attack. Based on CurTime().
+	---@field public PounceActive number? -- If non nil, the bot will pounce. Internally this contains a CurTime() timestamp.
+	---@field public nextCheckTarget number? -- Point in time when to check the current target for validity. Based on CurTime().
+	---@field public nextUpdateOffshoot number? -- Point in time when to recalculate the angle offshoot. Based on CurTime().
+	---@field public nextUpdatePath number? -- Point in time when to recalculate the path to the current target. Based on CurTime().
+	---@field public pounceFlightTime number? -- Estimated point in time when the pounce trajectory hits something. Based on CurTime().
+	---@field public pouncingStartTime number? -- Point in time when the bot starts to pounce. This is after weapon.PounceStartDelay has passed. Based on CurTime().
+	---@field public pouncing boolean? -- False (or nil) when the bot isn't pouncing.
+	---@field public pouncingTimer number? -- Point in time when to check pounce process. TODO: This seems to be obsolete
+	---@field public AimHeightFactor number? -- Factor of where to aim (From 0: Feet to 1: Head).
+	---@field public WasPressingAttack boolean? -- If neither nil nor false, the bot has pressed primary attack in the last frame.
+	---@field public LookTarget GPlayer? -- The player to look at. This is used in survivor bots.
+	---@field public IsCrab boolean? -- True when this bot is a (head?)crab.
 	---@field public TgtProximity number?
 	---@field public PosTgtProximity number?
 	---@field public NextCheckStuck number?
@@ -268,6 +282,14 @@ function meta:D3bot_InitializeOrReset()
 	mem.NextCheckStuck = nil								-- 
 	mem.MajorStuckCounter = nil								-- 
 
+	timer.Simple(0, function()                      -- Find Handler and check if bot is crab tick after spawn, otherwise it'll fail
+		if not IsValid(self) then return end        -- also make sure bot still exists
+
+		---@type GWeapon
+		local weapon = self:GetActiveWeapon()
+		mem.IsCrab = (weapon.HitRecovery or weapon.SpitWindUp) and true or false
+	end)
+
 	local myClass = self:GetZombieClassTable()
 	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 1) * (myClass.ModelScale or 1)
 	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
@@ -282,7 +304,8 @@ function meta:D3bot_UpdateAngsOffshoot(angOffshoot)
 	local mem = self.D3bot_Mem
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
-	if (nodeOrNil and nodeOrNil.Params.Aim == "Straight") or (nextNodeOrNil and nextNodeOrNil.Params.AimTo == "Straight") then
+	if (nodeOrNil and nodeOrNil.Params.Aim == "Straight") or (nextNodeOrNil and nextNodeOrNil.Params.AimTo == "Straight")
+		or (nextNodeOrNil and nodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.CrabPouncing == "Needed") then
 		mem.AngsOffshoot = angle_zero
 		return
 	end
@@ -305,7 +328,7 @@ function meta:D3bot_UpdatePath(pathCostFunction, heuristicCostFunction)
 	local node = mapNavMesh:GetNearestNodeOrNil(self:GetPos())
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or mapNavMesh:GetNearestNodeOrNil(mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil)
 	if not node or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab}
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
 	if weapon then
@@ -394,7 +417,8 @@ function meta:D3bot_UpdateAngsOffshoot( angOffshoot )
 	local mem = self.D3bot_Mem
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
-	if ( nodeOrNil and nodeOrNil:GetMetaData().Params.Aim == "Straight" ) or ( nextNodeOrNil and nextNodeOrNil:GetMetaData().Params.AimTo == "Straight" ) then
+	if ( nodeOrNil and nodeOrNil:GetMetaData().Params.Aim == "Straight" ) or ( nextNodeOrNil and nextNodeOrNil:GetMetaData().Params.AimTo == "Straight" )
+		or ( nextNodeOrNil and nodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil):GetMetaData().Params.CrabPouncing == "Needed" ) then
 		mem.AngsOffshoot = angle_zero
 		return
 	end
@@ -410,7 +434,7 @@ function meta:D3bot_UpdatePath( pathCostFunction, heuristicCostFunction )
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or navmesh.GetNearestNavArea( mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil )
 	
 	if not area or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab }
 
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
