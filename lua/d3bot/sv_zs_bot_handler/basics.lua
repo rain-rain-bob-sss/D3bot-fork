@@ -63,7 +63,6 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		if nodeOrNil and not nodeOrNil:GetContains(origin, nil) then aimStraight = true end
 	end
 	if shouldClimb then
-		bot:D3bot_AngsRotateTo(Vector(pos.x-origin.x, pos.y-origin.y, 0):Angle(), 1)
 		---@type GWeapon|table
 		local weapon = bot:GetActiveWeapon()
 		if weapon and weapon.GetClimbing and weapon:GetClimbing() and weapon.GetClimbSurface then
@@ -71,6 +70,8 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			if tr and tr.Hit then
 				bot:D3bot_AngsRotateTo((-tr.HitNormal):Angle(), 1)
 			end
+		else
+			bot:D3bot_AngsRotateTo(Vector(pos.x-origin.x, pos.y-origin.y, 0):Angle(), 1)
 		end
 	else
 		if mem.BarricadeAttackEntity and mem.BarricadeAttackPos and mem.BarricadeAttackEntity:IsValid() and mem.BarricadeAttackPos:DistToSqr(origin) < 100*100 then
