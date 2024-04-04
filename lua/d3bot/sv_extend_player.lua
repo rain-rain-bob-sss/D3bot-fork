@@ -270,10 +270,8 @@ function meta:D3bot_InitializeOrReset()
 
     	timer.Simple(0, function() -- Find Handler and check if bot is crab tick after spawn, otherwise it'll fail
     		if not IsValid(self) then return end -- also make sure bot still exists
-    		self.D3bot_Handler = FindHandler(self:GetZombieClass(), self:Team())
 
 		local weapon = self:GetActiveWeapon()
-			
     		mem.IsCrab = (weapon.HitRecovery or weapon.SpitWindUp) and true or false
     	end)
 	
@@ -281,13 +279,10 @@ function meta:D3bot_InitializeOrReset()
 	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 1) * (myClass.ModelScale or 1)
 	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
 	mem.CrouchHeight = myClass.HullDuck and myClass.HullDuck[2].z or 36
-
-	self:SetBarricadeGhosting(false)
 end
 
 function meta:D3bot_Deinitialize()
 	self.D3bot_Mem = nil
-	self.D3bot_Handler = nil
 end
 
 function meta:D3bot_UpdateAngsOffshoot(angOffshoot)
