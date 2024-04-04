@@ -472,6 +472,7 @@ end
 
 ---Pouncing handler.
 ---@param bot GPlayer|table
+---@param crab boolean
 ---@return boolean valid -- True if the handler ran corrcetly.
 ---@return table actions -- Table with a set of actions.
 ---@return number? speed -- The needed forwards speed for the bot.

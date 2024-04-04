@@ -231,6 +231,20 @@ function meta:D3bot_InitializeOrReset()
 	---@field public Angs GAngle -- Current angle, used to smooth out movement.
 	---@field public AngsOffshoot GAngle -- Offshoot angle, to make bots movement more random.
 	---@field public DontAttackTgt boolean -- If set to true, the bot will not attack the given target, but only walk towards it.
+	---@field public NextPounce number? -- Point in time when to start the next pounce. Based on CurTime().
+	---@field public nextUpdateSurroundingPlayers number? -- Point in time when to check the surrounding for other players to attack. Based on CurTime().
+	---@field public PounceActive number? -- If non nil, the bot will pounce. Internally this contains a CurTime() timestamp.
+	---@field public nextCheckTarget number? -- Point in time when to check the current target for validity. Based on CurTime().
+	---@field public nextUpdateOffshoot number? -- Point in time when to recalculate the angle offshoot. Based on CurTime().
+	---@field public nextUpdatePath number? -- Point in time when to recalculate the path to the current target. Based on CurTime().
+	---@field public pounceFlightTime number? -- Estimated point in time when the pounce trajectory hits something. Based on CurTime().
+	---@field public pouncingStartTime number? -- Point in time when the bot starts to pounce. This is after weapon.PounceStartDelay has passed. Based on CurTime().
+	---@field public pouncing boolean? -- False (or nil) when the bot isn't pouncing.
+	---@field public pouncingTimer number? -- Point in time when to check pounce process. TODO: This seems to be obsolete
+	---@field public AimHeightFactor number? -- Factor of where to aim (From 0: Feet to 1: Head).
+	---@field public WasPressingAttack boolean? -- If neither nil nor false, the bot has pressed primary attack in the last frame.
+	---@field public LookTarget GPlayer? -- The player to look at. This is used in survivor bots.
+	---@field public IsCrab boolean? -- True when this bot is a (head?)crab.
 	---@field public TgtProximity number?
 	---@field public PosTgtProximity number?
 	---@field public NextCheckStuck number?
