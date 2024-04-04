@@ -59,12 +59,12 @@ function D3bot.MaintainBotRoles()
 	-- Check if any zombie bot is in barricade ghosting mode.
 	-- This can happen in some gamemodes, we fix that here.
 	-- See https://github.com/Dadido3/D3bot/issues/99 for details.
-	--[[for _, bot in ipairs(bots) do
+	for _, bot in ipairs(bots) do
 		if bot:GetBarricadeGhosting() and bot:Team() == TEAM_UNDEAD and bot:Alive() then
 			--bot:Say(string.format("I was a nasty bot that noclips through barricades! (%s)", bot))
 			bot:SetBarricadeGhosting(false)
 		end
-	end]] -- Old solution
+	end
 
 	-- TODO: Fix invisible bots when CLASS.OverrideModel is used (most common with Frigid Revenant and other OverrideModel zombies in 2018 ZS if they have a low opacity OverrideModel)
 	
@@ -111,7 +111,6 @@ function D3bot.MaintainBotRoles()
 					spawnAsTeam = nil
 					if IsValid(bot) then
 						bot:D3bot_InitializeOrReset()
-						bot.D3bot_Handler = FindHandler(bot:GetZombieClass(), bot:Team()) -- This is very specific, but important here. Its still optimized
 					end
 				end
 				return
