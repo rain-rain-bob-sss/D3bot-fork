@@ -281,6 +281,8 @@ function meta:D3bot_InitializeOrReset()
 	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 1) * (myClass.ModelScale or 1)
 	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
 	mem.CrouchHeight = myClass.HullDuck and myClass.HullDuck[2].z or 36
+
+	self:SetBarricadeGhosting(false)
 end
 
 function meta:D3bot_Deinitialize()
