@@ -12,7 +12,7 @@ D3bot.NodeBlocking = {
 D3bot.NodeBlockingMap = {
 	mins = Vector(-1, -1, -1),
 	maxs = Vector(1, 1, 1),
-	classes = {func_breakable = true, prop_dynamic = true, prop_door_rotating = true, func_door = true, func_physbox_multiplayer = true, func_movelinear = true}
+	classes = {func_breakable = true, prop_dynamic = true, prop_door_rotating = true, func_door = true, func_movelinear = true}
 }
 
 D3bot.ValveNav = true							-- Enable the auto-genernated nav-mesh. (Created with "nav_generate")
