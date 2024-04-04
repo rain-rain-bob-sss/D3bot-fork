@@ -417,7 +417,7 @@ function meta:D3bot_UpdateAngsOffshoot( angOffshoot )
 	local mem = self.D3bot_Mem
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
-	if ( nodeOrNil and nodeOrNil:GetMetaData().Params.Aim == "Straight" ) or ( nextNodeOrNil and nextNodeOrNil:GetMetaData().Params.AimTo == "Straight" ) then
+	if ( nodeOrNil and nodeOrNil:GetMetaData().Params.Aim == "Straight" ) or ( nextNodeOrNil and nextNodeOrNil:GetMetaData().Params.AimTo == "Straight" )
 		or ( nextNodeOrNil and nodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil):GetMetaData().Params.CrabPouncing == "Needed" ) then
 		mem.AngsOffshoot = angle_zero
 		return
