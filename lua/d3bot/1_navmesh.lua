@@ -64,6 +64,7 @@ return function(lib)
 			Direction = { "Forward", "Backward" },
 			Walking = { "Needed" },
 			Pouncing = { "Needed" },
+			CrabPouncing = { "Needed" },
 			Climbing = { "Needed" },
 			Jumping = { "Needed" },
 			MaxHeight = {},
