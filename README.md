@@ -29,6 +29,7 @@ Here is a list of notable changes compared to the original version:
 - Code optimizations. (Thanks to [Antizombie])
 - Support for ZS sub-gamemodes such as Pants Mode, Baby Mode & Classic Mode. (Thanks to [Sigilmare])
 - Parameters for restricting paths based on the bot's jump and crouching height. (Thanks to [bol])
+- Pouncing/Leaping headcrabs. (Thanks to [bol])
 - Translations:
   - Chinese Simplified (Thanks to [XY]EvansFix)
   - Chinese Traditional (Thanks to [Half1569])
@@ -168,7 +169,8 @@ Be sure to follow all the other necessary steps as described in [#Installation](
     - Direction = Forward: Only allow paths from the first to the second element of the link. `!bot setparam 1-2 Direction Forward` will only allow the bot to move from 1 to 2.
     - Direction = Backward: Same as above, but backwards.
     - Pouncing = Needed: Only classes with the ability to pounce/leap can use this link.
-    - Jumping = "Needed": Only bots that can jump high enough can pass this link. The needed jump height is automatically determined from the height difference of the two nodes.
+    - CrabPouncing = Needed: Only (headcrab like) classes with the ability to pounce/leap can use this link.
+    - Jumping = Needed: Only bots that can jump high enough can pass this link. The needed jump height is automatically determined from the height difference of the two nodes.
 - Use `!bot reloadmesh` to discard changes.
 - Use `!bot savemesh` to save the changes to `garrysmod/data/d3bot/navmesh/map/<mapname>.txt`.
 - Use `!bot setmapparam <name> <value>` (example: `!bot setmapparam botmod 5`) to set or unset (by omitting \<value\>) map specific parameters:
@@ -207,9 +209,8 @@ Starting with highest public priority:
 
 - Making a config.txt for the static variables.
 - Refactoring, e.g. stable API, stable navmesh standard, consistency, bot metatable, gamemode independence by adding hooks usable by gamemodes or gamemode-based plugins, ...
-- Detailed linking e.g. required jump height, movement behavior (gap-jumping, ...), more link unlock conditions, ...
+- Detailed linking e.g. ~~required jump height~~, movement behavior (gap-jumping, ...), more link unlock conditions, ...
 - Map information in navmeshes using a singleton item type solely for storing parameters (e.g. zombie count multiplier).
-- Leap behavior for headcrab bots.
 - Sloped nodes for more accurate locating of entities.
 - Triangle-based nodes using vertices with automatic adjacent linking.
 - Sub-paths in nodes for more accurate movement (no "wall-sliding").
