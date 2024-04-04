@@ -490,8 +490,8 @@ function D3bot.Basics.PounceAuto(bot, crab)
 	if not bot:IsOnGround() or bot:GetMoveType() == MOVETYPE_LADDER then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 
 	---@type GWeapon|table
-	--local weapon = bot:GetActiveWeapon()
-	if not bot.CurrentWeapon.PounceVelocity and not crab then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+	local weapon = bot:GetActiveWeapon()
+	if not weapon.PounceVelocity and not crab then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 
 	-- Fill table with possible pounce target positions, ordered with increasing priority.
 
@@ -546,7 +546,7 @@ function D3bot.Basics.PounceAuto(bot, crab)
 	for _, pounceTargetPos in ipairs(table.Reverse(pounceTargetPositions)) do
 		local trajectories = bot:D3bot_CanPounceToPos(pounceTargetPos.Pos)
 		local timeToTarget = pounceTargetPos.Dist / bot:GetMaxSpeed()
-		if trajectories and (pounceTargetPos.ForcePounce or (pounceTargetPos.HeightDiff and pounceTargetPos.Pos.z - bot:GetPos().z > pounceTargetPos.HeightDiff) or timeToTarget > (trajectories[1].t1 + (bot.CurrentWeapon.PounceStartDelay or 0)) * pounceTargetPos.TimeFactor) then
+		if trajectories and (pounceTargetPos.ForcePounce or (pounceTargetPos.HeightDiff and pounceTargetPos.Pos.z - bot:GetPos().z > pounceTargetPos.HeightDiff) or timeToTarget > (trajectories[1].t1 + (weapon.PounceStartDelay or 0)) * pounceTargetPos.TimeFactor) then
 			trajectory = trajectories[1]
 			break
 		end
@@ -554,7 +554,7 @@ function D3bot.Basics.PounceAuto(bot, crab)
 
 	local actions = {}
 
-	if (trajectory and CurTime() >= bot.CurrentWeapon:GetNextPrimaryFire() and CurTime() >= bot.CurrentWeapon:GetNextSecondaryFire() and CurTime() >= (bot.CurrentWeapon.NextAllowPounce or bot.CurrentWeapon:GetNextPrimaryFire())) or mem.pouncing then
+	if (trajectory and CurTime() >= weapon:GetNextPrimaryFire() and CurTime() >= weapon:GetNextSecondaryFire() and CurTime() >= (weapon.NextAllowPounce or weapon:GetNextPrimaryFire())) or mem.pouncing then
 		if trajectory then
 			mem.Angs = Angle(-math.deg(trajectory.pitch), math.deg(trajectory.yaw), 0)
 			mem.pounceFlightTime = math.Clamp(trajectory.t1 + (mem.pouncingStartTime or CurTime()) - CurTime(), 0, 1) -- Store flight time, and use it to iteratively get close to the correct intersection point.
@@ -565,7 +565,7 @@ function D3bot.Basics.PounceAuto(bot, crab)
 			actions.Attack = crab and true or false
 			mem.pouncingTimer = CurTime() + 0.9 + math.random() * 0.2
 
-			mem.pouncingStartTime = CurTime() + (bot.CurrentWeapon.PounceStartDelay or 0)
+			mem.pouncingStartTime = CurTime() + (weapon.PounceStartDelay or 0)
 			mem.pouncing = true
 		elseif mem.pouncingTimer and mem.pouncingTimer < CurTime() and (CurTime() - mem.pouncingTimer > 5 or bot:WaterLevel() >= 2 or bot:IsOnGround()) then
 			-- Ended pouncing
