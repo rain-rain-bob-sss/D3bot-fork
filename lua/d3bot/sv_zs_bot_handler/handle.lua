@@ -25,10 +25,9 @@ end
 local FindHandler = FindHandler
 
 hook.Add("StartCommand", D3bot.BotHooksId, function(pl, cmd)
-	if D3bot.IsEnabledCached and pl.D3bot_Mem then
+	if D3bot.IsEnabledCached and pl.D3bot_Handler then
 		
-		local handler = FindHandler(pl:GetZombieClass(), pl:Team())
-		handler.UpdateBotCmdFunction(pl, cmd)
+		pl.D3bot_Handler.UpdateBotCmdFunction(pl, cmd)
 		
 	end
 end)
@@ -56,8 +55,9 @@ hook.Add("Think", D3bot.BotHooksId.."🤔", function()
 			end
 		end
 		
-		local handler = FindHandler(bot:GetZombieClass(), bot:Team())
-		handler.ThinkFunction(bot)
+		if bot.D3bot_Handler then
+			bot.D3bot_Handler.ThinkFunction(bot)
+        	end
 	end
 	
 	-- Supervisor think function
@@ -79,14 +79,12 @@ hook.Add("EntityTakeDamage", D3bot.BotHooksId.."TakeDamage", function(ent, dmg)
 	if D3bot.IsEnabledCached then
 		if ent:IsPlayer() and ent.D3bot_Mem then
 			-- Bot got damaged or damaged itself
-			local handler = FindHandler(ent:GetZombieClass(), ent:Team())
-			handler.OnTakeDamageFunction(ent, dmg)
+			ent.D3bot_Handler.OnTakeDamageFunction(ent, dmg)
 		end
 		local attacker = dmg:GetAttacker()
 		if attacker ~= ent and attacker:IsPlayer() and attacker.D3bot_Mem then
 			-- A Bot did damage something
-			local handler = FindHandler(attacker:GetZombieClass(), attacker:Team())
-			handler.OnDoDamageFunction(attacker, ent, dmg)
+			attacker.D3bot_Handler.OnDoDamageFunction(attacker, ent, dmg)
 			attacker.D3bot_LastDamage = CurTime()
 		end
 	end
@@ -94,8 +92,7 @@ end)
 
 hook.Add("PlayerDeath", D3bot.BotHooksId.."PlayerDeath", function(pl)
 	if D3bot.IsEnabledCached and pl.D3bot_Mem then
-		local handler = FindHandler(pl:GetZombieClass(), pl:Team())
-		handler.OnDeathFunction(pl)
+		pl.D3bot_Handler.OnDeathFunction(pl)
 		-- Add death cost to the current link
 		local mem = pl.D3bot_Mem
 		local nodeOrNil = mem.NodeOrNil
