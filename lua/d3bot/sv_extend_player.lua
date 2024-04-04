@@ -268,6 +268,15 @@ function meta:D3bot_InitializeOrReset()
 	mem.NextCheckStuck = nil								-- 
 	mem.MajorStuckCounter = nil								-- 
 
+    	timer.Simple(0, function() -- Find Handler and check if bot is crab tick after spawn, otherwise it'll fail
+    		if not IsValid(self) then return end -- also make sure bot still exists
+    		self.D3bot_Handler = FindHandler(self:GetZombieClass(), self:Team())
+
+		local weapon = self:GetActiveWeapon()
+			
+    		mem.IsCrab = (weapon.HitRecovery or weapon.SpitWindUp) and true or false
+    	end)
+	
 	local myClass = self:GetZombieClassTable()
 	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 1) * (myClass.ModelScale or 1)
 	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
@@ -276,13 +285,15 @@ end
 
 function meta:D3bot_Deinitialize()
 	self.D3bot_Mem = nil
+	self.D3bot_Handler = nil
 end
 
 function meta:D3bot_UpdateAngsOffshoot(angOffshoot)
 	local mem = self.D3bot_Mem
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
-	if (nodeOrNil and nodeOrNil.Params.Aim == "Straight") or (nextNodeOrNil and nextNodeOrNil.Params.AimTo == "Straight") then
+	if (nodeOrNil and nodeOrNil.Params.Aim == "Straight") or (nextNodeOrNil and nextNodeOrNil.Params.AimTo == "Straight")
+		or (nextNodeOrNil and nodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.CrabPouncing == "Needed") then
 		mem.AngsOffshoot = angle_zero
 		return
 	end
@@ -305,7 +316,7 @@ function meta:D3bot_UpdatePath(pathCostFunction, heuristicCostFunction)
 	local node = mapNavMesh:GetNearestNodeOrNil(self:GetPos())
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or mapNavMesh:GetNearestNodeOrNil(mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil)
 	if not node or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab}
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
 	if weapon then
@@ -395,6 +406,7 @@ function meta:D3bot_UpdateAngsOffshoot( angOffshoot )
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
 	if ( nodeOrNil and nodeOrNil:GetMetaData().Params.Aim == "Straight" ) or ( nextNodeOrNil and nextNodeOrNil:GetMetaData().Params.AimTo == "Straight" ) then
+		or ( nextNodeOrNil and nodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil):GetMetaData().Params.CrabPouncing == "Needed" ) then
 		mem.AngsOffshoot = angle_zero
 		return
 	end
@@ -410,7 +422,7 @@ function meta:D3bot_UpdatePath( pathCostFunction, heuristicCostFunction )
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or navmesh.GetNearestNavArea( mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil )
 	
 	if not area or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight}
+	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab }
 
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
