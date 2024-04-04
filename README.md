@@ -163,7 +163,7 @@ Be sure to follow all the other necessary steps as described in [#Installation](
     - BlockAfterWave: Bots will not use this node for pathfinding if the current wave is greater than the given value.
     - DMGPerSecond: Apply damage to human players and entities located on this node. Can be disabled globally in `sv_config.lua` by setting `D3bot.DisableNodeDamage = true`.
     - BotMod: Once a non bot player passes this node, the given offset will be applied to the zombie count target. Useful to adjust the bot count on objective maps.
-    - MaxHeight: Prevents bots that are taller than the provided value from passing through this node. This is using the bot's crouching height.
+    - MaxHeight: Prevents bots with a crouching/ducking height larger than the provided value from passing through this node. Bots that are taller when standing will crouch automatically when they pass this node.
   - Link parameters:
     - Cost: Add a penalty for paths using this link. Higher values makes it less likely for bots to use a path containing this link.
     - Direction = Forward: Only allow paths from the first to the second element of the link. `!bot setparam 1-2 Direction Forward` will only allow the bot to move from 1 to 2.
