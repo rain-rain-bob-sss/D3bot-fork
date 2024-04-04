@@ -50,8 +50,8 @@ function meta:D3bot_CanPounceToPos(pos)
 	local weapon = self:GetActiveWeapon()
 
 	local initVel
-	if weapon and weapon.PounceVelocity then
-		initVel = (1 - 0.5 * (self:GetLegDamage() / GAMEMODE.MaxLegDamage)) * weapon.PounceVelocity
+	if weapon then
+		initVel = (1 - 0.5 * (self:GetLegDamage() / GAMEMODE.MaxLegDamage)) * (weapon.PounceVelocity or 400) -- good for crabs
 	else
 		return
 	end
