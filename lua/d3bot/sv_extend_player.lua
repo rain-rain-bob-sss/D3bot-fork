@@ -282,13 +282,14 @@ function meta:D3bot_InitializeOrReset()
 	mem.NextCheckStuck = nil								-- 
 	mem.MajorStuckCounter = nil								-- 
 
-    	timer.Simple(0, function() -- Find Handler and check if bot is crab tick after spawn, otherwise it'll fail
-    		if not IsValid(self) then return end -- also make sure bot still exists
+	timer.Simple(0, function()                      -- Find Handler and check if bot is crab tick after spawn, otherwise it'll fail
+		if not IsValid(self) then return end        -- also make sure bot still exists
 
+		---@type GWeapon
 		local weapon = self:GetActiveWeapon()
-    		mem.IsCrab = (weapon.HitRecovery or weapon.SpitWindUp) and true or false
-    	end)
-	
+		mem.IsCrab = (weapon.HitRecovery or weapon.SpitWindUp) and true or false
+	end)
+
 	local myClass = self:GetZombieClassTable()
 	mem.JumpHeight = (myClass.JumpPower or DEFAULT_JUMP_POWER) * (myClass.Hull and myClass.Hull[2].z / 72 or 1) * (myClass.ModelScale or 1)
 	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
