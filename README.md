@@ -46,7 +46,7 @@ Here is a list of notable changes compared to the original version:
   - Portuguese(Brazil) (Thanks to GMBR | $herlock Bu$ter)
   - Russian (Thanks to [Blueberryy])
   - Spanish (Thanks to [Fafy2801])
-  - Turkish (Thanks to ᴇXғɪʀᴇᴄʜʀᴏᴍᴇ~)
+  - Turkish (Thanks to ᴇXғɪʀᴇᴄʜʀᴏᴍᴇ~ and [NovaDiablox])
   - Ukrainian (Thanks to [ErickMaksimets])
 - Some smaller things I possibly forgot.
 
@@ -227,6 +227,7 @@ Starting with highest public priority:
 [Fafy2801]: https://github.com/Fafy2801
 [Halamix2]: https://github.com/Halamix2
 [Half1569]: https://github.com/Half1569
+[NovaDiablox]: https://github.com/NovaDiablox
 [orecros]: https://github.com/orecros
 [Sigilmare]: https://github.com/Sigilmare
 [Wolfaloo]: https://github.com/Wolfaloo
