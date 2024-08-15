@@ -30,6 +30,7 @@ Here is a list of notable changes compared to the original version:
 - Support for ZS sub-gamemodes such as Pants Mode, Baby Mode & Classic Mode. (Thanks to [Sigilmare])
 - Parameters for restricting paths based on the bot's jump and crouching height. (Thanks to [bol])
 - Pouncing/Leaping headcrabs. (Thanks to [bol])
+- Ability to change the editing mode with numeric keys. (Thanks to [delstre])
 - Translations:
   - Chinese Simplified (Thanks to [XY]EvansFix)
   - Chinese Traditional (Thanks to [Half1569])
@@ -122,7 +123,7 @@ Be sure to follow all the other necessary steps as described in [#Installation](
 
 ## How to create navmeshes
 
-- Use the chat command `!bot editmesh ^` to enter the mesh editor.
+- Use the chat command `!bot editmesh ^` or `!bot editmeshspec ^` to enter the mesh editor.
   - Use IN_RELOAD to cycle through the edit modes:
     - Create node: Place nodes with IN_ATTACK.
     - Link nodes: Link nodes by selecting the first then the second node, both with IN_ATTACK. Clear selection with IN_RELOAD.
