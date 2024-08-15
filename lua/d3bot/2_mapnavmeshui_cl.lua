@@ -55,6 +55,8 @@ return function(lib)
 
 	local function round(num) return math.Round(num * 10) / 10 end
 
+	-- Client side list of edit modes.
+	-- Any edits have to be in sync with the server side list of edit modes.
 	local editModes = {
 		{ Name = "Create Node" },
 		{ Name = "Link Nodes" },
