@@ -141,6 +141,8 @@ end)
 
 registerSuperadminCmd("ViewMesh", plsParam, function(caller, pls) for k, pl in pairs(pls) do D3bot.SetMapNavMeshUiSubscription(pl, "view") end end)
 registerSuperadminCmd("EditMesh", plsParam, function(caller, pls) for k, pl in pairs(pls) do D3bot.SetMapNavMeshUiSubscription(pl, "edit") pl:AddFlags(FL_NOTARGET) end end)
+registerSuperadminCmd("ViewMeshSpec", plsParam, function(caller, pls) for k, pl in pairs(pls) do D3bot.SetMapNavMeshUiSubscription(pl, "view", true) end end)
+registerSuperadminCmd("EditMeshSpec", plsParam, function(caller, pls) for k, pl in pairs(pls) do D3bot.SetMapNavMeshUiSubscription(pl, "edit", true) pl:AddFlags(FL_NOTARGET) end end)
 registerSuperadminCmd("HideMesh", plsParam, function(caller, pls) for k, pl in pairs(pls) do D3bot.SetMapNavMeshUiSubscription(pl, nil) pl:RemoveFlags(FL_NOTARGET) end end)
 
 registerSuperadminCmd("SaveMesh", function(caller)

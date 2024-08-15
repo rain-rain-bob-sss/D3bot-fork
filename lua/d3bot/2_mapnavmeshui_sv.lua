@@ -205,29 +205,63 @@ return function(lib)
 	
 	local editModeByPl = {}
 	
-	local function printEditMode(pl) pl:ChatPrint("Edit Mode: " .. editModes[editModeByPl[pl]].Name) end
-	
 	local subscribers = {}
 	local subscriptionTypeOrNilByPl = {}
 	
 	function lib.BeMapNavMeshUiSubscriber(pl) if not subscriptionTypeOrNilByPl[pl] then lib.SetMapNavMeshUiSubscription(pl, "view") end end
-	function lib.SetMapNavMeshUiSubscription(pl, subscriptionTypeOrNil)
+	function lib.SetMapNavMeshUiSubscription(pl, subscriptionTypeOrNil, isSpectator)
 		local formerSubscriptionTypeOrNil = subscriptionTypeOrNilByPl[pl]
 		if subscriptionTypeOrNil == formerSubscriptionTypeOrNil then return end
 		subscriptionTypeOrNilByPl[pl] = subscriptionTypeOrNil
 		if formerSubscriptionTypeOrNil == nil then
 			table.insert(subscribers, pl)
 			lib.UploadMapNavMesh(pl)
+
+			pl.m_Weapons = {}
+			for i, weap in ipairs(pl:GetWeapons()) do
+				table.insert(pl.m_Weapons, weap:GetClass())
+			end
+			pl:StripWeapons()
+
+			if isSpectator then
+				pl.m_LastPos = pl:GetPos()
+				pl.m_LastEyeAngles = pl:EyeAngles()
+				pl.m_Spectate = true
+
+				pl:KillSilent()
+				pl:Spectate(OBS_MODE_ROAMING)
+			end
+
 			pl:SendLua(lib.GlobalK .. ".SetIsMapNavMeshViewEnabled(true)")
 		elseif subscriptionTypeOrNil == nil then
 			table.RemoveByValue(subscribers, pl)
+
+			if pl.m_Spectate then
+				pl:UnSpectate()
+				pl:Spawn()
+
+				pl:SetPos(pl.m_LastPos)
+				pl:SetEyeAngles(pl.m_LastEyeAngles)
+
+				pl.m_LastPos = nil
+				pl.m_LastEyeAngles = nil
+				pl.m_Spectate = nil
+			end
+
+			if pl.m_Weapons then
+				for i, weap in pairs(pl.m_Weapons) do
+					pl:Give(weap, true)
+				end
+			end
+
+			pl.m_Weapons = nil
+
 			pl:SendLua(lib.GlobalK .. ".SetIsMapNavMeshViewEnabled(false)")
 		end
 		if formerSubscriptionTypeOrNil == "edit" then clearSelection(pl) end
 		if subscriptionTypeOrNil == "edit" then
 			editModeByPl[pl] = 1
 			pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. 1)
-			printEditMode(pl)
 		end
 	end
 
@@ -258,7 +292,7 @@ return function(lib)
 		timer.Remove(getPathDebugTimerId(pl))
 		pl:SendLua(lib.GlobalK .. ".SetShownMapNavMeshPath{}")
 	end
-	
+
 	hook.Add("KeyPress", tostring({}), function(pl, key)
 		if subscriptionTypeOrNilByPl[pl] ~= "edit" then return end
 		if key == IN_RELOAD then
@@ -267,11 +301,23 @@ return function(lib)
 			else
 				editModeByPl[pl] = (editModeByPl[pl] % #editModes) + 1
 				pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. editModeByPl[pl])
-				printEditMode(pl)
 			end
 		else
 			local func = editModes[editModeByPl[pl]].FuncByKey[key]
 			if func then func(pl) end
+		end
+	end)
+
+	hook.Add("PlayerButtonDown", tostring({}), function(pl, key)
+		if subscriptionTypeOrNilByPl[pl] ~= "edit" then return end
+		if key >= KEY_0 and key <= KEY_9 and editModeByPl[pl] ~= key - 1 then
+			if editModes[key - 1] then
+				if hasSelection(pl) then
+					clearSelection(pl)
+				end
+				editModeByPl[pl] = key - 1
+				pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. key - 1)
+			end
 		end
 	end)
 end
