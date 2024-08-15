@@ -308,15 +308,16 @@ return function(lib)
 		end
 	end)
 
-	if SERVER then
-		hook.Add("PlayerButtonDown", tostring({}), function(pl, key)
-			if subscriptionTypeOrNilByPl[pl] ~= "edit" then return end
-			if key >= KEY_0 and key <= KEY_9 and editModeByPl[pl] ~= key-1 then
-				if editModes[key-1] then
-					editModeByPl[pl] = key-1
-					pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. key-1)
+	hook.Add("PlayerButtonDown", tostring({}), function(pl, key)
+		if subscriptionTypeOrNilByPl[pl] ~= "edit" then return end
+		if key >= KEY_0 and key <= KEY_9 and editModeByPl[pl] ~= key - 1 then
+			if editModes[key - 1] then
+				if hasSelection(pl) then
+					clearSelection(pl)
 				end
+				editModeByPl[pl] = key - 1
+				pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. key - 1)
 			end
-		end)
-	end
+		end
+	end)
 end
