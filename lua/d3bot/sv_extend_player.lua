@@ -292,7 +292,7 @@ function meta:D3bot_InitializeOrReset()
 
 	local myClass = self:GetZombieClassTable()
 	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
-	mem.DuckHeight = myClass.HullDuck and myClass.HullDuck[2].z or 36
+	mem.CrouchHeight = myClass.HullDuck and myClass.HullDuck[2].z or 36
 
    	mem.JumpHeight = 64 * (myClass.JumpPower and myClass.JumpPower / DEFAULT_JUMP_POWER or 1) * (mem.Height / 72) * (myClass.ModelScale or 1)
 end
