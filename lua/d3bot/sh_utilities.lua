@@ -15,6 +15,44 @@ function D3bot.GetTrajectories2DParams(g, initVel, distZ, distRad)
 	return trajectories
 end
 
+---This will calculate player jump heights based on the "Source SDK 2013" gamemovement.cpp logic.
+---While this could be done analytically, any such solution results in smaller final jump heights due to truncation errors of the numerical integration that the engine does.
+---Therefore we will replicate what the engine is doing.
+---
+---You may have to add the height difference between the `HullDuck` and `Hull` hull to the final result.
+---@param jumpPower number The initial jump velocity.
+---@param gravAcceleration number The gravitational acceleration.
+---@param isCrouching boolean When true, we will jump while crouching. This minimally changes the math, and makes the player jump higher.
+---@return number height The resulting jump height in source units.
+function D3bot.CalculateJumpHeight(jumpPower, gravAcceleration, isCrouching)
+	-- Some information:
+	-- - The initial vertical velocity is not 0 when the player is standing, but `-g/tickrate/2`. (https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/shared/gamemovement.cpp#L1259)
+	-- - Crouching and instantly jumping is better than jumping and crouching. This is because if the player jumps while crouching, the entity's speed is overwritten instead of added to, resulting in an initial velocity advantage of `g/tickrate/2`. (https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/shared/gamemovement.cpp#L2452-L2465)
+	-- - After we have started to jump, we will subtract `-g/tickrate/2` again. (https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/mp/src/game/shared/gamemovement.cpp#L2122)
+
+	local tickRate = 1 / engine.TickInterval() -- Ticks/s
+	local integratedAcceleration = math.abs(gravAcceleration/tickRate)
+
+	local vel, height = -integratedAcceleration/2, 0
+	if isCrouching then
+		vel = jumpPower
+	else
+		vel = vel + jumpPower
+	end
+	vel = vel - integratedAcceleration/2
+
+	-- Checks to ensure termination.
+	if vel > 10000 then return 0 end
+	if integratedAcceleration <= 0 then return 0 end
+
+	while vel > 0 do
+		height = height + vel / tickRate
+		vel = vel - integratedAcceleration
+	end
+
+	return height
+end
+
 function D3bot.GetTrajectory2DPoints(trajectory, segments)
 	trajectory.points = {}
 	for i = 0, segments, 1 do

@@ -255,7 +255,9 @@ function meta:D3bot_InitializeOrReset()
 	---@field public AntiStuckTime number?
 	---@field public AttackTgtOrNil GPlayer? -- Specific to survivor bots: The target player to attack.
 	---@field public MaxShootingDistance number? -- Specific to survivor bots: Maximum shooting distance.
-	---@field public JumpHeight number -- The possible crouch-jump height of this bot.
+	---@field public JumpHeight number -- The possible (non crouch) jump height of this bot. This is achieved just by jumping.
+	---@field public JumpCrouchHeight number -- The possible jump-crouch height of this bot. This is achieved by jumping and then crouching while being in the air.
+	---@field public CrouchJumpHeight number -- The possible crouch-jump height of this bot. This is achieved by crouching and then instantly jumping.
 	---@field public Height number -- The cached "standing" height of the bot.
 	---@field public CrouchHeight number -- The cached crouching height of the bot.
 	---@field public CanSeeTargetCache table? -- 
@@ -282,19 +284,37 @@ function meta:D3bot_InitializeOrReset()
 	mem.NextCheckStuck = nil								-- 
 	mem.MajorStuckCounter = nil								-- 
 
-	timer.Simple(0, function()                      -- Find Handler and check if bot is crab tick after spawn, otherwise it'll fail
-		if not IsValid(self) then return end        -- also make sure bot still exists
+	mem.IsCrab = false
+
+	mem.JumpHeight = 30
+	mem.JumpCrouchHeight = 68
+	mem.CrouchJumpHeight = 70
+
+	timer.Simple(0, function()
+		if not IsValid(self) then return end -- also make sure bot still exists
+
+		-- Find Handler and check if bot is crab tick after spawn, otherwise it'll fail.
 
 		---@type GWeapon
 		local weapon = self:GetActiveWeapon()
 		mem.IsCrab = (weapon.HitRecovery or weapon.SpitWindUp) and true or false
+
+		-- Calculate hull heights.
+
+		-- TODO: We could query the hulls and the jump power directly from the player entity instead of the zombie class table
+		local myClass = self:GetZombieClassTable()
+		mem.Height = myClass.Hull and myClass.Hull[2].z or 72
+		mem.CrouchHeight = myClass.HullDuck and myClass.HullDuck[2].z or 36
+
+		-- Calculate jump heights.
+
+		-- Gravitational acceleration in source units/s².
+		local g = physenv.GetGravity().z * (self:GetGravity() ~= 0 and self:GetGravity() or 1)
+
+		mem.JumpHeight = D3bot.CalculateJumpHeight(myClass.JumpPower or DEFAULT_JUMP_POWER, g, false)
+		mem.JumpCrouchHeight = D3bot.CalculateJumpHeight(myClass.JumpPower or DEFAULT_JUMP_POWER, g, false) + (mem.Height - mem.CrouchHeight)
+		mem.CrouchJumpHeight = D3bot.CalculateJumpHeight(myClass.JumpPower or DEFAULT_JUMP_POWER, g, true) + (mem.Height - mem.CrouchHeight)
 	end)
-
-	local myClass = self:GetZombieClassTable()
-	mem.Height = myClass.Hull and myClass.Hull[2].z or 72
-	mem.CrouchHeight = myClass.HullDuck and myClass.HullDuck[2].z or 36
-
-   	mem.JumpHeight = 64 * (myClass.JumpPower and myClass.JumpPower / DEFAULT_JUMP_POWER or 1) * (mem.Height / 72) * (myClass.ModelScale or 1)
 end
 
 function meta:D3bot_Deinitialize()
@@ -329,7 +349,7 @@ function meta:D3bot_UpdatePath(pathCostFunction, heuristicCostFunction)
 	local node = mapNavMesh:GetNearestNodeOrNil(self:GetPos())
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or mapNavMesh:GetNearestNodeOrNil(mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil)
 	if not node or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab}
+	local abilities = {Walk = true, Jump = mem.CrouchJumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab}
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
 	if weapon then
@@ -435,7 +455,7 @@ function meta:D3bot_UpdatePath( pathCostFunction, heuristicCostFunction )
 	mem.TgtNodeOrNil = mem.NodeTgtOrNil or navmesh.GetNearestNavArea( mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil )
 	
 	if not area or not mem.TgtNodeOrNil then return end
-	local abilities = {Walk = true, Jump = mem.JumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab }
+	local abilities = {Walk = true, Jump = mem.CrouchJumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab}
 
 	---@type GWeapon|table
 	local weapon = self:GetActiveWeapon()
