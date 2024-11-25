@@ -106,6 +106,11 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		duckToParam = nextNodeOrNil and nextNodeOrNil.Params.DuckTo
 		jumpParam = nodeOrNil and nodeOrNil.Params.Jump
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
+
+		if not jumpToParam and nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.Jumping == "Needed" and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
+			jumpToParam = "Close"
+		end
+		
 		maxHeightParam = nodeOrNil and nodeOrNil.Params.MaxHeight
 		nextMaxHeightParam = nextNodeOrNil and nextNodeOrNil.Params.MaxHeight
 	end
@@ -165,7 +170,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	end
 
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
-		if bot:IsOnGround() then
+		if bot:IsOnGround() or bot:WaterLevel() > 0 then
 			-- If we should climb, jump while we're on the ground.
 			if shouldClimb or jumpParam == "Always" or jumpToParam == "Always" then
 				actions.Jump = true
@@ -348,6 +353,10 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		duckToParam = nextNodeOrNil and nextNodeOrNil.Params.DuckTo
 		jumpParam = nodeOrNil and nodeOrNil.Params.Jump
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
+
+		if not jumpToParam and nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.Jumping == "Needed" and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
+			jumpToParam = "Close"
+		end
 	end
 
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
@@ -405,7 +414,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	end
 
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
-		if bot:IsOnGround() then
+		if bot:IsOnGround() or bot:WaterLevel() > 0 then
 			if jumpParam == "Always" or jumpToParam == "Always" then
 				actions.Jump = true
 			end
