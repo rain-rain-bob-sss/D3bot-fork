@@ -169,9 +169,9 @@ Be sure to follow all the other necessary steps as described in [#Installation](
     - Cost: Add a penalty for paths using this link. Higher values makes it less likely for bots to use a path containing this link.
     - Direction = Forward: Only allow paths from the first to the second element of the link. `!bot setparam 1-2 Direction Forward` will only allow the bot to move from 1 to 2.
     - Direction = Backward: Same as above, but backwards.
-    - Pouncing = Needed: Only classes with the ability to pounce/leap can use this link.
-    - CrabPouncing = Needed: Only (headcrab like) classes with the ability to pounce/leap can use this link.
-    - Jumping = Needed: Only bots that can jump high enough can pass this link. The needed jump height is automatically determined from the height difference of the two nodes.
+    - Pouncing = Needed: Only classes with the ability to pounce/leap can use this link. This parameter will make the bot pounce towards the target node once it reaches the first node.
+    - CrabPouncing = Needed: Only (headcrab like) classes with the ability to pounce/leap can use this link. This parameter will make the bot pounce towards the target node once it reaches the first node.
+    - Jumping = Needed: Only bots that can jump high enough can pass this link. The needed jump height is automatically determined from the height difference of the two nodes. This parameter will make bots jump just before they reach the perimeter of the target node, but only if the target node is above the first node.
 - Use `!bot reloadmesh` to discard changes.
 - Use `!bot savemesh` to save the changes to `garrysmod/data/d3bot/navmesh/map/<mapname>.txt`.
 - Use `!bot setmapparam <name> <value>` (example: `!bot setmapparam botmod 5`) to set or unset (by omitting \<value\>) map specific parameters:
