@@ -67,6 +67,7 @@ return function(lib)
 			CrabPouncing = { "Needed" },
 			Climbing = { "Needed" },
 			Jumping = { "Needed" },
+			Path = { "Ladder" },
 			MaxHeight = {},
 			DMGPerSecond = {},
 			BotMod = {}
