@@ -68,6 +68,7 @@ return function(lib)
 			Climbing = { "Needed" },
 			Jumping = { "Needed" },
 			Path = { "Ladder" },
+			Ladder = { "NoDismount" },
 			MaxHeight = {},
 			DMGPerSecond = {},
 			BotMod = {}
