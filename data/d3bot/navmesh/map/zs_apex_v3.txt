@@ -218,7 +218,7 @@
 183-184:
 184:AreaXMax=-704,AreaXMin=-816,AreaYMax=1112,AreaYMin=1066,X=-733.2,Y=1083,Z=127
 185:AimTo=Straight,AreaXMax=-896,AreaXMin=-943,AreaYMax=560,AreaYMin=512,X=-920.2,Y=539.6,Z=128
-185-189:
+185-189:Path=Ladder
 186:AreaXMax=-943,AreaXMin=-1024,AreaYMax=560,AreaYMin=512,X=-983.3,Y=541.6,Z=128
 186-185:
 186-188:
@@ -244,7 +244,7 @@
 194-208:
 195:Aim=Straight,AimTo=Straight,AreaXMax=-439.6,AreaXMin=-498.6,AreaYMax=1179.5,AreaYMin=1156.5,X=-477,Y=1168,Z=0
 196:Aim=Straight,AimTo=Straight,AreaXMax=-504,AreaXMin=-541.8,AreaYMax=1187,AreaYMin=1120,See=Disabled,X=-535.1,Y=1168,Z=124
-196-195:
+196-195:Path=Ladder
 197:AreaXMax=-544,AreaXMin=-672,AreaYMax=1280,AreaYMin=1216,See=Disabled,X=-604.8,Y=1244.4,Z=124
 197-193:
 198:AreaXMax=-512,AreaXMin=-544,AreaYMax=1280,AreaYMin=1216,See=Disabled,X=-529.2,Y=1242.5,Z=124
@@ -550,7 +550,7 @@
 319:AreaXMax=-398,AreaXMin=-506,AreaYMax=868,AreaYMin=768,X=-439.5,Y=821,Z=-464
 319-311:
 32:Aim=Straight,AimTo=Straight,AreaXMax=-566,AreaXMin=-656,AreaYMax=840,AreaYMin=816,X=-617.8,Y=827.5,Z=1152
-32-33:
+32-33:Path=Ladder
 32-39:
 320:AreaXMax=-624,AreaXMin=-752,AreaYMax=704,AreaYMin=576,X=-693,Y=641.4,Z=130.3
 320-322:
@@ -566,7 +566,7 @@
 326:Cost=100000,X=-768.2,Y=575.3,Z=128
 326-320:
 327:Aim=Straight,AimTo=Straight,AreaXMax=-624,AreaXMin=-752,AreaYMax=1728,AreaYMin=1600,X=-644.6,Y=1662.1,Z=640
-327-40:
+327-40:Path=Ladder
 33:Aim=Straight,AimTo=Straight,X=-672.2,Y=827.3,Z=1280
 33-12:
 34:AimTo=Straight,AreaXMax=-412,AreaXMin=-452,AreaYMax=1341.2,AreaYMin=1280,JumpTo=Always,X=-432.9,Y=1286.3,Z=1308
@@ -586,7 +586,7 @@
 40:Aim=Straight,AimTo=Straight,AreaXMax=-624,AreaXMin=-752,AreaYMax=1728,AreaYMin=1600,X=-681.8,Y=1662.2,Z=372
 40-42:
 41:Aim=Straight,AimTo=Straight,AreaXMax=-614,AreaXMin=-650.5,AreaYMax=1684,AreaYMin=1644,X=-635.6,Y=1664.2,Z=1144
-41-327:
+41-327:Path=Ladder
 42:AimTo=Straight,AreaXMax=-662,AreaXMin=-702,AreaYMax=1756,AreaYMin=1728,DuckTo=Always,JumpTo=Always,X=-680.8,Y=1738.4,Z=396
 42-43:
 43:AreaXMax=-662,AreaXMin=-702,AreaYMax=1796,AreaYMin=1756,X=-680.1,Y=1773.5,Z=396

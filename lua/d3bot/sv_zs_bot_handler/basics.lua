@@ -41,8 +41,18 @@ end
 function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	local mem = bot.D3bot_Mem
 
+	if mem.BlockMovementUntil then
+		if mem.BlockMovementUntil >= CurTime() and mem.BlockedOnNode and mem.BlockedOnNode:GetContains(bot:GetPos(), nil) then
+			return false, {}, nil, nil, nil, mem.Angs, false, false, false
+		else
+			mem.BlockMovementUntil = nil
+			mem.BlockedOnNode = nil
+		end
+	end
+
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
+	local currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
 
 	local offshootAngle = angle_zero
 	local origin = bot:GetPos()
@@ -93,6 +103,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 
 	local duckParam, duckToParam, jumpParam, jumpToParam
 	local maxHeightParam, nextMaxHeightParam
+	local pathParam, ladderParam
 
 	if D3bot.UsingSourceNav then
 		duckParam = nodeOrNil and nodeOrNil:GetMetaData().Params.Duck
@@ -106,11 +117,13 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		duckToParam = nextNodeOrNil and nextNodeOrNil.Params.DuckTo
 		jumpParam = nodeOrNil and nodeOrNil.Params.Jump
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
+		ladderParam = nodeOrNil and nodeOrNil.Params.Ladder
+		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
 
-		if not jumpToParam and nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.Jumping == "Needed" and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
+		if not jumpToParam and currentLinkOrNil and currentLinkOrNil.Params.Jumping == "Needed" and nextNodeOrNil and nodeOrNil and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
 			jumpToParam = "Close"
 		end
-		
+
 		maxHeightParam = nodeOrNil and nodeOrNil.Params.MaxHeight
 		nextMaxHeightParam = nextNodeOrNil and nextNodeOrNil.Params.MaxHeight
 	end
@@ -169,7 +182,23 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		end
 	end
 
+	if pathParam == "Ladder" then
+		mem.IsOnLadder = true
+	else
+		if mem.IsOnLadder and ladderParam ~= "NoDismount" then
+			actions.Use = true
+			actions.Jump = true
+
+			mem.BlockMovementUntil = CurTime() + 0.5
+			if not D3bot.UsingSourceNav then mem.BlockedOnNode = nodeOrNil end
+		end
+
+		mem.IsOnLadder = false
+	end
+
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
+		mem.IsOnLadder = false
+
 		if bot:IsOnGround() or bot:WaterLevel() > 0 then
 			-- If we should climb, jump while we're on the ground.
 			if shouldClimb or jumpParam == "Always" or jumpToParam == "Always" then
@@ -264,8 +293,18 @@ end
 function D3bot.Basics.WalkAttackAuto(bot)
 	local mem = bot.D3bot_Mem
 
+	if mem.BlockMovementUntil then
+		if mem.BlockMovementUntil >= CurTime() and mem.BlockedOnNode and mem.BlockedOnNode:GetContains(bot:GetPos(), nil) then
+			return false, {}, nil, nil, nil, mem.Angs, false, false, false
+		else
+			mem.BlockMovementUntil = nil
+			mem.BlockedOnNode = nil
+		end
+	end
+
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
+	local currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
 
 	local actions = {}
 
@@ -342,6 +381,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 
 	local duckParam, duckToParam, jumpParam, jumpToParam
 	local maxHeightParam, nextMaxHeightParam
+	local pathParam, ladderParam
 
 	if D3bot.UsingSourceNav then
 		duckParam = nodeOrNil and nodeOrNil:GetMetaData().Params.Duck
@@ -353,8 +393,10 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		duckToParam = nextNodeOrNil and nextNodeOrNil.Params.DuckTo
 		jumpParam = nodeOrNil and nodeOrNil.Params.Jump
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
+		ladderParam = nodeOrNil and nodeOrNil.Params.Ladder
+		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
 
-		if not jumpToParam and nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.Jumping == "Needed" and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
+		if not jumpToParam and currentLinkOrNil and currentLinkOrNil.Params.Jumping == "Needed" and nextNodeOrNil and nodeOrNil and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
 			jumpToParam = "Close"
 		end
 	end
@@ -413,7 +455,23 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		end
 	end
 
+	if pathParam == "Ladder" then
+		mem.IsOnLadder = true
+	else
+		if mem.IsOnLadder and ladderParam ~= "NoDismount" then
+			actions.Use = true
+			actions.Jump = true
+
+			mem.BlockMovementUntil = CurTime() + 0.5
+			if not D3bot.UsingSourceNav then mem.BlockedOnNode = nodeOrNil end
+		end
+
+		mem.IsOnLadder = false
+	end
+
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
+		mem.IsOnLadder = false
+
 		if bot:IsOnGround() or bot:WaterLevel() > 0 then
 			if jumpParam == "Always" or jumpToParam == "Always" then
 				actions.Jump = true
@@ -606,6 +664,14 @@ end
 ---@return boolean facesHindrance -- True if the bot is walking slower than expected.
 function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	local mem = bot.D3bot_Mem
+
+	if mem.BlockMovementUntil then
+		if mem.BlockMovementUntil >= CurTime() then
+			return false, {}, nil, nil, nil, mem.Angs, false, false, false
+		else
+			mem.BlockMovementUntil = nil
+		end
+	end
 
 	local actions = {}
 	local reloading

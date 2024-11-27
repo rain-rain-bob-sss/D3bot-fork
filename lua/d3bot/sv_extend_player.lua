@@ -260,7 +260,10 @@ function meta:D3bot_InitializeOrReset()
 	---@field public CrouchJumpHeight number -- The possible crouch-jump height of this bot. This is achieved by crouching and then instantly jumping.
 	---@field public Height number -- The cached "standing" height of the bot.
 	---@field public CrouchHeight number -- The cached crouching height of the bot.
-	---@field public CanSeeTargetCache table? -- 
+	---@field public CanSeeTargetCache table?
+	---@field public BlockMovementUntil number? -- Blocks bot handlers from issuing any CUserCmd action until this point in time (CurTime()) has passed. Used by ladder handling logic (func_useableladder).
+	---@field public BlockedOnNode D3NavmeshNode? -- Blocks bot handlers from issuing any CUserCmd action until they leave the specified node. Used by ladder handling logic (func_useableladder).
+	---@field public IsOnLadder boolean -- When true, we are on a path that is defined as "ladder" according to the navmesh. This is used to make the bot issue special commands to leave the ladder when necessary.
 	self.D3bot_Mem = self.D3bot_Mem or {}
 	local mem = self.D3bot_Mem
 
@@ -289,6 +292,8 @@ function meta:D3bot_InitializeOrReset()
 	mem.JumpHeight = 30
 	mem.JumpCrouchHeight = 68
 	mem.CrouchJumpHeight = 70
+
+	mem.IsOnLadder = false
 
 	timer.Simple(0, function()
 		if not IsValid(self) then return end -- also make sure bot still exists
