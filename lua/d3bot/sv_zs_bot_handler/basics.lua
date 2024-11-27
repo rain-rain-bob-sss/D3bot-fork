@@ -126,6 +126,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		duckToParam = nextNodeOrNil and nextNodeOrNil.Params.DuckTo
 		jumpParam = nodeOrNil and nodeOrNil.Params.Jump
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
+		ladderParam = nodeOrNil and nodeOrNil.Params.Ladder
 		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
 		
 		if not jumpToParam and nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.Jumping == "Needed" and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
@@ -400,8 +401,6 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		duckToParam = nextNodeOrNil and nextNodeOrNil.Params.DuckTo
 		jumpParam = nodeOrNil and nodeOrNil.Params.Jump
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
-		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
-
 		ladderParam = nodeOrNil and nodeOrNil.Params.Ladder
 		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
 
