@@ -23,15 +23,6 @@ function D3bot.Basics.SuicideOrRetarget(bot)
 	end
 end
 
--- A check to determine if vector is inside node area or not
----@param node D3NavmeshNode
----@param pos GVector
-local function IsInsideNode(node, pos)
-	return node.HasArea and node.Params.AreaXMin <= pos.x and pos.x <= node.Params.AreaXMax and node.Params.AreaYMin <= pos.y and pos.y <= node.Params.AreaYMax
-		   or not node.HasArea and node.Pos and node.Pos.x == pos.x and node.Pos.y == pos.y 
-		   or false
-end
-
 ---Basic walking handler.
 ---@param bot GPlayer|table
 ---@param pos GVector -- Target position the bot should walk towards. Should be inside the current or next node.
@@ -51,7 +42,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	local mem = bot.D3bot_Mem
 
 	if mem.BlockMovementUntil then
-		if mem.BlockMovementUntil >= CurTime() and IsInsideNode(mem.BlockedOnNode, bot:GetPos()) then
+		if mem.BlockMovementUntil >= CurTime() and mem.BlockedOnNode and mem.BlockedOnNode:GetContains(bot:GetPos(), nil) then
 			return false, {}, nil, nil, nil, mem.Angs, false, false, false
 		else
 			mem.BlockMovementUntil = nil
@@ -128,11 +119,11 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		jumpToParam = nextNodeOrNil and nextNodeOrNil.Params.JumpTo
 		ladderParam = nodeOrNil and nodeOrNil.Params.Ladder
 		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
-		
-		if not jumpToParam and nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil].Params.Jumping == "Needed" and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
+
+		if not jumpToParam and currentLinkOrNil and currentLinkOrNil.Params.Jumping == "Needed" and nextNodeOrNil and nodeOrNil and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
 			jumpToParam = "Close"
 		end
-		
+
 		maxHeightParam = nodeOrNil and nodeOrNil.Params.MaxHeight
 		nextMaxHeightParam = nextNodeOrNil and nextNodeOrNil.Params.MaxHeight
 	end
@@ -199,6 +190,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			actions.Jump = true
 
 			mem.BlockMovementUntil = CurTime() + 0.5
+			if not D3bot.UsingSourceNav then mem.BlockedOnNode = nodeOrNil end
 		end
 
 		mem.IsOnLadder = false
@@ -206,7 +198,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
 		mem.IsOnLadder = false
-		
+
 		if bot:IsOnGround() or bot:WaterLevel() > 0 then
 			-- If we should climb, jump while we're on the ground.
 			if shouldClimb or jumpParam == "Always" or jumpToParam == "Always" then
@@ -302,7 +294,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	local mem = bot.D3bot_Mem
 
 	if mem.BlockMovementUntil then
-		if mem.BlockMovementUntil >= CurTime() and IsInsideNode(mem.BlockedOnNode, bot:GetPos()) then
+		if mem.BlockMovementUntil >= CurTime() and mem.BlockedOnNode and mem.BlockedOnNode:GetContains(bot:GetPos(), nil) then
 			return false, {}, nil, nil, nil, mem.Angs, false, false, false
 		else
 			mem.BlockMovementUntil = nil
@@ -404,7 +396,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		ladderParam = nodeOrNil and nodeOrNil.Params.Ladder
 		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
 
-		if not jumpToParam and currentLinkOrNil and currentLinkOrNil.Params.Jumping == "Needed" and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
+		if not jumpToParam and currentLinkOrNil and currentLinkOrNil.Params.Jumping == "Needed" and nextNodeOrNil and nodeOrNil and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
 			jumpToParam = "Close"
 		end
 	end
@@ -471,7 +463,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 			actions.Jump = true
 
 			mem.BlockMovementUntil = CurTime() + 0.5
-			mem.BlockedOnNode = nodeOrNil
+			if not D3bot.UsingSourceNav then mem.BlockedOnNode = nodeOrNil end
 		end
 
 		mem.IsOnLadder = false
@@ -479,7 +471,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
 		mem.IsOnLadder = false
-		
+
 		if bot:IsOnGround() or bot:WaterLevel() > 0 then
 			if jumpParam == "Always" or jumpToParam == "Always" then
 				actions.Jump = true

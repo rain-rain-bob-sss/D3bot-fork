@@ -31,6 +31,8 @@ Here is a list of notable changes compared to the original version:
 - Parameters for restricting paths based on the bot's jump and crouching height. (Thanks to [bol])
 - Pouncing/Leaping headcrabs. (Thanks to [bol])
 - Ability to change the editing mode with numeric keys. (Thanks to [delstre])
+- Automatic jumping when using the link parameter `Jumping = Needed`. (Thanks to [bol])
+- Better handling of ladders, especially `func_useableladder`. (Thanks to [bol])
 - Translations:
   - Chinese Simplified (Thanks to [XY]EvansFix)
   - Chinese Traditional (Thanks to [Half1569])
@@ -165,6 +167,7 @@ Be sure to follow all the other necessary steps as described in [#Installation](
     - DMGPerSecond: Apply damage to human players and entities located on this node. Can be disabled globally in `sv_config.lua` by setting `D3bot.DisableNodeDamage = true`.
     - BotMod: Once a non bot player passes this node, the given offset will be applied to the zombie count target. Useful to adjust the bot count on objective maps.
     - MaxHeight: Prevents bots with a crouching/ducking height larger than the provided value from passing through this node. Bots that are taller when standing will crouch automatically when they pass this node.
+    - Ladder = NoDismount: Used in combination with `Path = Ladder` on links. This will prevent bots from pressing e (and/or jumping) when they need to leave a ladder.
   - Link parameters:
     - Cost: Add a penalty for paths using this link. Higher values makes it less likely for bots to use a path containing this link.
     - Direction = Forward: Only allow paths from the first to the second element of the link. `!bot setparam 1-2 Direction Forward` will only allow the bot to move from 1 to 2.
@@ -172,6 +175,7 @@ Be sure to follow all the other necessary steps as described in [#Installation](
     - Pouncing = Needed: Only classes with the ability to pounce/leap can use this link. This parameter will make the bot pounce towards the target node once it reaches the first node.
     - CrabPouncing = Needed: Only (headcrab like) classes with the ability to pounce/leap can use this link. This parameter will make the bot pounce towards the target node once it reaches the first node.
     - Jumping = Needed: Only bots that can jump high enough can pass this link. The needed jump height is automatically determined from the height difference of the two nodes. This parameter will make bots jump just before they reach the perimeter of the target node, but only if the target node is above the first node.
+    - Path = Ladder: Marks this link as part of a ladder. The bot will press e (and jump) when he needs to leave a ladder. Useful on links for `func_useableladder` brushes.
 - Use `!bot reloadmesh` to discard changes.
 - Use `!bot savemesh` to save the changes to `garrysmod/data/d3bot/navmesh/map/<mapname>.txt`.
 - Use `!bot setmapparam <name> <value>` (example: `!bot setmapparam botmod 5`) to set or unset (by omitting \<value\>) map specific parameters:
