@@ -199,7 +199,8 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
 		mem.IsOnLadder = false
 
-		if bot:IsOnGround() or bot:WaterLevel() > 0 then
+		local botOnGround = bot:IsOnGround()
+		if botOnGround or bot:WaterLevel() > 0 then
 			-- If we should climb, jump while we're on the ground.
 			if shouldClimb or jumpParam == "Always" or jumpToParam == "Always" then
 				actions.Jump = true
@@ -229,7 +230,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			actions.Duck = true
 		end
 
-		if shouldClimb then
+		if shouldClimb and not botOnGround then
 			-- If we are airborne and should be climbing, try to climb the surface.
 			actions.Attack2 = true
 			-- Calculate climbing speeds.
