@@ -168,6 +168,7 @@ return function(lib)
 	function fallback:InvalidateCache()
 		for id, link in pairs(lib.MapNavMesh.LinkById) do
 			link.CachedDist = nil -- Used to speed up path finding.
+			link.CachedZDiff = nil
 		end
 	end
 

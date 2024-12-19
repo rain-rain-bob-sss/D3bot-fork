@@ -199,7 +199,8 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
 		mem.IsOnLadder = false
 
-		if bot:IsOnGround() or bot:WaterLevel() > 0 then
+		local botOnGround = bot:IsOnGround()
+		if botOnGround or bot:WaterLevel() > 0 then
 			-- If we should climb, jump while we're on the ground.
 			if shouldClimb or jumpParam == "Always" or jumpToParam == "Always" then
 				actions.Jump = true
@@ -227,21 +228,23 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			end
 		else
 			actions.Duck = true
-			if shouldClimb then
-				-- If we are airborne and should be climbing, try to climb the surface.
-				actions.Attack2 = true
-				-- Calculate climbing speeds.
-				---@type GWeapon|table
-				local weapon = bot:GetActiveWeapon()
-				if weapon and weapon.GetClimbing and weapon:GetClimbing() then
-					local yaw1 = bot:GetForward():Angle().yaw
-					local yaw2 = Vector(pos.x-origin.x, pos.y-origin.y, 0):Angle().yaw
-					movementVector.y = math.AngleDifference(yaw2, yaw1)
-					movementVector.x = (pos.z - origin.z + 20) * 10
-					if (math.abs(movementVector.x) < 20 or bot:GetVelocity():Length() < 10) and math.abs(movementVector.y) > 1 then movementVector.x = 0 end
-				end
+		end
+
+		if shouldClimb and not botOnGround then
+			-- If we are airborne and should be climbing, try to climb the surface.
+			actions.Attack2 = true
+			-- Calculate climbing speeds.
+			---@type GWeapon|table
+			local weapon = bot:GetActiveWeapon()
+			if weapon and weapon.GetClimbing and weapon:GetClimbing() then
+				local yaw1 = bot:GetForward():Angle().yaw
+				local yaw2 = Vector(pos.x-origin.x, pos.y-origin.y, 0):Angle().yaw
+				movementVector.y = math.AngleDifference(yaw2, yaw1)
+				movementVector.x = (pos.z - origin.z + 20) * 10
+				if (math.abs(movementVector.x) < 20 or bot:GetVelocity():Length() < 10) and math.abs(movementVector.y) > 1 then movementVector.x = 0 end
 			end
 		end
+		
 	elseif minorStuck then
 		-- Stuck on ladder
 		actions.Jump = true
