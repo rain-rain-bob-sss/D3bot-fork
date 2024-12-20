@@ -82,7 +82,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 				bot:D3bot_AngsRotateTo((-tr.HitNormal):Angle(), 1)
 			end
 		else
-			bot:D3bot_AngsRotateTo(Vector(pos.x-origin.x, pos.y-origin.y, 0):Angle(), 1)
+			bot:D3bot_AngsRotateTo(Vector(pos.x-origin.x, pos.y-origin.y, 0):Angle(), 0.5)
 		end
 	else
 		if mem.BarricadeAttackEntity and mem.BarricadeAttackPos and mem.BarricadeAttackEntity:IsValid() and mem.BarricadeAttackPos:DistToSqr(origin) < 100*100 then
