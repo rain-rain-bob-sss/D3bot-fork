@@ -142,7 +142,11 @@ function HANDLER.ThinkFunction(bot)
 			local ammo = v:Clip1() + bot:GetAmmoCount(ammoType)
 			-- Silly cheat to prevent bots from running out of ammo TODO: Add buy logic
 			if ammo == 0 then
-				bot:SetAmmo(50, ammoType)
+				if bot:IsBot() then
+					bot:SetAmmo(50, ammoType)
+				else
+					bot:ConCommand("zs_quickbuyammo")
+				end
 			end
 			
 			if ammo > 0 and enemyDistance < maxDistance and bestRating < rating and weaponType == HANDLER.Weapon_Types.RANGED then
