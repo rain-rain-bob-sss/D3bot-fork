@@ -52,7 +52,12 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
-	local currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+	local currentLinkOrNil
+	if D3bot.UsingSourceNav then
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil)
+	else
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+	end
 
 	local offshootAngle = angle_zero
 	local origin = bot:GetPos()
@@ -307,7 +312,12 @@ function D3bot.Basics.WalkAttackAuto(bot)
 
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
-	local currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+	local currentLinkOrNil
+	if D3bot.UsingSourceNav then
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil)
+	else
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+	end
 
 	local actions = {}
 

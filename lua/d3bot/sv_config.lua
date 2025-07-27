@@ -15,8 +15,8 @@ D3bot.NodeBlockingMap = {
 	classes = {func_breakable = true, prop_dynamic = true, prop_door_rotating = true, func_door = true, func_movelinear = true}
 }
 
-D3bot.ValveNav = true							-- Enable the auto-genernated nav-mesh. (Created with "nav_generate")
-D3bot.ValveNavOverride = false					-- Enable overriding the manually created nav-mesh with the auto-generated.
+D3bot.ValveNav = true						-- Enable the use of auto-generated nav-meshes ("SourceNav"). You can create these by using the console command "nav_generate".
+D3bot.ValveNavOverride = false				-- When true: Prefer auto-generated nav-meshes ("SourceNav") over manually created nav-meshes ("D3botNav").
 
 D3bot.NodeDamageEnts = {"prop_*turret", "prop_arsenalcrate", "prop_resupply"}
 
