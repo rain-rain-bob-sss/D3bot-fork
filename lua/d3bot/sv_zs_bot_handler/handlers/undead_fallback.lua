@@ -197,7 +197,7 @@ local potEntTargets = nil
 ---@param target GPlayer|GEntity|any
 function HANDLER.CanBeTgt(bot, target)
 	if not target or not IsValid(target) then return end
-	if target:IsPlayer() and target ~= bot and target:Team() ~= TEAM_UNDEAD and target:GetObserverMode() == OBS_MODE_NONE and not target:IsFlagSet(FL_NOTARGET) and target:Alive() then return true end
+	if target:IsPlayer() and target ~= bot and (target:Team() ~= TEAM_UNDEAD and not GAMEMODE:GetEndRound()) and target:GetObserverMode() == OBS_MODE_NONE and not target:IsFlagSet(FL_NOTARGET) and target:Alive() then return true end
 	if target:GetClass() == "prop_obj_sigil" and target:GetSigilCorrupted() then return false end -- Special case to ignore corrupted sigils.
 	if potEntTargets and table.HasValue(potEntTargets, target) then return true end
 
