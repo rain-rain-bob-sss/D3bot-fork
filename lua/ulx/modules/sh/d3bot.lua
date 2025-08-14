@@ -7,6 +7,13 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 		pl:ChatPrint(hint)
 	end)
 
+	local GunCanUse = function(ply)
+		local reloadspeed = ply.ReloadSpeedMultiplier
+		local aimspread = ply.AimSpreadMul
+		if reloadspeed <= 0.5 --[[or aimspread >= 2]] then return false end
+		return true
+	end
+
 	local loadouts = {
 		--Peashooter loadout
 		{
@@ -14,7 +21,8 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			"weapon_zs_peashooter",
 			ammo = {
 				pistol = 28 + 42
-			}
+			},
+			CanUse = GunCanUse
 		},
 		--Battleaxe loadout
 		{
@@ -22,7 +30,8 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			"weapon_zs_battleaxe",
 			ammo = {
 				pistol = 28 + 42
-			}
+			},
+			CanUse = GunCanUse
 		},
 		--Pulse loadout
 		{
@@ -30,7 +39,8 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			"weapon_zs_z9000",
 			ammo = {
 				pulse = 60 + 90
-			}
+			},
+			CanUse = GunCanUse
 		},
 		--Medic loadout
 		{
@@ -63,22 +73,18 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			CanUse = function(ply)
 
 				if ply:GetMaxHealth() <= 80 then return false end
+				if ply:IsSkillActive(SKILL_D_FRAIL or 71) or ply:IsSkillActive(SKILL_D_CLUMSY or 58) then return false end
 
-				local c = 0
-				local skills = ply:GetDesiredActiveSkills()
-				local sc = #skills
-				for skillid,active in pairs(skills) do 
-					if active then
-						local skill = GAMEMODE.Skills[skillid]
-						if not skill then continue end
-						if skill.Tree == (TREE_MELEETREE or 5) then 
-							c = c + 1
-						end
-					end
-				end
-				return ((c/sc) >= 0.5) or c > 8
+				local delay = ply.MeleeSwingDelayMul or 1
+				local takendmg = ply.MeleeDamageTakenMul or 1
+				local dmg = ply.MeleeDamageMultiplier or 1
+				local bloodarmor = ply.MaxBloodArmor or 20
+				local bloodarmordamagereduction = ply.BloodArmorDamageReductionAdd or 0
+				if dmg <= 0.6 or delay >= 1.5 or takendmg >= 1.5 or bloodarmor <= 15 or bloodarmordamagereduction <= -0.5 then return false end
+				return true
 			end
 		},
+		--[[
 		--Cader loadout
 		{
 			{"weapon_zs_plank","weapon_zs_swissarmyknife"},
@@ -89,6 +95,7 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 				return not ply:IsSkillActive(SKILL_D_NOODLEARMS or 55)
 			end
 		}
+		]]
 	}
 	
 	function ulx.giveHumanLoadout(pl,redeem)
@@ -99,6 +106,11 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			if loadout.CanUse and not loadout.CanUse(pl) then continue end
 			loadouts2[#loadouts2+1] = loadout
 		end
+
+		if #loadouts2 == 0 then
+			loadouts2[1] = loadouts[1] --Wow YOU ARE FUCKING BAD AT EVERYTHING
+		end
+
 		local loadout = table.Random(loadouts2)
 		for k,v in pairs(loadout) do 
 			if k == "ammo" then 
@@ -109,10 +121,12 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 				if istable(v) then 
 					v = table.Random(v)
 				end
-				if redeem then 
-					if weapons.Get(v.."_q2") then v = v.."_q2" end
+				if isstring(v) then
+					if redeem then 
+						if weapons.Get(v.."_q2") then v = v.."_q2" end
+					end
+					pl:Give(v)
 				end
-				pl:Give(v)
 			end
 		end
 	end
