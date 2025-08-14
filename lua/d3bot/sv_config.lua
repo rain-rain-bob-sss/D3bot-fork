@@ -44,6 +44,7 @@ D3bot.SurvivorsEnabled = false			-- If true, survivor bots are allowed to exists
 
 D3bot.IsSelfRedeemEnabled = false		-- Enable or disable the !human command.
 D3bot.SelfRedeemWaveMax = 1				-- The maximum wave a player can use !human. (Setting it to 2 would allow the players to redeem in the first and second wave)
+D3bot.AllowLastHumanRedeem = false      -- Self Explainy
 D3bot.StartBonus = nil					-- Number of additional points, that players get at the start of a round.
 
 D3bot.DisableBotCrows = false			-- Disable crows from being controlled by the bot.

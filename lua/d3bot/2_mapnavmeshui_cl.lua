@@ -1,5 +1,24 @@
 
 return function(lib)
+
+	surface.CreateFont("HudDefault2", {
+		font = "Verdana",
+		size = ScreenScaleH(9),
+		weight = 700,
+		blursize = 0,
+		scanlines = 0,
+		antialias = true,
+	})
+
+	surface.CreateFont("HudDefault2Large", {
+		font = "Verdana",
+		size = ScreenScaleH(12),
+		weight = 700,
+		blursize = 0,
+		scanlines = 0,
+		antialias = true,
+	})
+
 	local from = lib.From
 
 	local isEnabled = false
@@ -444,10 +463,10 @@ return function(lib)
 					local itemPos = item:GetFocusPos()
 					if isCursored or itemPos:DistToSqr(eyePos) <= maxDrawingDistanceSqr then
 						local pos = itemPos:ToScreen()
-						if pos.visible and (not smartDraw or isNodeIdVisible(id)) then
+						if pos.visible and (not smartDraw or isNodeIdVisible(id) or isHighlightedById[id]) then
 							local paramsQuery = from(item.Params)
 							if not isCursored then paramsQuery:Where(function(name) return not isHiddenParamByParamName[name] end) end
-							local txt = item.Id .. ":\n" .. paramsQuery:Sel(function(name, v) return nil, name .. " = " .. v end):Sort():Join("\n").R
+							local txt = (isHighlightedById[id] and "[SELECTED] " or "") .. item.Id .. ":\n" .. paramsQuery:Sel(function(name, v) return nil, name .. " = " .. v end):Sort():Join("\n").R
 							local txtW, txtH = surface.GetTextSize(txt)
 							local w = txtW + 10
 							local h = txtH + 10
@@ -461,15 +480,36 @@ return function(lib)
 				end
 
 				local editmodeid = lib.MapNavMeshEditMode
-				for i, mod in ipairs(editModes) do
-					draw.SimpleText(string.format("[%s] %s", i, mod.Name), "HudDefault", 100, ScrH()/2+(i*20), editmodeid == i and lib.Color.Red or lib.Color.White)
+				do
+					local y = 0
+					for i, mod in ipairs(editModes) do
+						local text = string.format("[%s] %s", i, mod.Name)
+						draw.SimpleText(text, "HudDefault2" .. (editmodeid == i and "Large" or ""), 100, ScrH()/2+y, editmodeid == i and lib.Color.Red or lib.Color.White)
+						local w,h = surface.GetTextSize(text)
+						y = y + h
+					end
+				end
+			end)
+
+			hook.Add("PlayerBindPress",hooksId,function(ply,bind,pressed,code)
+
+				if not ply:GetNWBool("D3Bot_NoWeapons") then return end
+
+				if string.StartsWith(bind,"slot") then return true end
+				if (bind == "invprev" or bind == "invnext") then 
+					if pressed then
+						net.Start("d3bot_selecting")
+						net.WriteBool(bind == "invprev")
+						net.SendToServer()
+					end
+					return true 
 				end
 			end)
 		else
 			hook.Remove("Think", hooksId)
 			hook.Remove("PostDrawOpaqueRenderables", hooksId)
 			hook.Remove("HUDPaint", hooksId)
+			hook.Remove("PlayerBindPress", hooksId)
 		end
 	end
 end
-

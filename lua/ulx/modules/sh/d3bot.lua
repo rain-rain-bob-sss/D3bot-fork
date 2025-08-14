@@ -6,11 +6,100 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 		pl:PrintMessage(HUD_PRINTCENTER, hint)
 		pl:ChatPrint(hint)
 	end)
+
+	local loadouts = {
+		--Peashooter loadout
+		{
+			"weapon_zs_plank",
+			"weapon_zs_peashooter",
+			ammo = {
+				pistol = 28 + 42
+			}
+		},
+		--Battleaxe loadout
+		{
+			"weapon_zs_knife",
+			"weapon_zs_battleaxe",
+			ammo = {
+				pistol = 28 + 42
+			}
+		},
+		--Medic loadout
+		{
+			"weapon_zs_knife",
+			"weapon_zs_medicalkit",
+			"weapon_zs_medicgun",
+			ammo = {
+				Battery = 60 + 90
+			},
+			CanUse = function(ply)
+				local c = 0
+				local skills = ply:GetDesiredActiveSkills()
+				local sc = #skills
+				for skillid,active in pairs(skills) do 
+					if active then
+						local skill = GAMEMODE.Skills[skillid]
+						if not skill then continue end
+						if skill.Tree == (TREE_SUPPORTTREE or 3) then 
+							c = c + 1
+						end
+					end
+				end
+				return ((c/sc) >= 0.5) or c > 8
+			end
+		},
+		--Melee loadout
+		{
+			"weapon_zs_axe",
+			"weapon_zs_crowbar",
+			CanUse = function(ply)
+
+				if ply:GetMaxHealtth() <= 80 then return false end
+
+				local c = 0
+				local skills = ply:GetDesiredActiveSkills()
+				local sc = #skills
+				for skillid,active in pairs(skills) do 
+					if active then
+						local skill = GAMEMODE.Skills[skillid]
+						if not skill then continue end
+						if skill.Tree == (TREE_MELEETREE or 5) then 
+							c = c + 1
+						end
+					end
+				end
+				return ((c/sc) >= 0.5) or c > 8
+			end
+		},
+		--Cader loadout
+		{
+			"weapon_zs_hammer",
+			"weapon_zs_boardpack",
+			CanUse = function(ply)
+				if #player.GetHumans() <= 2 then return false end
+				return not ply:IsSkillActive(SKILL_D_NOODLEARMS or 55)
+			end
+		}
+	}
 	
 	function ulx.giveHumanLoadout(pl)
 		pl:Give("weapon_zs_fists")
-		pl:Give("weapon_zs_peashooter")
-		pl:GiveAmmo(50, "pistol")
+		local loadouts2 = {}
+		for _,loadout in ipairs(loadouts) do 
+			if loadout.Ignore then continue end
+			if loadout.CanUse and not loadout.CanUse(pl) then continue end
+			loadouts2[#loadouts2+1] = loadout
+		end
+		local loadout = table.Random(loadouts2)
+		for k,v in pairs(loadout) do 
+			if k == "ammo" then 
+				for type,amount in pairs(v) do 
+					pl:GiveAmmo(amount,type,true)
+				end
+			else
+				pl:Give(v)
+			end
+		end
 	end
 	
 	function ulx.tryBringToHumans(pl)
@@ -64,7 +153,7 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			pl:PrintMessage(HUD_PRINTCENTER, response)
 			return
 		end
-		if LASTHUMAN and not GAMEMODE.RoundEnded then
+		if LASTHUMAN and not GAMEMODE.RoundEnded and not D3Bot.AllowLastHumanRedeem then
 			local response = translate.ClientGet(pl, "D3bot_noredeemlasthuman")
 			pl:ChatPrint(response)
 			pl:PrintMessage(HUD_PRINTCENTER, response)

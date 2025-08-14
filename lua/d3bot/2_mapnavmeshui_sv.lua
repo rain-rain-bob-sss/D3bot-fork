@@ -1,5 +1,8 @@
 
 return function(lib)
+
+	util.AddNetworkString("d3bot_selecting")
+
 	local from = lib.From
 
 	local function getCursoredPosOrNil(pl)
@@ -217,19 +220,22 @@ return function(lib)
 			table.insert(subscribers, pl)
 			lib.UploadMapNavMesh(pl)
 
-			pl.m_Weapons = {}
-			for i, weap in ipairs(pl:GetWeapons()) do
-				table.insert(pl.m_Weapons, weap:GetClass())
-			end
-			pl:StripWeapons()
-
 			if isSpectator then
 				pl.m_LastPos = pl:GetPos()
 				pl.m_LastEyeAngles = pl:EyeAngles()
 				pl.m_Spectate = true
 
+				pl.m_Weapons = {}
+				for i, weap in ipairs(pl:GetWeapons()) do
+					table.insert(pl.m_Weapons, {weap:GetClass(),weap:Clip1(),weap:Clip2()})
+				end
+				pl:StripWeapons()
+
 				pl:KillSilent()
 				pl:Spectate(OBS_MODE_ROAMING)
+			elseif subscriptionTypeOrNil ~= "view" then
+				pl:SetNWBool("D3Bot_NoWeapons",true)
+				pl:SetActiveWeapon(NULL)
 			end
 
 			pl:SendLua(lib.GlobalK .. ".SetIsMapNavMeshViewEnabled(true)")
@@ -250,11 +256,15 @@ return function(lib)
 
 			if pl.m_Weapons then
 				for i, weap in pairs(pl.m_Weapons) do
-					pl:Give(weap, true)
+					local wep = pl:Give(weap[1], true)
+					wep:SetClip1(weap[2])
+					wep:SetClip2(weap[3])
 				end
 			end
 
 			pl.m_Weapons = nil
+			pl:SetNWBool("D3Bot_NoWeapons",false)
+			timer.Simple(0,function() pl:SelectWeapon(table.Random(pl:GetWeapons():GetClass())) end)
 
 			pl:SendLua(lib.GlobalK .. ".SetIsMapNavMeshViewEnabled(false)")
 		end
@@ -301,6 +311,7 @@ return function(lib)
 			else
 				editModeByPl[pl] = (editModeByPl[pl] % #editModes) + 1
 				pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. editModeByPl[pl])
+				pl:SetActiveWeapon(NULL)
 			end
 		else
 			local func = editModes[editModeByPl[pl]].FuncByKey[key]
@@ -317,7 +328,25 @@ return function(lib)
 				end
 				editModeByPl[pl] = key - 1
 				pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. key - 1)
+				pl:SetActiveWeapon(NULL)
 			end
 		end
+	end)
+
+
+	net.Receive("d3bot_selecting",function(len,ply)
+		if subscriptionTypeOrNilByPl[ply] ~= "edit" then return end
+		local current = editModeByPl[ply]
+		local prev = net.ReadBool()
+		local target
+		if prev then
+			target = current - 1
+			if target <= 0 then target = #editModes end
+		else
+			target = math.Clamp((current % #editModes) + 1,1,#editModes)
+		end
+		editModeByPl[ply] = target
+		ply:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. target)
+		ply:SetActiveWeapon(NULL)
 	end)
 end
