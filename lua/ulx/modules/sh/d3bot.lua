@@ -10,7 +10,7 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 	local loadouts = {
 		--Peashooter loadout
 		{
-			"weapon_zs_plank",
+			{"weapon_zs_plank","weapon_zs_swissarmyknife"},
 			"weapon_zs_peashooter",
 			ammo = {
 				pistol = 28 + 42
@@ -18,15 +18,23 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 		},
 		--Battleaxe loadout
 		{
-			"weapon_zs_knife",
+			{"weapon_zs_plank","weapon_zs_swissarmyknife"},
 			"weapon_zs_battleaxe",
 			ammo = {
 				pistol = 28 + 42
 			}
 		},
+		--Pulse loadout
+		{
+			"weapon_zs_stunbaton",
+			"weapon_zs_z9000",
+			ammo = {
+				pulse = 60 + 90
+			}
+		},
 		--Medic loadout
 		{
-			"weapon_zs_knife",
+			{"weapon_zs_plank","weapon_zs_swissarmyknife"},
 			"weapon_zs_medicalkit",
 			"weapon_zs_medicgun",
 			ammo = {
@@ -50,11 +58,11 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 		},
 		--Melee loadout
 		{
-			"weapon_zs_axe",
-			"weapon_zs_crowbar",
+			{"weapon_zs_plank","weapon_zs_swissarmyknife"},
+			{"weapon_zs_axe","weapon_zs_crowbar"},
 			CanUse = function(ply)
 
-				if ply:GetMaxHealtth() <= 80 then return false end
+				if ply:GetMaxHealth() <= 80 then return false end
 
 				local c = 0
 				local skills = ply:GetDesiredActiveSkills()
@@ -73,16 +81,17 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 		},
 		--Cader loadout
 		{
+			{"weapon_zs_plank","weapon_zs_swissarmyknife"},
 			"weapon_zs_hammer",
 			"weapon_zs_boardpack",
 			CanUse = function(ply)
-				if #player.GetHumans() <= 2 then return false end
+				if #player.GetHumans() <= 2 then return false end --what the fuck no weapons what can i do?
 				return not ply:IsSkillActive(SKILL_D_NOODLEARMS or 55)
 			end
 		}
 	}
 	
-	function ulx.giveHumanLoadout(pl)
+	function ulx.giveHumanLoadout(pl,redeem)
 		pl:Give("weapon_zs_fists")
 		local loadouts2 = {}
 		for _,loadout in ipairs(loadouts) do 
@@ -97,6 +106,12 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 					pl:GiveAmmo(amount,type,true)
 				end
 			else
+				if istable(v) then 
+					v = table.Random(v)
+				end
+				if redeem then 
+					if weapons.Get(v.."_q2") then v = v.."_q2" end
+				end
 				pl:Give(v)
 			end
 		end
@@ -122,65 +137,80 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 	local nextByPl = {}
 	local tierByPl = {}
 	function ulx.human(pl)
-		if not D3bot.IsEnabledCached then
-			local response = translate.ClientGet(pl, "D3bot_botmapsonly")
-			pl:ChatPrint(response)
-			pl:PrintMessage(HUD_PRINTCENTER, response)
-			return
-		end
-		if not D3bot.IsSelfRedeemEnabled then
-			local response = translate.ClientGet(pl, "D3bot_selfredeemdisabled")
-			pl:ChatPrint(response)
-			pl:PrintMessage(HUD_PRINTCENTER, response)
-			return
-		end
-		if GAMEMODE:GetWave() > D3bot.SelfRedeemWaveMax then
-			local response = translate.ClientFormat(pl, "D3bot_toolate", D3bot.SelfRedeemWaveMax + 1)
-			pl:ChatPrint(response)
-			pl:PrintMessage(HUD_PRINTCENTER, response)
-			return
-		end
-		if pl:Team() == TEAM_HUMAN then
-			local response = translate.ClientGet(pl, "D3bot_alreadyhum")
-			pl:ChatPrint(response)
-			pl:PrintMessage(HUD_PRINTCENTER, response)
-			return
-		end
-		local remainingTime = (nextByPl[pl] or 0) - CurTime()
-		if remainingTime > 0 then
-			local response = translate.ClientFormat(pl, "D3bot_selfredeemrecenty", math.ceil(remainingTime))
-			pl:ChatPrint(response)
-			pl:PrintMessage(HUD_PRINTCENTER, response)
-			return
-		end
-		if LASTHUMAN and not GAMEMODE.RoundEnded and not D3Bot.AllowLastHumanRedeem then
-			local response = translate.ClientGet(pl, "D3bot_noredeemlasthuman")
-			pl:ChatPrint(response)
-			pl:PrintMessage(HUD_PRINTCENTER, response)
-			return
-		end
+
 		if GAMEMODE.ZombieEscape then
 			local response = translate.ClientGet(pl, "D3bot_noredeemzombieescape")
 			pl:ChatPrint(response)
 			pl:PrintMessage(HUD_PRINTCENTER, response)
 			return
 		end
-		local nextTier = (tierByPl[pl] or 0) + 1
-		tierByPl[pl] = nextTier
-		local cooldown = nextTier * 30
-		nextByPl[pl] = CurTime() + cooldown
-		local response = translate.ClientFormat(pl, "D3bot_selfredeemcooldown", math.ceil(cooldown))
-		pl:ChatPrint(response)
-		pl:PrintMessage(HUD_PRINTCENTER, response)
-		pl:ChangeTeam(TEAM_HUMAN)
-		pl:SetDeaths(0)
-		pl:SetPoints(0)
-		pl:DoHulls()
-		pl:UnSpectateAndSpawn()
-		pl:StripWeapons()
-		pl:StripAmmo()
-		ulx.giveHumanLoadout(pl)
-		ulx.tryBringToHumans(pl)
+
+		local isRedeem = pl:Team() == TEAM_UNDEAD and (pl:Frags() >= GAMEMODE:GetRedeemBrains())
+
+		if not isRedeem then
+
+			if not D3bot.IsEnabledCached then
+				local response = translate.ClientGet(pl, "D3bot_botmapsonly")
+				pl:ChatPrint(response)
+				pl:PrintMessage(HUD_PRINTCENTER, response)
+				return
+			end
+			if not D3bot.IsSelfRedeemEnabled then
+				local response = translate.ClientGet(pl, "D3bot_selfredeemdisabled")
+				pl:ChatPrint(response)
+				pl:PrintMessage(HUD_PRINTCENTER, response)
+				return
+			end
+			if GAMEMODE:GetWave() > D3bot.SelfRedeemWaveMax then
+				local response = translate.ClientFormat(pl, "D3bot_toolate", D3bot.SelfRedeemWaveMax + 1)
+				pl:ChatPrint(response)
+				pl:PrintMessage(HUD_PRINTCENTER, response)
+				return
+			end
+			if pl:Team() == TEAM_HUMAN then
+				local response = translate.ClientGet(pl, "D3bot_alreadyhum")
+				pl:ChatPrint(response)
+				pl:PrintMessage(HUD_PRINTCENTER, response)
+				return
+			end
+			local remainingTime = (nextByPl[pl] or 0) - CurTime()
+			if remainingTime > 0 then
+				local response = translate.ClientFormat(pl, "D3bot_selfredeemrecenty", math.ceil(remainingTime))
+				pl:ChatPrint(response)
+				pl:PrintMessage(HUD_PRINTCENTER, response)
+				return
+			end
+			if LASTHUMAN and not GAMEMODE.RoundEnded and not D3Bot.AllowLastHumanRedeem then
+				local response = translate.ClientGet(pl, "D3bot_noredeemlasthuman")
+				pl:ChatPrint(response)
+				pl:PrintMessage(HUD_PRINTCENTER, response)
+				return
+			end
+			local nextTier = (tierByPl[pl] or 0) + 1
+			tierByPl[pl] = nextTier
+			local cooldown = nextTier * 30
+			nextByPl[pl] = CurTime() + cooldown
+			local response = translate.ClientFormat(pl, "D3bot_selfredeemcooldown", math.ceil(cooldown))
+			pl:ChatPrint(response)
+			pl:PrintMessage(HUD_PRINTCENTER, response)
+		end
+
+		if isRedeem then
+			pl:Redeem()
+			ulx.giveHumanLoadout(pl,true)
+			ulx.tryBringToHumans(pl)
+		else
+			pl:ChangeTeam(TEAM_HUMAN)
+			pl:SetDeaths(0)
+			pl:SetPoints(0)
+			pl:DoHulls()
+			pl:UnSpectateAndSpawn()
+			pl:StripWeapons()
+			pl:StripAmmo()
+			ulx.giveHumanLoadout(pl)
+			ulx.tryBringToHumans(pl)
+		end
+		
 	end
 	local cmd = ulx.command("Zombie Survival", "ulx human", ulx.human, "!human", true)
 	cmd:defaultAccess(ULib.ACCESS_ALL)
