@@ -1,7 +1,9 @@
 # D3bot
+# FORK
 
 A very primitive AI for GMod bots primarily designed to work with Jetboom's Zombie Survival gamemode.
-This is a fork of [/Azurblau/AzBot](https://github.com/Azurblau/AzBot) with new features and bug fixes.
+This is a fork of [Azurblau/AzBot](https://github.com/Azurblau/AzBot) with new features and bug fixes.
+This is a fork of [Dadido3/D3Bot](https://github.com/Dadido3/D3Bot) with new features and bug fixes.
 
 Here is a list of notable changes compared to the original version:
 
