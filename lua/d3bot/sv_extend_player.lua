@@ -307,7 +307,9 @@ function meta:D3bot_InitializeOrReset()
 		-- Calculate hull heights.
 
 		-- TODO: We could query the hulls and the jump power directly from the player entity instead of the zombie class table
-		local myClass = self:GetZombieClassTable()
+		local myClass = self.GetZombieClassTable and self:GetZombieClassTable() or {
+			JumpPower = self:GetJumpPower(),
+		}
 		mem.Height = (myClass.Hull and myClass.Hull[2].z or 72) * self:GetModelScale()
 		mem.CrouchHeight = (myClass.HullDuck and myClass.HullDuck[2].z or 36) * self:GetModelScale()
 

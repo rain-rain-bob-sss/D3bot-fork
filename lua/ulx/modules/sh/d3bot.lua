@@ -299,15 +299,67 @@ registerSuperadminCmd("RefreshMeshView", function(caller)
 	caller:ChatPrint("Refreshed.")
 end)
 
+local shortkey = {
+	D = "Direction",
+	P = "Pouncing",
+	Cond = "Condition",
+	DPS = "DMGPerSecond",
+	CrabP = "CrabPouncing",
+	J = "Jumping",
+}
+
+local shortvalue = {
+	F = "Forward",
+	B = "Backward",
+	S = "Straight",
+	N = "Needed",
+	L = "Ladder",
+}
+
+local function a(key,value)
+	return shortkey[key] or key,shortvalue[value] or value
+end
+
+if SERVER then 
+	util.AddNetworkString("d3bot_error")
+else
+	net.Receive("d3bot_error",function()
+		chat.AddText(Color(255,0,0),net.ReadString())
+	end)
+end
+
 registerSuperadminCmd("SetParam", strParam, strParam, optionalStrParam, function(caller, id, name, serializedNumOrStrOrEmpty)
 	D3bot.TryCatch(function()
+		name, serializedNumOrStrOrEmpty = a(name, serializedNumOrStrOrEmpty)
 		D3bot.MapNavMesh.ItemById[D3bot.DeserializeNavMeshItemId(id)]:SetParam(name, serializedNumOrStrOrEmpty)
 		D3bot.lastParamKey = name
 		D3bot.lastParamValue = serializedNumOrStrOrEmpty
 		D3bot.MapNavMesh:InvalidateCache()
 		D3bot.UpdateMapNavMeshUiSubscribers()
 	end, function(errorMsg)
+		net.Start("d3bot_error") net.WriteString(errorMsg) net.Send(caller)
 		caller:ChatPrint("Error. Re-check your parameters.")
+	end)
+end)
+
+local lib
+
+registerSuperadminCmd("QSetParam", strParam, optionalStrParam, function(caller, name, serializedNumOrStrOrEmpty)
+	if not lib then lib = D3bot end
+	D3bot.TryCatch(function()
+		name, serializedNumOrStrOrEmpty = a(name, serializedNumOrStrOrEmpty)
+		local item = lib.MapNavMesh:GetCursoredItemOrNil(caller)
+		if not item then 
+			Error("Point at a node/area.")
+		end
+		D3bot.MapNavMesh.ItemById[D3bot.DeserializeNavMeshItemId(item.Id)]:SetParam(name, serializedNumOrStrOrEmpty)
+		D3bot.lastParamKey = name
+		D3bot.lastParamValue = serializedNumOrStrOrEmpty
+		D3bot.MapNavMesh:InvalidateCache()
+		D3bot.UpdateMapNavMeshUiSubscribers()
+	end, function(errorMsg)
+		net.Start("d3bot_error") net.WriteString(errorMsg) net.Send(caller)
+		caller:ChatPrint("Error.")
 	end)
 end)
 
@@ -480,10 +532,10 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			end
 		end
 	end)
-	
-	registerSuperadminCmd("Control", plsParam, function(caller, pls) for k, pl in pairs(pls) do pl:D3bot_InitializeOrReset() end end)
-	registerSuperadminCmd("Uncontrol", plsParam, function(caller, pls) for k, pl in pairs(pls) do pl:D3bot_Deinitialize() end end)
 end
+
+registerSuperadminCmd("Control", plsParam, function(caller, pls) for k, pl in pairs(pls) do pl:D3bot_InitializeOrReset() end end)
+registerSuperadminCmd("Uncontrol", plsParam, function(caller, pls) for k, pl in pairs(pls) do pl:D3bot_Deinitialize() end end)
 
 -- TODO: Add user command to check the version of D3bot
 

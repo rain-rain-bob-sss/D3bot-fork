@@ -45,9 +45,16 @@ return function(lib)
 		if not excludeZOrNil and getCursoredDirection(angs.p) == 0 then return "Z" end
 		return getCursoredDirection(angs.y) == 1 and "X" or "Y"
 	end
+
+	local function setParam(link,name,value)
+		lib.MapNavMesh.ItemById[lib.DeserializeNavMeshItemId(link.Id)]:SetParam(name, value)
+		lib.lastParamKey = name
+		lib.lastParamValue = value
+	end
 	
 	local editModes = {
-		{	Name = "Create Node",
+		{	
+			Name = "Create Node",
 			FuncByKey = {
 				[IN_ATTACK] = function(pl)
 					local cursoredPos = getCursoredPosOrNil(pl)
@@ -56,8 +63,11 @@ return function(lib)
 					setPos(node, cursoredPos)
 					lib.MapNavMesh:InvalidateCache()
 					lib.UpdateMapNavMeshUiSubscribers()
-				end } },
-		{	Name = "Link Nodes",
+				end 
+			} 
+		},
+		{	
+			Name = "Link Nodes",
 			FuncByKey = {
 				[IN_ATTACK] = function(pl)
 					local selectedNode = getSelectedNodes(pl)[1]
@@ -72,8 +82,11 @@ return function(lib)
 						lib.MapNavMesh:InvalidateCache()
 						lib.UpdateMapNavMeshUiSubscribers()
 					end
-				end } },
-		{	Name = "Merge/Split/Extend Nodes",
+				end 
+			} 
+		},
+		{	
+			Name = "Merge/Split/Extend Nodes",
 			FuncByKey = {
 				[IN_ATTACK] = function(pl)
 					local selectedNode = getSelectedNodes(pl)[1]
@@ -101,8 +114,11 @@ return function(lib)
 					clearSelection(pl)
 					lib.MapNavMesh:InvalidateCache()
 					lib.UpdateMapNavMeshUiSubscribers()
-				end } },
-		{	Name = "Reposition Node",
+				end 
+			} 
+		},
+		{	
+			Name = "Reposition Node",
 			FuncByKey = {
 				[IN_ATTACK] = function(pl)
 					local selectedNode = getSelectedNodes(pl)[1]
@@ -126,8 +142,11 @@ return function(lib)
 					selectedNode:SetParam(cursoredAxisName, round(cursoredPos[cursoredAxisName:lower()]))
 					lib.MapNavMesh:InvalidateCache()
 					lib.UpdateMapNavMeshUiSubscribers()
-				end } },
-		{	Name = "Resize Node Area",
+				end 
+			} 
+		},
+		{	
+			Name = "Resize Node Area",
 			FuncByKey = {
 				[IN_ATTACK] = function(pl)
 					clearSelection(pl)
@@ -144,8 +163,11 @@ return function(lib)
 					selectedNode:SetParam("Area" .. cursoredAxisName .. (cursoredDimension < selectedNode.Pos[cursoredPosKey] and "Min" or "Max"), cursoredDimension)
 					lib.MapNavMesh:InvalidateCache()
 					lib.UpdateMapNavMeshUiSubscribers()
-				end } },
-		{	Name = "Copy Nodes",
+				end 
+			} 
+		},
+		{	
+			Name = "Copy Nodes",
 			FuncByKey = {
 				[IN_ATTACK] = trySelectCursoredNode,
 				[IN_ATTACK2] = function(pl)
@@ -171,8 +193,11 @@ return function(lib)
 					end
 					lib.MapNavMesh:InvalidateCache()
 					lib.UpdateMapNavMeshUiSubscribers()
-				end } },
-		{	Name = "Set/Unset Last Parameter",
+				end 
+			} 
+		},
+		{	
+			Name = "Set/Unset Last Parameter",
 			FuncByKey = {
 				[IN_ATTACK] = function(pl)
 					local item = lib.MapNavMesh:GetCursoredItemOrNil(pl)
@@ -188,8 +213,11 @@ return function(lib)
 					item:SetParam(lib.lastParamKey, "")
 					lib.MapNavMesh:InvalidateCache()
 					lib.UpdateMapNavMeshUiSubscribers()
-				end } },
-		{	Name = "Delete Item or Area",
+				end 
+			} 
+		},
+		{	
+			Name = "Delete Item or Area",
 			FuncByKey = {
 				[IN_ATTACK] = function(pl)
 					local item = lib.MapNavMesh:GetCursoredItemOrNil(pl)
@@ -204,7 +232,90 @@ return function(lib)
 					for idx, name in ipairs{ "AreaXMin", "AreaXMax", "AreaYMin", "AreaYMax" } do item:SetParam(name, "") end
 					lib.MapNavMesh:InvalidateCache()
 					lib.UpdateMapNavMeshUiSubscribers()
-				end } } }
+				end 
+			} 
+		},
+		{	
+			Name = "Link Nodes(Direction:Forward)",
+			FuncByKey = {
+				[IN_ATTACK] = function(pl)
+					local selectedNode = getSelectedNodes(pl)[1]
+					if not selectedNode then
+						clearSelection(pl)
+						trySelectCursoredNode(pl)
+					else
+						local node = getCursoredNodeOrNil(pl)
+						if not node then return end
+						local link = lib.MapNavMesh:ForceGetLink(selectedNode, node)
+						clearSelection(pl)
+						setParam(link,"Direction","Forward")
+						lib.MapNavMesh:InvalidateCache()
+						lib.UpdateMapNavMeshUiSubscribers()
+					end
+				end 
+			} 
+		},
+		{	
+			Name = "Link Nodes(Direction:Backward)",
+			FuncByKey = {
+				[IN_ATTACK] = function(pl)
+					local selectedNode = getSelectedNodes(pl)[1]
+					if not selectedNode then
+						clearSelection(pl)
+						trySelectCursoredNode(pl)
+					else
+						local node = getCursoredNodeOrNil(pl)
+						if not node then return end
+						local link = lib.MapNavMesh:ForceGetLink(selectedNode, node)
+						clearSelection(pl)
+						setParam(link,"Direction","Backward")
+						lib.MapNavMesh:InvalidateCache()
+						lib.UpdateMapNavMeshUiSubscribers()
+					end
+				end 
+			} 
+		},
+		{	
+			Name = "Link Nodes(Jumping:Needed)",
+			FuncByKey = {
+				[IN_ATTACK] = function(pl)
+					local selectedNode = getSelectedNodes(pl)[1]
+					if not selectedNode then
+						clearSelection(pl)
+						trySelectCursoredNode(pl)
+					else
+						local node = getCursoredNodeOrNil(pl)
+						if not node then return end
+						local link = lib.MapNavMesh:ForceGetLink(selectedNode, node)
+						clearSelection(pl)
+						setParam(link,"Jumping","Needed")
+						lib.MapNavMesh:InvalidateCache()
+						lib.UpdateMapNavMeshUiSubscribers()
+					end
+				end 
+			} 
+		},
+		{	
+			Name = "Link Nodes(Pouncing:Needed)",
+			FuncByKey = {
+				[IN_ATTACK] = function(pl)
+					local selectedNode = getSelectedNodes(pl)[1]
+					if not selectedNode then
+						clearSelection(pl)
+						trySelectCursoredNode(pl)
+					else
+						local node = getCursoredNodeOrNil(pl)
+						if not node then return end
+						local link = lib.MapNavMesh:ForceGetLink(selectedNode, node)
+						clearSelection(pl)
+						setParam(link,"Pouncing","Needed")
+						lib.MapNavMesh:InvalidateCache()
+						lib.UpdateMapNavMeshUiSubscribers()
+					end
+				end 
+			} 
+		},
+	}
 	
 	local editModeByPl = {}
 	
@@ -264,7 +375,7 @@ return function(lib)
 
 			pl.m_Weapons = nil
 			pl:SetNWBool("D3Bot_NoWeapons",false)
-			timer.Simple(0,function() pl:SelectWeapon(table.Random(pl:GetWeapons():GetClass())) end)
+			timer.Simple(0,function() pl:SelectWeapon(table.Random(pl:GetWeapons()):GetClass()) end)
 
 			pl:SendLua(lib.GlobalK .. ".SetIsMapNavMeshViewEnabled(false)")
 		end

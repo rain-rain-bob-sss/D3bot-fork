@@ -39,7 +39,7 @@ end
 
 -- IsEnabled returns whether the whole bot logic will be active or not.
 function D3bot.IsEnabled()
-	if engine.ActiveGamemode() ~= "zombiesurvival" then return false end
+	--if engine.ActiveGamemode() ~= "zombiesurvival" then return false end
 
 	-- Check if there is a desired navmesh type.
 	local navmeshType = D3bot.DesiredNavmeshType()

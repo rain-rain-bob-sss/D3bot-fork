@@ -14,7 +14,7 @@ function D3bot.GetBestMeshPathOrNil(startNode, endNode, pathCostFunction, heuris
 	if not abilities then return nil end
 
 	local a_Walk, a_Pounce, a_Climb, a_Crab, a_Jump, a_Height = abilities.Walk, abilities.Pounce, abilities.Climb, abilities.Crab, abilities.Jump, abilities.Height
-	local wave = GAMEMODE:GetWave()
+	local wave = GAMEMODE.GetWave and GAMEMODE:GetWave() or 0
 	-- See: https://en.wikipedia.org/wiki/A*_search_algorithm
 
 	-- Benchmarks:

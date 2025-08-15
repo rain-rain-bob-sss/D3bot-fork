@@ -63,10 +63,12 @@
     "lua.format.useTabs": true,
     "lua.format.lineWidth": 240,
     "Lua.runtime.special": {
-        "include": "require"
+        "include": "dofile",
+        "IncludeCS": "dofile"
     },
     "Lua.workspace.library": [
-        "libgmod/"
+        "libgmod/",
+        "${addons}/garrysmod/module/library"
     ],
     "Lua.diagnostics.globals": [
         "CLIENT",
@@ -91,7 +93,9 @@
     "Lua.runtime.version": "LuaJIT",
     "Lua.runtime.unicodeName": true,
     "Lua.diagnostics.disable": [
-        "missing-parameter"
+        "missing-parameter",
+        "duplicate-set-field"
     ],
-    "Lua.diagnostics.libraryFiles": "Disable"
+    "Lua.diagnostics.libraryFiles": "Disable",
+    "Lua.workspace.checkThirdParty": false
 }

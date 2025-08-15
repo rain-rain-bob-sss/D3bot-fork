@@ -14,20 +14,21 @@ function FindHandler(zombieClass, team)
 	
 	for _, fallback in ipairs({false, true}) do
 		for _, handler in pairs(D3bot.Handlers) do
-			if handler.Fallback == fallback and handler.SelectorFunction(GAMEMODE.ZombieClasses[zombieClass].Name, team) then
+			if handler.Fallback == fallback and handler.SelectorFunction(GAMEMODE.ZombieClasses and GAMEMODE.ZombieClasses[zombieClass].Name or "", team) then
 				handlerLookup[team] = {}
 				handlerLookup[team][zombieClass] = handler
 				return handler
 			end
 		end
 	end
+	return D3Bot.Handlers["Sandbox_Fallback"]
 end
 local FindHandler = FindHandler
 
 hook.Add("StartCommand", D3bot.BotHooksId, function(pl, cmd)
 	if D3bot.IsEnabledCached and pl.D3bot_Mem then
 		
-		local handler = FindHandler(pl:GetZombieClass(), pl:Team())
+		local handler = FindHandler(pl.GetZombieClass and pl:GetZombieClass() or "", pl:Team())
 		handler.UpdateBotCmdFunction(pl, cmd)
 		
 	end
@@ -43,7 +44,7 @@ hook.Add("Think", D3bot.BotHooksId.."🤔", function()
 		
 		if not D3bot.UseConsoleBots then
 			-- Hackish method to get bots back into game. (player.CreateNextBot created bots do not trigger the StartCommand hook while they are dead)
-			if not bot:OldAlive() then
+			if not (bot.OldAlive and bot:OldAlive() or bot:Alive()) then
 				gamemode.Call("PlayerDeathThink", bot)
 				if (not bot.StartSpectating or bot.StartSpectating <= CurTime()) and not (GAMEMODE.RoundEnded or bot.Revive or bot.NextSpawnTime) and bot:GetObserverMode() ~= OBS_MODE_NONE then
 					if GAMEMODE:GetWaveActive() then
@@ -56,7 +57,7 @@ hook.Add("Think", D3bot.BotHooksId.."🤔", function()
 			end
 		end
 		
-		local handler = FindHandler(bot:GetZombieClass(), bot:Team())
+		local handler = FindHandler(bot.GetZombieClass and bot:GetZombieClass() or "", bot:Team())
 		handler.ThinkFunction(bot)
 	end
 	
@@ -79,13 +80,13 @@ hook.Add("EntityTakeDamage", D3bot.BotHooksId.."TakeDamage", function(ent, dmg)
 	if D3bot.IsEnabledCached then
 		if ent:IsPlayer() and ent.D3bot_Mem then
 			-- Bot got damaged or damaged itself
-			local handler = FindHandler(ent:GetZombieClass(), ent:Team())
+			local handler = FindHandler(ent.GetZombieClass and ent:GetZombieClass() or "", ent:Team())
 			handler.OnTakeDamageFunction(ent, dmg)
 		end
 		local attacker = dmg:GetAttacker()
 		if attacker ~= ent and attacker:IsPlayer() and attacker.D3bot_Mem then
 			-- A Bot did damage something
-			local handler = FindHandler(attacker:GetZombieClass(), attacker:Team())
+			local handler = FindHandler(attacker.GetZombieClass and attacker:GetZombieClass() or "", attacker:Team())
 			handler.OnDoDamageFunction(attacker, ent, dmg)
 			attacker.D3bot_LastDamage = CurTime()
 		end

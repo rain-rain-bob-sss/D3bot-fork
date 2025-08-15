@@ -27,6 +27,8 @@ hook.Add("PlayerInitialSpawn", D3bot.BotHooksId, function(pl)
 		pl:D3bot_InitializeOrReset()
 	end
 
+	if not GAMEMODE.PreviouslyDied then return end
+
 	if spawnAsTeam == TEAM_UNDEAD then
 		GAMEMODE.PreviouslyDied[pl:UniqueID()] = CurTime()
 		GAMEMODE:PlayerInitialSpawn(pl)
@@ -37,6 +39,7 @@ hook.Add("PlayerInitialSpawn", D3bot.BotHooksId, function(pl)
 end)
 
 function D3bot.MaintainBotRoles()
+	if engine.ActiveGamemode() ~= "zombiesurvival" then return end
 	if #player.GetHumans() == 0 then return end
 	local desiredCountByTeam = {}
 	local allowedTotal

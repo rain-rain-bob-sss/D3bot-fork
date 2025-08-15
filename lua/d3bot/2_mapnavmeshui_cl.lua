@@ -85,6 +85,10 @@ return function(lib)
 		{ Name = "Copy Nodes" },
 		{ Name = "Set/Unset Last Parameter" },
 		{ Name = "Delete Item or Area" },
+		{ Name = "Link Nodes(Direction:Forward)" },
+		{ Name = "Link Nodes(Direction:Backward)" },
+		{ Name = "Link Nodes(Jumping:Needed)" },
+		{ Name = "Link Nodes(Pouncing:Needed)" },
 	}
 
 	function lib.SetIsMapNavMeshViewEnabled(bool)
@@ -238,7 +242,7 @@ return function(lib)
 									end
 								end
 							end
-						elseif editmodeid == 2 then -- Link Node
+						elseif editmodeid == 2 or editmodeid == 9 or editmodeid == 10 or editmodeid == 11 or editmodeid == 12 then -- Link Node
 							for nodeid, _ in pairs(isHighlightedById) do
 								if lib.MapNavMesh.NodeById[nodeid] then
 									if cursoredItemOrNil then
