@@ -74,6 +74,17 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		end
 	end
 
+	local wep = bot:GetActiveWeapon()
+	if IsValid(wep) and wep.GetBattlecry then 
+		local canhowl = true
+		if wep.GetNextHowl and (wep:GetNextHowl() > CurTime()) then canhowl = false end
+		if wep:GetNextSecondaryFire() > CurTime() then canhowl = false end
+		if (actions.Attack) and canhowl then
+			actions.Attack2 = true
+			actions.Attack = false
+		end
+	end
+
 	local buttons
 	if actions then
 		buttons = bit.bor(actions.MoveForward and IN_FORWARD or 0, actions.MoveBackward and IN_BACK or 0, actions.MoveLeft and IN_MOVELEFT or 0, actions.MoveRight and IN_MOVERIGHT or 0, actions.Attack and IN_ATTACK or 0, actions.Attack2 and IN_ATTACK2 or 0, actions.Duck and IN_DUCK or 0, actions.Jump and IN_JUMP or 0, actions.Use and IN_USE or 0)
