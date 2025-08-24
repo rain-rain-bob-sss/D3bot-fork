@@ -40,10 +40,12 @@ if SERVER then
 	include("d3bot/sv_navmesh_generate.lua")
 	include("d3bot/sv_benchmark.lua")
 
-	--if engine.ActiveGamemode() == "zombiesurvival" then
-		include("d3bot/sv_zs_bot_handler/node_metadata.lua")
-		include("d3bot/sv_zs_bot_handler/supervisor.lua")
-		include("d3bot/sv_zs_bot_handler/handle.lua")
-		include("d3bot/sv_zs_bot_handler/basics.lua")
-	--end
+	include("d3bot/sv_zs_bot_handler/node_metadata.lua")
+	include("d3bot/sv_zs_bot_handler/supervisor.lua")
+	include("d3bot/sv_zs_bot_handler/handle.lua")
+	include("d3bot/sv_zs_bot_handler/basics.lua")
+
+	if engine.ActiveGamemode() == "zombiesurvival" then
+		include("d3bot/sv_bot_getinfo_fix.lua")
+	end
 end

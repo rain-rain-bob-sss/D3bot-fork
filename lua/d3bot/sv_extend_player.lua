@@ -265,6 +265,7 @@ function meta:D3bot_InitializeOrReset()
 	---@field public BlockedOnNode D3NavmeshNode? -- Blocks bot handlers from issuing any CUserCmd action until they leave the specified node. Used by ladder handling logic (func_useableladder).
 	---@field public IsOnLadder boolean -- When true, we are on a path that is defined as "ladder" according to the navmesh. This is used to make the bot issue special commands to leave the ladder when necessary.
 	self.D3bot_Mem = self.D3bot_Mem or {}
+	self.RefreshBossClass = CurTime()
 	local mem = self.D3bot_Mem
 
 	local considerPathLethality = math.random(1, D3bot.BotConsideringDeathCostAntichance) == 1
@@ -294,6 +295,9 @@ function meta:D3bot_InitializeOrReset()
 	mem.CrouchJumpHeight = 70
 
 	mem.IsOnLadder = false
+
+	mem.WeaponColor = {math.Rand(0,2.5),math.Rand(0,2.5),math.Rand(0,2.5)}
+	mem.PlayerColor = {math.Rand(0,2.5),math.Rand(0,2.5),math.Rand(0,2.5)}
 
 	timer.Simple(0, function()
 		if not IsValid(self) then return end -- also make sure bot still exists
