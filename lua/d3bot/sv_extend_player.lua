@@ -176,7 +176,7 @@ function meta:D3bot_RerollClass(classes)
 	for _, class in ipairs(classes) do
 		local zombieClass = GAMEMODE.ZombieClasses[class]
 		if zombieClass then
-			if not zombieClass.Locked and (zombieClass.Unlocked or zombieClass.Wave <= GAMEMODE:GetWave()) then
+			if GAMEMODE:IsClassUnlocked(k) and not class.Hidden then
 				table.insert(zombieClasses, zombieClass)
 			end
 		end
