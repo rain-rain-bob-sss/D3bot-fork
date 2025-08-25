@@ -1,3 +1,9 @@
+if not D3bot.AFKEnabled then 
+    util.AddNetworkString("D3bot_unafk")
+    net.Receive("D3bot_unafk",function() end)
+    return
+end
+
 local function Control(ply)
     if ply.D3bot_Mem then return end
     ply:D3bot_InitializeOrReset("afk")
