@@ -11,3 +11,6 @@ LANGUAGE.D3bot_noredeemzombieescape	= "This command is disabled on zombie escape
 LANGUAGE.D3bot_selfredeemdisabled	= "The self-redeem command is disabled!"
 LANGUAGE.D3bot_selfredeemrecenty	= "You already self-redeemed recently. Try again in %u seconds!"
 LANGUAGE.D3bot_selfredeemcooldown	= "You self-redeemed. Your current cooldown until next self-redeem is %u seconds!"
+
+LANGUAGE.D3bot_afk	= "You're being controled by bot now."
+LANGUAGE.D3bot_unafk	= "You have left bot control mode."

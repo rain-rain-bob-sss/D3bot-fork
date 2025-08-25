@@ -176,7 +176,7 @@ function meta:D3bot_RerollClass(classes)
 	for _, class in ipairs(classes) do
 		local zombieClass = GAMEMODE.ZombieClasses[class]
 		if zombieClass then
-			if GAMEMODE:IsClassUnlocked(k) and not class.Hidden then
+			if gamemode.Call("IsClassUnlocked", class) and (not class.CanUse or class:CanUse(sender)) then
 				table.insert(zombieClasses, zombieClass)
 			end
 		end
@@ -218,7 +218,7 @@ function meta:D3bot_SetNodeTgtOrNil(targetNode) -- Set the node as target, bot w
 	mem.NodeTgtOrNil = targetNode
 end
 
-function meta:D3bot_InitializeOrReset()
+function meta:D3bot_InitializeOrReset(inittype)
 	---@class D3bot_Mem
 	---@field public TgtOrNil GEntity? -- The target entity if not nil.
 	---@field public PosTgtOrNil GVector? -- The target position if not nil.
@@ -298,6 +298,8 @@ function meta:D3bot_InitializeOrReset()
 
 	mem.WeaponColor = {math.Rand(0,2.5),math.Rand(0,2.5),math.Rand(0,2.5)}
 	mem.PlayerColor = {math.Rand(0,2.5),math.Rand(0,2.5),math.Rand(0,2.5)}
+
+	mem.Type = inittype
 
 	timer.Simple(0, function()
 		if not IsValid(self) then return end -- also make sure bot still exists

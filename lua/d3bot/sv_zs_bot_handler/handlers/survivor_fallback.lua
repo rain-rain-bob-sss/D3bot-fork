@@ -131,7 +131,7 @@ function HANDLER.ThinkFunction(bot)
 	end
 	
 	-- Change held weapon based on target distance
-	if mem.nextHeldWeaponUpdate and mem.nextHeldWeaponUpdate < CurTime() or not mem.nextHeldWeaponUpdate then
+	if not mem.nextHeldWeaponUpdate or (mem.nextHeldWeaponUpdate and mem.nextHeldWeaponUpdate < CurTime()) then
 		mem.nextHeldWeaponUpdate = CurTime() + 1 + math.random() * 1
 		local weapons = bot:GetWeapons()
 		local filteredWeapons = {}
@@ -216,9 +216,9 @@ HANDLER.Weapon_Types.RANGED = 1
 HANDLER.Weapon_Types.MELEE = 2
 
 function HANDLER.WeaponRatingFunction(weapon, targetDistance)
-	local sweptable = weapons.GetStored(weapon.ClassName)
+	local sweptable = weapons.GetStored(weapon.ClassName) or weapon:GetTable()
 	local weaponType = HANDLER.Weapon_Types.MELEE
-	if weapon.Base == "weapon_zs_base" then
+	if not weapon.IsMelee then
 		weaponType = HANDLER.Weapon_Types.RANGED
 	end
 	
@@ -238,7 +238,7 @@ function HANDLER.WeaponRatingFunction(weapon, targetDistance)
 	
 	local rating = dmgPerSec * areaIntersection
 	
-	return weaponType, rating, maxDistance
+	return weaponType, rating, weaponType == HANDLER.Weapon_Types.MELEE and 32 or 2048 --maxDistance
 end
 
 function HANDLER.FindEscapePath(bot, startNode, enemies)
@@ -302,7 +302,7 @@ function HANDLER.CanShootTarget(bot, target)
 		start = origin,
 		endpos = targetPos,
 		filter = player.GetAll(),
-		mask = MASK_SHOT_HULL
+		mask = MASK_SHOT
 	})
 	return not tr.Hit
 end

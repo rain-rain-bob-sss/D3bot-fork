@@ -534,7 +534,7 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 	end)
 end
 
-registerSuperadminCmd("Control", plsParam, function(caller, pls) for k, pl in pairs(pls) do pl:D3bot_InitializeOrReset() end end)
+registerSuperadminCmd("Control", plsParam, function(caller, pls) for k, pl in pairs(pls) do pl:D3bot_InitializeOrReset("ULX") end end)
 registerSuperadminCmd("Uncontrol", plsParam, function(caller, pls) for k, pl in pairs(pls) do pl:D3bot_Deinitialize() end end)
 
 -- TODO: Add user command to check the version of D3bot

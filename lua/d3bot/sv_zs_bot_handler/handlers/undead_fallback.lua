@@ -1,20 +1,60 @@
 D3bot.Handlers.Undead_Fallback = D3bot.Handlers.Undead_Fallback or {}
 local HANDLER = D3bot.Handlers.Undead_Fallback
 
-HANDLER.AngOffshoot = 45
+HANDLER.AngOffshoot = 30
 HANDLER.BotTgtFixationDistMin = 250
 HANDLER.BotClasses = {
-	"Zombie", "Zombie", "Zombie",
-	"Ghoul",
+	"Zombie", "Zombie", "Zombie","Zombie","Zombie",
+	"Gore Blaster Zombie","Gore Blaster Zombie",
+	"Chem Burster","Chem Burster","Chem Burster","Chem Burster","Chem Burster",
+	"Ghoul","Ghoul",
+	"Elder Ghoul","Elder Ghoul",
+	"Noxious Ghoul","Noxious Ghoul",
 	"Wraith", "Wraith", "Wraith",
+	"Skeletal Shambler",
+	"Skeletal Walker","Skeletal Walker",
+	"Shadow Walker","Shadow Walker","Shadow Walker",
+	"Shadow Lurker",
 	"Bloated Zombie", "Bloated Zombie", "Bloated Zombie",
 	"Fast Zombie", "Fast Zombie", "Fast Zombie", "Fast Zombie",
 	"Poison Zombie", "Poison Zombie", "Poison Zombie",
-	"Zombine", "Zombine", "Zombine", "Zombine", "Zombine"
+	"Zombine", "Zombine", "Zombine", "Zombine", "Zombine",
+	"Charger","Charger","Charger",
 }
+
 HANDLER.RandomSecondaryAttack = {
-	Ghoul = {MinTime = 5, MaxTime = 7}
-	--["Poison Zombie"] = {MinTime = 5, MaxTime = 7} -- Slows them too much
+	Ghoul = {MinTime = 5, MaxTime = 7},
+	["Elder Ghoul"] = {MinTime = 5, MaxTime = 7},
+	["Noxious Ghoul"] = {MinTime = 5, MaxTime = 7},
+	["Frigid Revenant"] = {MinTime = 5, MaxTime = 7},
+	["Devourer"] = {MinTime = 5, MaxTime = 7},
+	Charger = {MinTime = 4, MaxTime = 5, SeeTarget = true},
+	["Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100}, -- Slows them too much
+	["Wild Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100} -- Slows them too much
+}
+HANDLER.PrimaryAttack = {
+	["Chem Burster"] = {AttackBarricade = true,NearTarget = true,Stuck = false}
+}
+
+HANDLER.CreateMoves = {
+	Charger = function (pl, cmd)
+		local wep = pl:GetActiveWeapon()
+		if wep:IsValid() and wep.m_ViewAngles and ((wep.GetChargeStart and wep:GetChargeStart() ~= 0) or wep.IsCharging) then
+			local maxdiff = FrameTime() * 15
+			local mindiff = -maxdiff
+			local originalangles = wep.m_ViewAngles
+			local viewangles = cmd:GetViewAngles()
+
+			local diff = math.AngleDifference(viewangles.yaw, originalangles.yaw)
+			if diff > maxdiff or diff < mindiff then
+				viewangles.yaw = math.NormalizeAngle(originalangles.yaw + math.Clamp(diff, mindiff, maxdiff))
+			end
+
+			wep.m_ViewAngles = viewangles
+
+			cmd:SetViewAngles(viewangles)
+		end
+	end
 }
 
 HANDLER.Fallback = true
@@ -67,11 +107,49 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	-- TODO: Only throw if possible target is close enough. Aiming. Timing.
 	local secAttack = HANDLER.RandomSecondaryAttack[GAMEMODE.ZombieClasses[bot:GetZombieClass()].Name]
 	if secAttack then
-		if not mem.NextThrowPoisonTime or mem.NextThrowPoisonTime <= CurTime() then
-			mem.NextThrowPoisonTime = CurTime() + secAttack.MinTime + math.random() * (secAttack.MaxTime - secAttack.MinTime)
-			actions = actions or {}
-			actions.Attack2 = true
+		local inRange = false
+		local range = secAttack.Range or 0
+		local origin = bot:GetShootPos()
+		local attackPos = bot:D3bot_GetAttackPosOrNilFuture(nil, math.Rand(0, D3bot.BotAimPosVelocityOffshoot))
+		if attackPos and attackPos:DistToSqr(origin) < math.pow(range, 2) then
+			inRange = true
 		end
+
+		local targetvel = IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetVelocity():Length() or 0
+		if (not secAttack.SeeTarget or bot:D3bot_CanSeeTargetCached()) and (not secAttack.Range or inRange) and (not secAttack.TargetVelMax or secAttack.TargetVelMax >= targetvel) then
+			if not mem.NextThrowPoisonTime or mem.NextThrowPoisonTime <= CurTime() then
+				mem.NextThrowPoisonTime = CurTime() + secAttack.MinTime + math.random() * (secAttack.MaxTime - secAttack.MinTime)
+				actions = actions or {}
+				actions.Attack = false
+				actions.Attack2 = true
+			end
+		end
+	end
+
+	local primAttack = HANDLER.PrimaryAttack[GAMEMODE.ZombieClasses[bot:GetZombieClass()].Name]
+	if primAttack then 
+		local can = false
+		if IsValid(mem.BarricadeAttackEntity) and primAttack.AttackBarricade then 
+			can = true
+		end
+
+		if facesHindrance and primAttack.Stuck then 
+			can = true
+		end
+
+		if primAttack.NearTarget then
+			local weapon = bot:GetActiveWeapon()
+			local range = (IsValid(weapon) and weapon.MeleeReach or 75) + 25 -- Either MeleeReach + 25, or 100.
+			-- We don't have a case that can be handled by the basic walk handler.
+			-- So we just attack something directly.
+			local origin = bot:GetShootPos() -- Attack origin of the bot.
+			local attackPos = bot:D3bot_GetAttackPosOrNilFuture(nil, math.Rand(0, D3bot.BotAimPosVelocityOffshoot)) -- Target attack position, for aiming.
+			if attackPos and attackPos:DistToSqr(origin) < math.pow(range, 2) then
+				can = true
+			end
+		end
+
+		if actions and not can then actions.Attack = false end
 	end
 
 	local wep = bot:GetActiveWeapon()
@@ -97,6 +175,11 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	if sideSpeed then cmd:SetSideMove(sideSpeed) end
 	if upSpeed then cmd:SetUpMove(upSpeed) end
 	cmd:SetButtons(buttons)
+
+
+	local createMove = HANDLER.CreateMoves[GAMEMODE.ZombieClasses[bot:GetZombieClass()].Name]
+	--uncomment to make bots stop cheating
+	--if createMove then createMove(bot, cmd) end
 end
 
 ---Called every frame.

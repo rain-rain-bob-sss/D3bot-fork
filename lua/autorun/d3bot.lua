@@ -22,10 +22,14 @@ include("d3bot/sh_utilities.lua")
 AddCSLuaFile("d3bot/cl_convars.lua")
 AddCSLuaFile("d3bot/cl_ui.lua")
 AddCSLuaFile("d3bot/vgui/meshing_main.lua")
+AddCSLuaFile("d3bot/cl_player_afk.lua")
 if CLIENT then
 	include("d3bot/cl_convars.lua")
 	include("d3bot/cl_ui.lua")
 	include("d3bot/vgui/meshing_main.lua")
+	if engine.ActiveGamemode() == "zombiesurvival" then
+		include("d3bot/cl_player_afk.lua")
+	end
 end
 
 -- Server files
@@ -47,5 +51,6 @@ if SERVER then
 
 	if engine.ActiveGamemode() == "zombiesurvival" then
 		include("d3bot/sv_bot_getinfo_fix.lua")
+		include("d3bot/sv_player_afk.lua")
 	end
 end

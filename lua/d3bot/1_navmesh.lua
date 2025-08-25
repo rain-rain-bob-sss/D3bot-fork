@@ -71,7 +71,8 @@ return function(lib)
 			Ladder = { "NoDismount" },
 			MaxHeight = {},
 			DMGPerSecond = {},
-			BotMod = {}
+			BotMod = {},
+			Nest = {"Always","TargetNear"}
 		},
 		Replace = {
 			Unidir = "Direction"
