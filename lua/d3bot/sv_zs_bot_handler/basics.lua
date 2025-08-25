@@ -362,6 +362,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- We don't have a case that can be handled by the basic walk handler.
 	-- So we just attack something directly.
 	local facesTgt = false -- True if bot is close enough for attacks.
+	local attackType = ""
 	local origin = bot:GetShootPos() -- Attack origin of the bot.
 	local attackPos = bot:D3bot_GetAttackPosOrNilFuture(nil, math.Rand(0, D3bot.BotAimPosVelocityOffshoot)) -- Target attack position, for aiming.
 	local movePos = attackPos or bot:GetPos() -- Target movement position.
@@ -374,6 +375,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		if attackPos.z < bot:GetPos().z + bot:GetViewOffsetDucked().z then
 			actions.Duck = true
 		end
+		attackType = "Target"
 	elseif mem.BarricadeAttackEntity and mem.BarricadeAttackPos then
 		-- We are not within attack range, but we have a barricade entity to attack.
 		-- So we aim for this one, instead.
@@ -385,6 +387,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 			-- Target is invalid or too far away, forget about it.
 			mem.BarricadeAttackPos, mem.BarricadeAttackEntity = nil, nil
 		end
+		attackType = "Cade"
 	end
 
 	local offshootAngle = bot:D3bot_GetOffshoot(facesTgt and D3bot.FaceTargetOffshootFactor or 1)
@@ -417,7 +420,8 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movementVector = movePos - origin
+	local movePosOffset = attackType == "Target" and Vector(math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50,math.cos(CurTime() * 3 + bot:EntIndex() * 80) * 50) or bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50
+	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.01, 1)
 	local speed = bot:GetMaxSpeed() * invProximity

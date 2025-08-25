@@ -4,9 +4,9 @@ local HANDLER = D3bot.Handlers.Undead_Fallback
 HANDLER.AngOffshoot = 30
 HANDLER.BotTgtFixationDistMin = 250
 HANDLER.BotClasses = {
-	"Zombie", "Zombie", "Zombie","Zombie","Zombie",
-	"Gore Blaster Zombie","Gore Blaster Zombie",
-	"Chem Burster","Chem Burster","Chem Burster","Chem Burster","Chem Burster",
+	"Zombie", "Zombie", "Zombie",
+	"Gore Blaster Zombie","Gore Blaster Zombie","Gore Blaster Zombie",
+	"Chem Burster","Chem Burster",
 	"Ghoul","Ghoul",
 	"Elder Ghoul","Elder Ghoul",
 	"Noxious Ghoul","Noxious Ghoul",
@@ -16,8 +16,10 @@ HANDLER.BotClasses = {
 	"Shadow Walker","Shadow Walker","Shadow Walker",
 	"Shadow Lurker",
 	"Bloated Zombie", "Bloated Zombie", "Bloated Zombie",
-	"Fast Zombie", "Fast Zombie", "Fast Zombie", "Fast Zombie",
+	"Fast Zombie", "Fast Zombie", "Fast Zombie", "Fast Zombie","Fast Zombie","Fast Zombie","Fast Zombie",
+	"Slingshot Zombie","Slingshot Zombie","Slingshot Zombie",
 	"Poison Zombie", "Poison Zombie", "Poison Zombie",
+	"Wild Poison Zombie","Wild Poison Zombie",
 	"Zombine", "Zombine", "Zombine", "Zombine", "Zombine",
 	"Charger","Charger","Charger",
 }
@@ -128,6 +130,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 
 	local primAttack = HANDLER.PrimaryAttack[GAMEMODE.ZombieClasses[bot:GetZombieClass()].Name]
 	if primAttack then 
+		actions = actions or {}
 		local can = false
 		if IsValid(mem.BarricadeAttackEntity) and primAttack.AttackBarricade then 
 			can = true
@@ -150,10 +153,13 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		end
 
 		if actions and not can then actions.Attack = false end
+
+		if actions.Attack and primAttack.SecondaryAttack then actions.Attack = false actions.Attack2 = true end
 	end
 
 	local wep = bot:GetActiveWeapon()
 	if IsValid(wep) and wep.GetBattlecry then 
+		actions = actions or {}
 		local canhowl = true
 		if wep.GetNextHowl and (wep:GetNextHowl() > CurTime()) then canhowl = false end
 		if wep:GetNextSecondaryFire() > CurTime() then canhowl = false end
@@ -182,6 +188,20 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	--if createMove then createMove(bot, cmd) end
 end
 
+local targetPriorities = {
+	["player"] = 500,
+	["prop_obj_sigil"] = 100,
+}
+
+function HANDLER.TargetScore(bot,target,botPos,maxDist)
+	if not IsValid(target) then return -math.huge end
+	botPos = botPos or bot:GetPos()
+	local dist = botPos:DistToSqr(target:GetPos())
+	local score = ((maxDist or 500*500) - dist) * 0.5
+		+ (targetPriorities[target:GetClass()] or 0)
+	return score
+end
+
 ---Called every frame.
 ---@param bot GPlayer
 function HANDLER.ThinkFunction(bot)
@@ -193,7 +213,7 @@ function HANDLER.ThinkFunction(bot)
 		if not mem.TgtOrNil or IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():Distance(botPos) > HANDLER.BotTgtFixationDistMin then
 			mem.nextUpdateSurroundingPlayers = CurTime() + 0.9 + math.random() * 0.2
 			local targets = player.GetAll() -- TODO: Filter targets before sorting
-			table.sort(targets, function(a, b) return botPos:DistToSqr(a:GetPos()) < botPos:DistToSqr(b:GetPos()) end)
+			table.sort(targets, function(a, b) return HANDLER.TargetScore(bot,a,botPos) > HANDLER.TargetScore(bot,b,botPos) end)
 			for k, v in ipairs(targets) do
 				if IsValid(v) and botPos:DistToSqr(v:GetPos()) < 500*500 and HANDLER.CanBeTgt(bot, v) and bot:D3bot_CanSeeTarget(nil, v) then
 					bot:D3bot_SetTgtOrNil(v, false, nil)
@@ -312,5 +332,6 @@ function HANDLER.RerollTarget(bot)
 	end
 	potEntTargets = D3bot.GetEntsOfClss(potTargetEntClasses)
 	local potTargets = table.Add(players, potEntTargets)
-	bot:D3bot_SetTgtOrNil(table.Random(potTargets), false, nil)
+	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
+	bot:D3bot_SetTgtOrNil(potTargets[math.random(1,math.min(#potTargets,3))], false, nil)
 end

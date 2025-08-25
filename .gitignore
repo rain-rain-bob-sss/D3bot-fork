@@ -3,3 +3,4 @@
 data/d3bot/navmesh/map/wip/
 .vscode/settings.json
 /.vscode
+tools/generate-previews/generate-previews.exe

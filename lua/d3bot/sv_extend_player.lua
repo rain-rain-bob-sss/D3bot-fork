@@ -296,8 +296,10 @@ function meta:D3bot_InitializeOrReset(inittype)
 
 	mem.IsOnLadder = false
 
-	mem.WeaponColor = {math.Rand(0,2.5),math.Rand(0,2.5),math.Rand(0,2.5)}
-	mem.PlayerColor = {math.Rand(0,2.5),math.Rand(0,2.5),math.Rand(0,2.5)}
+	local wepcolor = HSVToColor(math.random(1,360),1,1)
+	local plycolor = HSVToColor(math.random(1,360),1,1)
+	mem.WeaponColor = {wepcolor.r/255,wepcolor.g/255,wepcolor.b/255}
+	mem.PlayerColor = {plycolor.r/255,plycolor.g/255,plycolor.b/255}
 
 	mem.Type = inittype
 
