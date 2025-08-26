@@ -180,10 +180,13 @@ function meta:D3bot_RerollClass(classes)
 
 	local mem = self.D3bot_Mem
 	if mem.ForcedClass then 
-		classes = {mem.ForcedClass} mem.ForcedClass = nil 
+		classes = {mem.ForcedClass}
+		mem.ForcedClass = nil 
 	else
 		if self:D3bot_ShouldNest() then
-			table.insert(classes,"Flesh Creeper")
+			for i = 1,5 do
+				table.insert(classes,"Flesh Creeper")
+			end
 		end
 	end
 

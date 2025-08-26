@@ -271,7 +271,7 @@ function HANDLER.ThinkFunction(bot)
 			pathCostFunction = function( node, linkedNode, link )
 				local linkMetadata = D3bot.LinkMetadata[link]
 				local linkPenalty = linkMetadata and linkMetadata.ZombieDeathCost or 0
-				return linkPenalty * (mem.ConsidersPathLethality and 1 or 0)
+				return linkPenalty * (mem.ConsidersPathLethality and 1 or 0) + classCost
 			end
 		end
 	end

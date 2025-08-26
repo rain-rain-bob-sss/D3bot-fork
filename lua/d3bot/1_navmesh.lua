@@ -73,7 +73,8 @@ return function(lib)
 			DMGPerSecond = {},
 			BotMod = {},
 			Nest = {"Enabled"},
-			ForceClass = {}
+			ForceClass = {},
+			--ClassCost = {},
 		},
 		Replace = {
 			Unidir = "Direction"
