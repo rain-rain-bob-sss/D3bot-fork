@@ -10,17 +10,91 @@ function D3bot.Basics.SuicideOrRetarget(bot)
 	
 	if D3bot.UsingSourceNav then return end
 		
-	if nodeOrNil and nextNodeOrNil and nextNodeOrNil.Pos.z > nodeOrNil.Pos.z + 55 then
-		local wallParam = nextNodeOrNil.Params.Wall
-		if wallParam == "Retarget" then
-			local handler = FindHandler(bot:GetZombieClass(), bot:Team())
-			if handler and handler.RerollTarget then handler.RerollTarget(bot) end
-			return
-		elseif wallParam == "Suicide" then
-			bot:Kill()
-			return
+	if nodeOrNil and nextNodeOrNil then
+		if nextNodeOrNil.Pos.z > nodeOrNil.Pos.z + 55 then
+			local wallParam = nextNodeOrNil.Params.Wall
+			if wallParam == "Retarget" then
+				local handler = FindHandler(bot:GetZombieClass(), bot:Team())
+				if handler and handler.RerollTarget then handler.RerollTarget(bot) end
+				return
+			elseif wallParam == "Suicide" then
+				bot:Kill()
+				return
+			end
+		end
+
+		local classParam = nextNodeOrNil.Params.ForceClass
+		if classParam then
+			classParam = string.Replace(classParam,"_"," ")
+			local bestclassindex = GAMEMODE:GetBestAvailableZombieClass(classParam)
+			for i,class in pairs(GAMEMODE.ZombieClasses) do 
+				if class.Index == bestclassindex then classParam = class.Name break end
+			end
+			if GAMEMODE:GetWaveActive() and bot:GetZombieClassTable().Name ~= classParam and not (GAMEMODE.ZombieEscape or GAMEMODE.PantsMode or GAMEMODE:IsClassicMode() or GAMEMODE:IsBabyMode()) and gamemode.Call("IsClassUnlocked", classParam) then
+				mem.ForcedClass = classParam
+				mem.TargetAfterSpawned = mem.TgtOrNil
+				bot:Kill()
+				return
+			end
 		end
 	end
+end
+
+
+---Find nest point.
+---@param bot GPlayer
+---@return boolean Success
+---@return any|nil Node
+---@return GVector|nil NodePosition
+function D3bot.Basics.FindNestPoint(bot)
+	local mem = bot.D3bot_Mem
+	
+	if D3bot.UsingSourceNav then return false end
+
+	local nestCount = 0
+	local pnestCount = 0
+	local nestedNodes = {}
+	for i,v in pairs(ents.FindByClass("prop_creepernest")) do 
+		if v:GetNestBuilt() then
+			nestedNodes[D3bot.MapNavMesh:GetNearestNodeOrNil(v:GetPos())] = true
+		end
+		nestCount = nestCount + 1
+		local uid = bot:UniqueID()
+		if v.OwnerUID == uid then
+			pnestCount = pnestCount + 1
+		end
+		if pnestCount >= 3 then return false end
+		if nestCount >= 12 then return false end
+	end
+
+	for id, node in pairs(D3bot.MapNavMesh.NodeById) do
+		if node.Params.Nest == "Enabled" and not nestedNodes[node] then 
+			local pos = node:GetClosestPointOnArea(bot:GetPos())
+			for _, ent in pairs(ents.FindByClass("prop_creepernest")) do
+				if util.SkewedDistance(ent:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuildNest then
+					continue
+				end
+			end
+
+			for _, sigil in pairs(ents.FindByClass("prop_obj_sigil")) do
+				if sigil:GetSigilCorrupted() then continue end
+
+				if util.SkewedDistance(sigil:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuildNest then
+					continue
+				end
+			end
+
+			for _, human in pairs(team.GetPlayers(TEAM_HUMAN)) do
+				if util.SkewedDistance(human:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuild then
+					continue
+				end
+			end
+
+			return true,node,node:GetClosestPointOnArea(bot:GetPos())
+		end
+	end
+
+	return false
 end
 
 ---Basic walking handler.
@@ -420,7 +494,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movePosOffset = attackType == "Target" and Vector(math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50,math.cos(CurTime() * 3 + bot:EntIndex() * 80) * 50) or bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50
+	local movePosOffset = attackType == "Target" and Vector(math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50,math.cos(CurTime() * 3 + bot:EntIndex() * 80) * 50) or attackType == "Cade" and bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50 or vector_origin
 	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.01, 1)

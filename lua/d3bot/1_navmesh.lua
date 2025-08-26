@@ -72,7 +72,8 @@ return function(lib)
 			MaxHeight = {},
 			DMGPerSecond = {},
 			BotMod = {},
-			Nest = {"Always","TargetNear"}
+			Nest = {"Enabled"},
+			ForceClass = {}
 		},
 		Replace = {
 			Unidir = "Direction"

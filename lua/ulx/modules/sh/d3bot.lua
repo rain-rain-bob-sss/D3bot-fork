@@ -317,6 +317,7 @@ local shortvalue = {
 }
 
 local function a(key,value)
+	value = string.Replace(value," ","_")
 	return shortkey[key] or key,shortvalue[value] or value
 end
 

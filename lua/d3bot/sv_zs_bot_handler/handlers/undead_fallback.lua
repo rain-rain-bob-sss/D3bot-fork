@@ -32,7 +32,7 @@ HANDLER.RandomSecondaryAttack = {
 	["Devourer"] = {MinTime = 5, MaxTime = 7},
 	Charger = {MinTime = 4, MaxTime = 5, SeeTarget = true},
 	["Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100}, -- Slows them too much
-	["Wild Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100} -- Slows them too much
+	["Wild Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100}, -- Slows them too much
 }
 HANDLER.PrimaryAttack = {
 	["Chem Burster"] = {AttackBarricade = true,NearTarget = true,Stuck = false}
@@ -88,11 +88,29 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	bot:D3bot_UpdatePathProgress()
 	D3bot.Basics.SuicideOrRetarget(bot)
 
+	local trynest = false
+
 	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false)
 	if not result then
-		result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
-		if not result then
-			return
+		if bot:GetZombieClassTable().Name == "Flesh Creeper" and bot:Alive() then 
+			local cannest,node = D3bot.Basics.FindNestPoint(bot)
+			if cannest then
+				trynest = true
+				bot:D3bot_SetNodeTgtOrNil(node)
+			else
+				if mem.NodeTgtOrNil then 
+					mem.NodeTgtOrNil = nil
+				end
+			end
+			result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
+			if not result then 
+				return 
+			end
+		else
+			result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
+			if not result then
+				return
+			end
 		end
 	end
 
@@ -104,6 +122,8 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 			mem.BarricadeAttackEntity, mem.BarricadeAttackPos = entity, entityPos
 		end
 	end
+
+	actions = actions or {}
 
 	-- Simple hack for throwing poison randomly.
 	-- TODO: Only throw if possible target is close enough. Aiming. Timing.
@@ -121,7 +141,6 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		if (not secAttack.SeeTarget or bot:D3bot_CanSeeTargetCached()) and (not secAttack.Range or inRange) and (not secAttack.TargetVelMax or secAttack.TargetVelMax >= targetvel) then
 			if not mem.NextThrowPoisonTime or mem.NextThrowPoisonTime <= CurTime() then
 				mem.NextThrowPoisonTime = CurTime() + secAttack.MinTime + math.random() * (secAttack.MaxTime - secAttack.MinTime)
-				actions = actions or {}
 				actions.Attack = false
 				actions.Attack2 = true
 			end
@@ -130,7 +149,6 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 
 	local primAttack = HANDLER.PrimaryAttack[GAMEMODE.ZombieClasses[bot:GetZombieClass()].Name]
 	if primAttack then 
-		actions = actions or {}
 		local can = false
 		if IsValid(mem.BarricadeAttackEntity) and primAttack.AttackBarricade then 
 			can = true
@@ -157,9 +175,10 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		if actions.Attack and primAttack.SecondaryAttack then actions.Attack = false actions.Attack2 = true end
 	end
 
+	if (trynest and facesHindrance) and bot:Alive() then actions.Attack = false actions.Attack2 = true actions.Jump = false majorStuck = false end
+
 	local wep = bot:GetActiveWeapon()
 	if IsValid(wep) and wep.GetBattlecry then 
-		actions = actions or {}
 		local canhowl = true
 		if wep.GetNextHowl and (wep:GetNextHowl() > CurTime()) then canhowl = false end
 		if wep:GetNextSecondaryFire() > CurTime() then canhowl = false end
@@ -197,7 +216,7 @@ function HANDLER.TargetScore(bot,target,botPos,maxDist)
 	if not IsValid(target) then return -math.huge end
 	botPos = botPos or bot:GetPos()
 	local dist = botPos:DistToSqr(target:GetPos())
-	local score = ((maxDist or 500*500) - dist) * 0.5
+	local score = ((maxDist or 500*500) - math.min(maxDist or 500*500,dist)) * 0.5
 		+ (targetPriorities[target:GetClass()] or 0)
 	return score
 end
@@ -283,7 +302,7 @@ function HANDLER.OnDoDamageFunction(bot, ent, dmg)
 	local mem = bot.D3bot_Mem
 
 	-- If the zombie hits a barricade prop, store that hit position for the next attack.
-	  if ent and ent:IsValid() and ent:D3bot_IsBarricade() then
+	if ent and ent:IsValid() and ent:D3bot_IsBarricade() then
 		mem.BarricadeAttackEntity, mem.BarricadeAttackPos = ent, dmg:GetDamagePosition()
 	end
 
@@ -303,7 +322,7 @@ end
 -- Custom functions and settings --
 -----------------------------------
 
-local potTargetEntClasses = {"prop_*turret", "prop_arsenalcrate", "prop_manhack*", "prop_obj_sigil"}
+local potTargetEntClasses = {"prop_*turret*", "prop_arsenalcrate", "prop_manhack*", "prop_obj_sigil", "prop_zapper*"}
 local potEntTargets = nil
 
 ---Returns whether a target is valid.
@@ -321,6 +340,15 @@ end
 ---Rerolls the bot's target.
 ---@param bot GPlayer
 function HANDLER.RerollTarget(bot)
+
+	local mem = bot.D3bot_Mem
+
+	if IsValid(mem.TargetAfterSpawned) then --We need to target it again.
+		bot:D3bot_SetTgtOrNil(mem.TargetAfterSpawned, false, nil)
+		mem.TargetAfterSpawned = nil
+		return
+	end
+
 	-- Get humans or non zombie players or any players in this order.
 	local players = D3bot.RemoveObsDeadTgts(team.GetPlayers(TEAM_HUMAN))
 	if #players == 0 and TEAM_UNDEAD then
@@ -333,5 +361,5 @@ function HANDLER.RerollTarget(bot)
 	potEntTargets = D3bot.GetEntsOfClss(potTargetEntClasses)
 	local potTargets = table.Add(players, potEntTargets)
 	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
-	bot:D3bot_SetTgtOrNil(potTargets[math.random(1,math.min(#potTargets,3))], false, nil)
+	bot:D3bot_SetTgtOrNil(potTargets[1], false, nil)
 end

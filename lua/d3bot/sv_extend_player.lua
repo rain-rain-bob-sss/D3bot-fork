@@ -168,10 +168,25 @@ function meta:D3bot_FindBarricadeEntity(samples)
 	return nil, nil
 end
 
+function meta:D3bot_ShouldNest()
+	local can = D3bot.Basics.FindNestPoint(self)
+	return can
+end
+
 function meta:D3bot_RerollClass(classes)
 	if not GAMEMODE:GetWaveActive() then return end
 	--if self:GetZombieClassTable().Name == "Zombie Torso" then return end -- ???
 	if GAMEMODE.ZombieEscape or GAMEMODE.PantsMode or GAMEMODE:IsClassicMode() or GAMEMODE:IsBabyMode() then return end
+
+	local mem = self.D3bot_Mem
+	if mem.ForcedClass then 
+		classes = {mem.ForcedClass} mem.ForcedClass = nil 
+	else
+		if self:D3bot_ShouldNest() then
+			table.insert(classes,"Flesh Creeper")
+		end
+	end
+
 	local zombieClasses = {}
 	for _, class in ipairs(classes) do
 		local zombieClass = GAMEMODE.ZombieClasses[class]
@@ -264,6 +279,13 @@ function meta:D3bot_InitializeOrReset(inittype)
 	---@field public BlockMovementUntil number? -- Blocks bot handlers from issuing any CUserCmd action until this point in time (CurTime()) has passed. Used by ladder handling logic (func_useableladder).
 	---@field public BlockedOnNode D3NavmeshNode? -- Blocks bot handlers from issuing any CUserCmd action until they leave the specified node. Used by ladder handling logic (func_useableladder).
 	---@field public IsOnLadder boolean -- When true, we are on a path that is defined as "ladder" according to the navmesh. This is used to make the bot issue special commands to leave the ladder when necessary.
+	---@field public WeaponColor Color
+	---@field public PlayerColor Color
+	---@field public Type string?
+	---@field public TargetAfterSpawned GEntity?
+	---@field public ForcedClass string?
+	
+	
 	self.D3bot_Mem = self.D3bot_Mem or {}
 	self.RefreshBossClass = CurTime()
 	local mem = self.D3bot_Mem
