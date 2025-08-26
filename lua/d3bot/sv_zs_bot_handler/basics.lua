@@ -70,6 +70,12 @@ function D3bot.Basics.FindNestPoint(bot)
 	for id, node in pairs(D3bot.MapNavMesh.NodeById) do
 		if node.Params.Nest == "Enabled" and not nestedNodes[node] then 
 			local pos = node:GetClosestPointOnArea(bot:GetPos())
+
+			if IsValid(bot.TgtOrNil) then
+				local dist = bot.TgtOrNil:GetPos():Distance(pos)
+				if (dist >= 1800) then continue end
+			end
+
 			for _, ent in pairs(ents.FindByClass("prop_creepernest")) do
 				if util.SkewedDistance(ent:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuildNest then
 					continue
@@ -90,7 +96,7 @@ function D3bot.Basics.FindNestPoint(bot)
 				end
 			end
 
-			return true,node,node:GetClosestPointOnArea(bot:GetPos())
+			return true,node,pos
 		end
 	end
 

@@ -10,9 +10,9 @@ return function(lib)
 		if not trR.Hit then return end
 		return trR.HitPos
 	end
-	local function getCursoredNodeOrNil(pl)
-		local item = lib.MapNavMesh:GetCursoredItemOrNil(pl)
-		if not item or item.Type ~= "node" then return end
+	local function getCursoredNodeOrNil(pl,links)
+		local item = lib.MapNavMesh:GetCursoredItemOrNil(pl,links)
+		if not item or (not links and item.Type ~= "node") then return end
 		return item
 	end
 	
@@ -312,6 +312,16 @@ return function(lib)
 						lib.MapNavMesh:InvalidateCache()
 						lib.UpdateMapNavMeshUiSubscribers()
 					end
+				end 
+			} 
+		},
+		{	
+			Name = "Edit Param",
+			FuncByKey = {
+				[IN_ATTACK] = function(pl)
+					local node = getCursoredNodeOrNil(pl,true)
+					if not node then return end
+					pl:SendLua(lib.GlobalK .. ".EditParam('" .. node.Id .. "')")
 				end 
 			} 
 		},

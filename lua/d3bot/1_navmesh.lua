@@ -303,7 +303,7 @@ return function(lib)
 		return true
 	end
 
-	function fallback:GetCursoredItemOrNil(pl)
+	function fallback:GetCursoredItemOrNil(pl,links)
 		local oldDraw = pl:GetInfoNum("d3bot_navmeshing_smartdraw", 1) == 0
 		local maxDrawingDistanceSqr = math.pow(pl:GetInfoNum("d3bot_navmeshing_drawdistance", 0), 2)
 		local relAngMin = 5
@@ -326,6 +326,7 @@ return function(lib)
 				end
 			end
 		end
+
 		return cursoredItemOrNil
 	end
 

@@ -39,6 +39,60 @@ return function(lib)
 			previousId = id
 		end
 	end
+
+	function lib.EditParam(nodeid)
+		nodeid = nodeid or "?????"
+		local params = D3bot.Params.Correct
+
+		local frame = vgui.Create("DFrame")
+		frame:SetSize(ScreenScale(120),ScreenScaleH(70))
+		frame:SetTitle("Edit param of " .. nodeid)
+		frame:Center()
+		frame:MakePopup()
+		frame:SetSkin("Default")
+
+		local label1 = vgui.Create( "DLabel", frame )
+		label1:SetText( "Key" )
+		label1:Dock( TOP )
+
+		local textentry1 = vgui.Create( "DTextEntry", frame )
+		textentry1:Dock( TOP )
+
+		function textentry1:GetAutoComplete( text )
+			local text = string.Trim(text)
+			local completes = {}
+			for key,_ in pairs(params) do 
+				if text == "" or string.sub(key,1,#text) == text then
+					completes[#completes + 1] = key
+				end
+			end
+			return completes
+		end
+
+		local label2 = vgui.Create( "DLabel", frame )
+		label2:SetText( "Value" )
+		label2:Dock( TOP )
+
+		local textentry2 = vgui.Create( "DTextEntry", frame )
+		textentry2:Dock( TOP )
+		function textentry2:GetAutoComplete( text )
+			local text = string.Trim(text)
+			local values = params[textentry1:GetValue()]
+			if not values then return {} end
+			local completes = {}
+			for _,value in pairs(values) do 
+				completes[#completes + 1] = value
+			end
+			return completes
+		end
+
+		local button = vgui.Create("DButton", frame)
+		button:Dock( TOP )
+		function button:DoClick()
+			local key,value = textentry1:GetValue(),textentry2:GetValue()
+			RunConsoleCommand("d3bot","setparam",nodeid,key,value)
+		end
+	end
 	
 	local isHighlightedById = {}
 	local selectedNodeIDs = {} -- Contains the same information as `isHighlightedById`, but is sorted by selection order.
@@ -89,6 +143,7 @@ return function(lib)
 		{ Name = "Link Nodes(Direction:Backward)" },
 		{ Name = "Link Nodes(Jumping:Needed)" },
 		{ Name = "Link Nodes(Pouncing:Needed)" },
+		{ Name = "Edit Param", },
 	}
 
 	function lib.SetIsMapNavMeshViewEnabled(bool)
