@@ -90,9 +90,10 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 
 	local trynest = false
 
-	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false)
+	local fleshcreeper = bot:GetZombieClassTable().Name == "Flesh Creeper"
+	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, false --[[disabled, doesn't work???]])
 	if not result then
-		if bot:GetZombieClassTable().Name == "Flesh Creeper" and bot:Alive() then 
+		if fleshcreeper then 
 			local cannest,node = D3bot.Basics.FindNestPoint(bot)
 			if cannest then
 				trynest = true
@@ -190,7 +191,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 
 	local buttons
 	if actions then
-		buttons = bit.bor(actions.MoveForward and IN_FORWARD or 0, actions.MoveBackward and IN_BACK or 0, actions.MoveLeft and IN_MOVELEFT or 0, actions.MoveRight and IN_MOVERIGHT or 0, actions.Attack and IN_ATTACK or 0, actions.Attack2 and IN_ATTACK2 or 0, actions.Duck and IN_DUCK or 0, actions.Jump and IN_JUMP or 0, actions.Use and IN_USE or 0)
+		buttons = bit.bor(actions.MoveForward and IN_FORWARD or 0, actions.MoveBackward and IN_BACK or 0, actions.MoveLeft and IN_MOVELEFT or 0, actions.MoveRight and IN_MOVERIGHT or 0, actions.Attack and IN_ATTACK or 0, actions.Attack2 and IN_ATTACK2 or 0, actions.Duck and IN_DUCK or 0, actions.Jump and IN_JUMP or 0, actions.Use and IN_USE or 0, actions.Reload and IN_RELOAD or 0)
 	end
 
 	if majorStuck and GAMEMODE:GetWaveActive() then bot:Kill() end
@@ -218,6 +219,14 @@ function HANDLER.TargetScore(bot,target,botPos,maxDist)
 	local dist = botPos:DistToSqr(target:GetPos())
 	local score = ((maxDist or 500*500) - math.min(maxDist or 500*500,dist)) * 0.5
 		+ (targetPriorities[target:GetClass()] or 0)
+	for _,otherbot in ipairs(player.GetAll())do 
+		if otherbot ~= bot and otherbot.D3bot_Mem then
+			local mem = otherbot.D3bot_Mem
+			if IsValid(mem.TgtOrNil) and mem.TgtOrNil == target then
+				score = score / 1.5
+			end
+		end
+	end
 	return score
 end
 
@@ -331,7 +340,7 @@ local potEntTargets = nil
 function HANDLER.CanBeTgt(bot, target)
 	if not target or not IsValid(target) then return end
 	if target:IsPlayer() and target ~= bot and (target:Team() ~= TEAM_UNDEAD or GAMEMODE:GetEndRound()) and target:GetObserverMode() == OBS_MODE_NONE and not target:IsFlagSet(FL_NOTARGET) and target:Alive() then return true end
-	if target:GetClass() == "prop_obj_sigil" and target:GetSigilCorrupted() then return false end -- Special case to ignore corrupted sigils.
+	if target:GetClass() == "prop_obj_sigil" and (LASTHUMAN or target:GetSigilCorrupted()) then return false end -- Special case to ignore useless sigils.
 	if potEntTargets and table.HasValue(potEntTargets, target) then return true end
 
 	return false
@@ -361,5 +370,9 @@ function HANDLER.RerollTarget(bot)
 	potEntTargets = D3bot.GetEntsOfClss(potTargetEntClasses)
 	local potTargets = table.Add(players, potEntTargets)
 	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
-	bot:D3bot_SetTgtOrNil(potTargets[1], false, nil)
+	for _,target in ipairs(potTargets) do
+		if HANDLER.CanBeTgt(bot, target) then
+			bot:D3bot_SetTgtOrNil(target, false, nil)
+		end
+	end
 end

@@ -51,18 +51,31 @@ function D3bot.Basics.FindNestPoint(bot)
 	
 	if D3bot.UsingSourceNav then return false end
 
+	for _, human in pairs(team.GetPlayers(TEAM_HUMAN)) do
+		if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 600 then
+			return false
+		end
+	end
+
 	local nestCount = 0
 	local pnestCount = 0
 	local nestedNodes = {}
 	for i,v in pairs(ents.FindByClass("prop_creepernest")) do 
 		if v:GetNestBuilt() then
 			nestedNodes[D3bot.MapNavMesh:GetNearestNodeOrNil(v:GetPos())] = true
+			local uid = bot:UniqueID()
+			if v.OwnerUID == uid then
+				pnestCount = pnestCount + 1
+			end
+		else
+			local uid = bot:UniqueID()
+			if v.OwnerUID == uid then
+				local node = D3bot.MapNavMesh:GetNearestNodeOrNil(v:GetPos())
+				local pos = node:GetClosestPointOnArea(bot:GetPos())
+				return true,node,pos
+			end
 		end
 		nestCount = nestCount + 1
-		local uid = bot:UniqueID()
-		if v.OwnerUID == uid then
-			pnestCount = pnestCount + 1
-		end
 		if pnestCount >= 3 then return false end
 		if nestCount >= 12 then return false end
 	end
@@ -73,12 +86,13 @@ function D3bot.Basics.FindNestPoint(bot)
 
 			if IsValid(bot.TgtOrNil) then
 				local dist = bot.TgtOrNil:GetPos():Distance(pos)
-				if (dist >= 1800) then continue end
+				if (dist >= 2000) then continue end
 			end
 
+			local skip = false
 			for _, ent in pairs(ents.FindByClass("prop_creepernest")) do
 				if util.SkewedDistance(ent:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuildNest then
-					continue
+					skip = true break
 				end
 			end
 
@@ -86,15 +100,17 @@ function D3bot.Basics.FindNestPoint(bot)
 				if sigil:GetSigilCorrupted() then continue end
 
 				if util.SkewedDistance(sigil:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuildNest then
-					continue
+					skip = true break
 				end
 			end
 
 			for _, human in pairs(team.GetPlayers(TEAM_HUMAN)) do
 				if util.SkewedDistance(human:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuild then
-					continue
+					skip = true break
 				end
 			end
+
+			if skip then continue end
 
 			return true,node,pos
 		end
@@ -500,7 +516,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movePosOffset = attackType == "Target" and Vector(math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50,math.cos(CurTime() * 3 + bot:EntIndex() * 80) * 50) or attackType == "Cade" and bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * 50 or vector_origin
+	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 3 + bot:EntIndex() * 80),math.cos(CurTime() * 3 + bot:EntIndex() * 80)) * range) or attackType == "Cade" and (bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * range) or vector_origin
 	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.01, 1)
@@ -646,7 +662,7 @@ end
 ---@return boolean minorStuck -- True if the bot seems to be stuck on a ladder or similar.
 ---@return boolean majorStuck -- True if the bot seems to be stuck on props, or runs in circles.
 ---@return boolean facesHindrance -- True if the bot is walking slower than expected.
-function D3bot.Basics.PounceAuto(bot, crab)
+function D3bot.Basics.PounceAuto(bot, crab, fleshcreeper)
 	local mem = bot.D3bot_Mem
 
 	local nodeOrNil = mem.NodeOrNil
@@ -656,7 +672,7 @@ function D3bot.Basics.PounceAuto(bot, crab)
 
 	---@type GWeapon|table
 	local weapon = bot:GetActiveWeapon()
-	if not weapon.PounceVelocity and not crab then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+	if not weapon.PounceVelocity and not crab and not fleshcreeper then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 
 	-- Fill table with possible pounce target positions, ordered with increasing priority.
 
@@ -726,11 +742,15 @@ function D3bot.Basics.PounceAuto(bot, crab)
 		end
 		if not mem.pouncing then
 			-- Started pouncing
-			actions.Attack2 = crab and false or true
-			actions.Attack = crab and true or false
+			if not fleshcreeper then
+				actions.Attack2 = crab and false or true
+				actions.Attack = crab and true or false
+			else
+				actions.Reload = true
+			end
 			mem.pouncingTimer = CurTime() + 0.9 + math.random() * 0.2
 
-			mem.pouncingStartTime = CurTime() + (weapon.PounceStartDelay or 0)
+			mem.pouncingStartTime = CurTime() + (weapon.PounceStartDelay or 0.5)
 			mem.pouncing = true
 		elseif mem.pouncingTimer and mem.pouncingTimer < CurTime() and (CurTime() - mem.pouncingTimer > 5 or bot:WaterLevel() >= 2 or bot:IsOnGround()) then
 			-- Ended pouncing
