@@ -452,11 +452,16 @@ function D3bot.Basics.WalkAttackAuto(bot)
 			return D3bot.Basics.Walk(bot, nextNodeOrNil.Pos, nil)
 		end
 	elseif not bot:D3bot_CanSeeTargetCached() and nextNodeOrNil then
-		-- Target not visible, walk towards next node.
-		if D3bot.UsingSourceNav then
-			return D3bot.Basics.Walk(bot, nextNodeOrNil:GetCenter(), nil)
-		else
-			return D3bot.Basics.Walk(bot, nextNodeOrNil.Pos, nil)
+
+		if not (IsValid(mem.BarricadeAttackEntity) and IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():DistToSqr(bot:GetPos()) <= 56*56) then
+
+			-- Target not visible, walk towards next node.
+			if D3bot.UsingSourceNav then
+				return D3bot.Basics.Walk(bot, nextNodeOrNil:GetCenter(), nil)
+			else
+				return D3bot.Basics.Walk(bot, nextNodeOrNil.Pos, nil)
+			end
+
 		end
 	elseif mem.TgtOrNil and mem.DontAttackTgt then
 		-- There is a target entity, but the bot shouldn't attack it.
