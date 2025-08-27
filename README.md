@@ -202,8 +202,8 @@ Be sure to follow all the other necessary steps as described in [#Installation](
 - This sketch might help: [navmesh2.png](./media/navmesh2.png)
 - How to create nest points: 
 
-  ![GOOD EXAMPLE](./media/nests/nest_area_good.png)
-  ![BAD EXAMPLE](./media/nests/nest_area_bad.png)
+![GOOD EXAMPLE](./media/nests/nest_area_good.png)
+![BAD EXAMPLE](./media/nests/nest_area_bad.png)
 
 - Having sized nodes helps locating (= "what node are you in?"). Nodes without an area use a small sphere instead.
 - Once a bot enters a node's area/sphere, he immediately moves towards the next node's position.
