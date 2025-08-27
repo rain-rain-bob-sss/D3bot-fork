@@ -373,6 +373,7 @@ function HANDLER.RerollTarget(bot)
 	for _,target in ipairs(potTargets) do
 		if HANDLER.CanBeTgt(bot, target) then
 			bot:D3bot_SetTgtOrNil(target, false, nil)
+			break
 		end
 	end
 end
