@@ -245,7 +245,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - (proximity or 10)) / 60, 0.75, 1)
 	local speed = bot:GetMaxSpeed() * (slowdown and invProximity or 1)
-	movementVector.z = 0
+	--movementVector.z = 0
 	movementVector:Normalize()
 	movementVector:Mul(speed)
 	movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
@@ -384,10 +384,20 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	actions.Attack = facesHindrance and not shouldClimb -- If the bot should climb, but is using its primary attack, climing will fail.
 	actions.Use = actions.Use or facesHindrance
 
-	if bot:GetMoveType() ~= MOVETYPE_LADDER and actions.Attack and attackType == "Cade" and posdiff:Length() <= range * 0.45 then 
-		movementVector.x = -movementVector.x * 25
-		movementVector.y = -movementVector.y * 25
+	local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
+	local swingtime = math.Clamp(swingendtime - CurTime(),0,10)
+	local canusestrat1 = weapon and ((weapon.MeleeDelay and weapon.MeleeDelay > 0.5) or (weapon.SwingTime and weapon.SwingTime > 0.5))
+	if bot:GetMoveType() ~= MOVETYPE_LADDER and attackType == "Cade" and (swingtime == 0 or swingtime > 0.5) and mem.CadeAttackStrat == 1 then 
+		movementVector = -posdiff
+		local speed = bot:GetMaxSpeed() * 0.5
+		movementVector.z = 0
+		movementVector:Normalize()
+		movementVector:Mul(speed)
+		movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
+		actions.Attack = true and not shouldClimb
 	end
+
+	if attackType == "Cade" then actions.Jump = false end
 
 	if movementVector.x > 0 then actions.MoveForward = true end
 	if movementVector.x < 0 then actions.MoveBackward = true end
@@ -451,17 +461,13 @@ function D3bot.Basics.WalkAttackAuto(bot)
 			return D3bot.Basics.Walk(bot, nextNodeOrNil.Pos, nil)
 		end
 	elseif not bot:D3bot_CanSeeTargetCached() and nextNodeOrNil then
+		-- Target not visible, walk towards next node.
+		if D3bot.UsingSourceNav then
+			return D3bot.Basics.Walk(bot, nextNodeOrNil:GetCenter(), nil)
+		else
+			return D3bot.Basics.Walk(bot, nextNodeOrNil.Pos, nil)
+		end
 
-		--if not (IsValid(mem.BarricadeAttackEntity) and IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():DistToSqr(bot:GetPos()) <= 42*42) then
-
-			-- Target not visible, walk towards next node.
-			if D3bot.UsingSourceNav then
-				return D3bot.Basics.Walk(bot, nextNodeOrNil:GetCenter(), nil)
-			else
-				return D3bot.Basics.Walk(bot, nextNodeOrNil.Pos, nil)
-			end
-
-		--end
 	elseif mem.TgtOrNil and mem.DontAttackTgt then
 		-- There is a target entity, but the bot shouldn't attack it.
 		return D3bot.Basics.Walk(bot, mem.TgtOrNil:GetPos(), nil, true, mem.TgtProximity)
@@ -543,7 +549,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.95, 1)
 	local speed = bot:GetMaxSpeed() * invProximity
-	movementVector.z = 0
+	--movementVector.z = 0
 	movementVector:Normalize()
 	movementVector:Mul(speed)
 	movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))

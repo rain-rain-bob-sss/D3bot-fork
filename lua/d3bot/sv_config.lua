@@ -1,6 +1,6 @@
 D3bot.BotSeeTr = {
-	mins = Vector(-7, -7, -7),
-	maxs = Vector(7, 7, 7),
+	mins = Vector(-14, -14, -14),
+	maxs = Vector(14, 14, 14),
 	mask = MASK_PLAYERSOLID
 }
 D3bot.NodeBlocking = {

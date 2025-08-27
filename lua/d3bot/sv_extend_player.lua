@@ -103,11 +103,6 @@ function meta:D3bot_CanSeeTarget(fraction, target)
 	tr.filter = player.GetAll()
 
 	local result = attackPos and not util.TraceHull(tr).Hit
-	if mem.BarricadeAttackEntity and mem.BarricadeAttackPos and mem.BarricadeAttackEntity:IsValid() then
-		if attackPos:DistToSqr(tr.start) >= 52*52 then
-			return false
-		end
-	end
 	return result
 end
 
@@ -294,6 +289,8 @@ function meta:D3bot_InitializeOrReset(inittype)
 	---@field public Type string?
 	---@field public TargetAfterSpawned GEntity?
 	---@field public ForcedClass string?
+	---@field public CadeAttackStrat number?
+	---@field public nextUpdateCadeAttackStrat number?
 	
 	
 	self.D3bot_Mem = self.D3bot_Mem or {}
@@ -334,6 +331,9 @@ function meta:D3bot_InitializeOrReset(inittype)
 	mem.PlayerColor = {plycolor.r/255,plycolor.g/255,plycolor.b/255}
 
 	mem.Type = inittype
+
+	mem.CadeAttackStrat = 0
+	mem.nextUpdateCadeAttackStrat = CurTime()
 
 	timer.Simple(0, function()
 		if not IsValid(self) then return end -- also make sure bot still exists

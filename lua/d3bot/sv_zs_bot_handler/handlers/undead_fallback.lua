@@ -265,6 +265,12 @@ function HANDLER.ThinkFunction(bot)
 		bot:D3bot_UpdateAngsOffshoot(HANDLER.AngOffshoot)
 	end
 
+	if mem.nextUpdateCadeAttackStrat and mem.nextUpdateCadeAttackStrat < CurTime() or not mem.nextUpdateCadeAttackStrat then
+		mem.nextUpdateCadeAttackStrat = CurTime() + 7
+		mem.CadeAttackStrat = math.random(0,1)
+		--print("strat: ",mem.CadeAttackStrat)
+	end
+
 	local pathCostFunction
 
 	if D3bot.UsingSourceNav then
