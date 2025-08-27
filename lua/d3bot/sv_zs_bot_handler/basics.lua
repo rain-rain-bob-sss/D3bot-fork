@@ -174,6 +174,10 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	else
 		if nodeOrNil and not nodeOrNil:GetContains(origin, nil) then aimStraight = true end
 	end
+
+	local attackType = ""
+	local posdiff = pos - origin
+
 	if shouldClimb then
 		---@type GWeapon|table
 		local weapon = bot:GetActiveWeapon()
@@ -192,6 +196,8 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			aimAngle = aimAngle or (mem.BarricadeAttackPos - bot:GetShootPos()):Angle()
 			bot:D3bot_AngsRotateTo(aimAngle + offshootAngle, 0.5)
 			--ClDebugOverlay.Line(GetPlayerByName("D3"), bot:GetShootPos(), mem.BarricadeAttackPos, 1, Color(0,255,0), false)
+			attackType = "Cade"
+			posdiff = mem.BarricadeAttackPos - origin
 		else
 			-- Target is invalid or too far away, forget about it.
 			-- We will either use the given aim angle, or calculate it based on the walk position.
@@ -232,9 +238,12 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
+	local weapon = bot:GetActiveWeapon()
+	local range = (weapon and weapon.MeleeReach or 75) + 25 -- Either MeleeReach + 25, or 100.
+
 	local movementVector = pos - origin
 	-- Slow down bot when close to target (2D distance).
-	local invProximity = math.Clamp((movementVector:Length2D() - (proximity or 10)) / 60, 0, 1)
+	local invProximity = math.Clamp((movementVector:Length2D() - (proximity or 10)) / 60, 0.75, 1)
 	local speed = bot:GetMaxSpeed() * (slowdown and invProximity or 1)
 	movementVector.z = 0
 	movementVector:Normalize()
@@ -374,6 +383,12 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 
 	actions.Attack = facesHindrance and not shouldClimb -- If the bot should climb, but is using its primary attack, climing will fail.
 	actions.Use = actions.Use or facesHindrance
+
+	if bot:GetMoveType() ~= MOVETYPE_LADDER and actions.Attack and attackType == "Cade" and posdiff:Length() <= range then 
+		movementVector.x = -movementVector.x * 25
+		movementVector.y = -movementVector.y * 25
+		if engine.TickCount() % 15 ~= 0 then actions.Jump = false end
+	end
 
 	if movementVector.x > 0 then actions.MoveForward = true end
 	if movementVector.x < 0 then actions.MoveBackward = true end
@@ -516,10 +531,10 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 3 + bot:EntIndex() * 80),math.cos(CurTime() * 3 + bot:EntIndex() * 80)) * range) or attackType == "Cade" and (bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * range) or vector_origin
+	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.7) or attackType == "Cade" and (bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * range) or vector_origin
 	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
-	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.01, 1)
+	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.95, 1)
 	local speed = bot:GetMaxSpeed() * invProximity
 	movementVector.z = 0
 	movementVector:Normalize()

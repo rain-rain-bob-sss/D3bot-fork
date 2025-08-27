@@ -332,16 +332,15 @@ end
 -----------------------------------
 
 local potTargetEntClasses = {"prop_*turret*", "prop_arsenalcrate", "prop_manhack*", "prop_obj_sigil", "prop_zapper*"}
-local potEntTargets = nil
 
 ---Returns whether a target is valid.
 ---@param bot GPlayer
 ---@param target GPlayer|GEntity|any
-function HANDLER.CanBeTgt(bot, target)
-	if not target or not IsValid(target) then return end
+function HANDLER.CanBeTgt(bot, target, potEntTargets)
+	if not target or not IsValid(target) then return false end
 	if target:IsPlayer() and target ~= bot and (target:Team() ~= TEAM_UNDEAD or GAMEMODE:GetEndRound()) and target:GetObserverMode() == OBS_MODE_NONE and not target:IsFlagSet(FL_NOTARGET) and target:Alive() then return true end
 	if target:GetClass() == "prop_obj_sigil" and (LASTHUMAN or target:GetSigilCorrupted()) then return false end -- Special case to ignore useless sigils.
-	if potEntTargets and table.HasValue(potEntTargets, target) then return true end
+	if potEntTargets and potEntTargets[target] then return true end
 
 	return false
 end
@@ -367,11 +366,21 @@ function HANDLER.RerollTarget(bot)
 	if #players == 0 then
 		players = D3bot.RemoveObsDeadTgts(player.GetAll())
 	end
-	potEntTargets = D3bot.GetEntsOfClss(potTargetEntClasses)
+	local potEntTargets2 = {}
+	local potEntTargets = D3bot.GetEntsOfClss(potTargetEntClasses, function(class)
+		local _ents = {}
+		local c = 0
+		for _,v in ipairs(ents.FindByClass(class)) do 
+			c = c + 1
+			_ents[c] = v
+			potEntTargets2[v] = true
+		end
+		return _ents
+	end)
 	local potTargets = table.Add(players, potEntTargets)
 	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
 	for _,target in ipairs(potTargets) do
-		if HANDLER.CanBeTgt(bot, target) then
+		if HANDLER.CanBeTgt(bot, target, potEntTargets2) then
 			bot:D3bot_SetTgtOrNil(target, false, nil)
 			break
 		end
