@@ -202,8 +202,9 @@ Be sure to follow all the other necessary steps as described in [#Installation](
 - This sketch might help: [navmesh2.png](./media/navmesh2.png)
 - How to create nest points: 
 
-![nest_area_good.png](./media/nests/nest_area_good.png)
-![nest_area_bad.png](./media/nests/nest_area_bad.png)
+  ![GOOD EXAMPLE](./media/nests/nest_area_good.png)
+  ![BAD EXAMPLE](./media/nests/nest_area_bad.png)
+
 - Having sized nodes helps locating (= "what node are you in?"). Nodes without an area use a small sphere instead.
 - Once a bot enters a node's area/sphere, he immediately moves towards the next node's position.
 - It is recommended to use sized nodes for rooms/areas and nodes without an area for doors. Each hallway, intersection and groove should have their own sized node. For ladders, two nodes without an area, one at bottom and one at top, suffice.
