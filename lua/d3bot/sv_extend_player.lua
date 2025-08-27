@@ -171,7 +171,7 @@ function meta:D3bot_FindBarricadeEntity(samples)
 end
 
 function meta:D3bot_ShouldNest()
-	local can = D3bot.Basics.FindNestPoint(self)
+	local can = D3bot.Basics.FindNestPoint(self,true)
 	return can
 end
 
@@ -394,7 +394,7 @@ function meta:D3bot_UpdatePath(pathCostFunction, heuristicCostFunction)
 	if not IsValid(mem.TgtOrNil) and not mem.PosTgtOrNil and not mem.NodeTgtOrNil then return end
 	local mapNavMesh = D3bot.MapNavMesh
 	local node = mapNavMesh:GetNearestNodeOrNil(self:GetPos())
-	mem.TgtNodeOrNil = mem.NodeTgtOrNil or mapNavMesh:GetNearestNodeOrNil(mem.TgtOrNil and mem.TgtOrNil:GetPos() or mem.PosTgtOrNil)
+	mem.TgtNodeOrNil = mem.NodeTgtOrNil or mapNavMesh:GetNearestNodeOrNil(mem.PosTgtOrNil or (mem.TgtOrNil and mem.TgtOrNil:GetPos()))
 	if not node or not mem.TgtNodeOrNil then return end
 	local abilities = {Walk = true, Jump = mem.CrouchJumpHeight, Height = mem.CrouchHeight, Crab = mem.IsCrab}
 	---@type GWeapon|table

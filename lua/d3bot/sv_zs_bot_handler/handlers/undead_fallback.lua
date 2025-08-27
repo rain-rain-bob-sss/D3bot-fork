@@ -31,6 +31,7 @@ HANDLER.RandomSecondaryAttack = {
 	["Frigid Revenant"] = {MinTime = 5, MaxTime = 7},
 	["Devourer"] = {MinTime = 5, MaxTime = 7},
 	Charger = {MinTime = 4, MaxTime = 5, SeeTarget = true},
+	["Deadly Charger"] = {MinTime = 4, MaxTime = 5, SeeTarget = true}, --zs improved
 	["Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100}, -- Slows them too much
 	["Wild Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100}, -- Slows them too much
 }
@@ -79,7 +80,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 
 	if not bot:Alive() then
 		-- Get back into the game.
-		cmd:SetButtons(IN_ATTACK)
+		cmd:SetButtons(math.random(1,10) == 1 and IN_RELOAD or IN_ATTACK2) --NEAREST
 		return
 	end
 
@@ -91,27 +92,27 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	local trynest = false
 
 	local fleshcreeper = bot:GetZombieClassTable().Name == "Flesh Creeper"
-	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, false --[[disabled, doesn't work???]])
-	if not result then
-		if fleshcreeper then 
-			local cannest,node = D3bot.Basics.FindNestPoint(bot)
-			if cannest then
-				trynest = true
-				bot:D3bot_SetNodeTgtOrNil(node)
-			else
-				if mem.NodeTgtOrNil then 
-					mem.NodeTgtOrNil = nil
-				end
-			end
-			result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
-			if not result then 
-				return 
-			end
+	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, false --[[disabled, bots are stupid as fuck]])
+	if fleshcreeper and actions.Reload and IsValid(bot:GetActiveWeapon()) then bot:GetActiveWeapon():Reload() end --WHAT THE FUCK,STUPID HACK
+	if fleshcreeper then 
+		local cannest,node,pos = D3bot.Basics.FindNestPoint(bot)
+		if cannest then
+			trynest = true
+			bot:D3bot_SetNodeTgtOrNil(node)
+			--bot:D3bot_SetPosTgtOrNil(pos)
 		else
-			result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
-			if not result then
-				return
+			--if mem.PosTgtOrNil then 
+			--	mem.PosTgtOrNil = nil
+			--end
+			if mem.NodeTgtOrNil then 
+				mem.NodeTgtOrNil = nil
 			end
+		end
+	end
+	if not result then
+		result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
+		if not result then
+			return
 		end
 	end
 
@@ -176,7 +177,12 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		if actions.Attack and primAttack.SecondaryAttack then actions.Attack = false actions.Attack2 = true end
 	end
 
-	if (trynest and facesHindrance) and bot:Alive() then actions.Attack = false actions.Attack2 = true actions.Jump = false majorStuck = false end
+	if (trynest and facesHindrance--[[mem.PosTgtOrNil and mem.PosTgtOrNil:DistToSqr(bot:GetPos()) <= 42 * 42]]) then 
+		actions.Attack = false 
+		actions.Attack2 = true 
+		actions.Jump = false 
+		majorStuck = false 
+	end
 
 	local wep = bot:GetActiveWeapon()
 	if IsValid(wep) and wep.GetBattlecry then 

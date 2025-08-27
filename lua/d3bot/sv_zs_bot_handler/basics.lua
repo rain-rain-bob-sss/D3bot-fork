@@ -46,16 +46,11 @@ end
 ---@return boolean Success
 ---@return any|nil Node
 ---@return GVector|nil NodePosition
-function D3bot.Basics.FindNestPoint(bot)
+function D3bot.Basics.FindNestPoint(bot,check)
 	local mem = bot.D3bot_Mem
 	
 	if D3bot.UsingSourceNav then return false end
 
-	for _, human in pairs(team.GetPlayers(TEAM_HUMAN)) do
-		if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 600 then
-			return false
-		end
-	end
 
 	local nestCount = 0
 	local pnestCount = 0
@@ -71,7 +66,7 @@ function D3bot.Basics.FindNestPoint(bot)
 			local uid = bot:UniqueID()
 			if v.OwnerUID == uid then
 				local node = D3bot.MapNavMesh:GetNearestNodeOrNil(v:GetPos())
-				local pos = node:GetClosestPointOnArea(bot:GetPos())
+				local pos = v:GetPos()
 				return true,node,pos
 			end
 		end
@@ -80,11 +75,28 @@ function D3bot.Basics.FindNestPoint(bot)
 		if nestCount >= 12 then return false end
 	end
 
+	if not check then
+		for _, human in pairs(team.GetPlayers(TEAM_HUMAN)) do
+			local distract = 0
+			for _,otherbot in ipairs(player.GetAll())do 
+				if otherbot ~= bot and otherbot.D3bot_Mem and otherbot:GetZombieClassTable().Name ~= "Flesh Creeper" then
+					local mem = otherbot.D3bot_Mem
+					if IsValid(mem.TgtOrNil) and mem.TgtOrNil == human then
+						distract = distract + 1
+					end
+				end
+			end
+			if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 500 and distract <= 3 then
+				return false
+			end
+		end
+	end
+
 	for id, node in pairs(D3bot.MapNavMesh.NodeById) do
 		if node.Params.Nest == "Enabled" and not nestedNodes[node] then 
 			local pos = node:GetClosestPointOnArea(bot:GetPos())
 
-			if IsValid(bot.TgtOrNil) then
+			if not check and IsValid(bot.TgtOrNil) and bot:D3bot_CanSeeTargetCached() then
 				local dist = bot.TgtOrNil:GetPos():Distance(pos)
 				if (dist >= 2000) then continue end
 			end
@@ -700,7 +712,7 @@ function D3bot.Basics.PounceAuto(bot, crab, fleshcreeper)
 
 	---@type GWeapon|table
 	local weapon = bot:GetActiveWeapon()
-	if not weapon.PounceVelocity and not crab and not fleshcreeper then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+	if not IsValid(weapon) or (not weapon.PounceVelocity and not crab and not fleshcreeper) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 
 	-- Fill table with possible pounce target positions, ordered with increasing priority.
 

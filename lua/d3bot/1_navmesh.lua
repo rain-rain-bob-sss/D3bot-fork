@@ -245,7 +245,7 @@ return function(lib)
 	---It may just return the node's origin if the node doesn't have any area.
 	---@param pos GVector
 	---@return GVector
-	function nodeFallback:GetClosestPointOnArea(pos)
+	function nodeFallback:GetClosestPointOnArea(pos,middle)
 		local posX, posY, posZ = pos:Unpack()
 
 		local params = self.Params
@@ -260,7 +260,10 @@ return function(lib)
 		posX = (posX > areaXMax and areaXMax) or (posX < areaXMin and areaXMin) or posX
 		posY = (posY > areaYMax and areaYMax) or (posY < areaYMin and areaYMin) or posY
 
-		return Vector(posX, posY, posZ)
+
+		local result = Vector(posX, posY, posZ)
+		if middle then result = result * 0.5 + pos * 0.5 end
+		return result
 	end
 
 	function nodeFallback:GetFocusPos() return self.Pos end
