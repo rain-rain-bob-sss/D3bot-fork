@@ -384,10 +384,9 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	actions.Attack = facesHindrance and not shouldClimb -- If the bot should climb, but is using its primary attack, climing will fail.
 	actions.Use = actions.Use or facesHindrance
 
-	if bot:GetMoveType() ~= MOVETYPE_LADDER and actions.Attack and attackType == "Cade" and posdiff:Length() <= range then 
+	if bot:GetMoveType() ~= MOVETYPE_LADDER and actions.Attack and attackType == "Cade" and posdiff:Length() <= range * 0.45 then 
 		movementVector.x = -movementVector.x * 25
 		movementVector.y = -movementVector.y * 25
-		if engine.TickCount() % 15 ~= 0 then actions.Jump = false end
 	end
 
 	if movementVector.x > 0 then actions.MoveForward = true end
@@ -453,7 +452,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		end
 	elseif not bot:D3bot_CanSeeTargetCached() and nextNodeOrNil then
 
-		if not (IsValid(mem.BarricadeAttackEntity) and IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():DistToSqr(bot:GetPos()) <= 56*56) then
+		--if not (IsValid(mem.BarricadeAttackEntity) and IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():DistToSqr(bot:GetPos()) <= 42*42) then
 
 			-- Target not visible, walk towards next node.
 			if D3bot.UsingSourceNav then
@@ -462,7 +461,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 				return D3bot.Basics.Walk(bot, nextNodeOrNil.Pos, nil)
 			end
 
-		end
+		--end
 	elseif mem.TgtOrNil and mem.DontAttackTgt then
 		-- There is a target entity, but the bot shouldn't attack it.
 		return D3bot.Basics.Walk(bot, mem.TgtOrNil:GetPos(), nil, true, mem.TgtProximity)
@@ -492,6 +491,9 @@ function D3bot.Basics.WalkAttackAuto(bot)
 			actions.Duck = true
 		end
 		attackType = "Target"
+		if mem.BarricadeAttackEntity and mem.BarricadeAttackPos then
+			attackType = "Target-Cade"
+		end
 	elseif mem.BarricadeAttackEntity and mem.BarricadeAttackPos then
 		-- We are not within attack range, but we have a barricade entity to attack.
 		-- So we aim for this one, instead.
@@ -536,7 +538,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.7) or attackType == "Cade" and (bot:GetForward() * math.sin(CurTime() * 3 + bot:EntIndex() * 80) * range) or vector_origin
+	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.7) or vector_origin
 	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.95, 1)

@@ -86,7 +86,7 @@ function meta:D3bot_CanSeeTargetCached(fraction, target)
 	if not mem then return end
 	if not mem.CanSeeTargetCache or mem.CanSeeTargetCache.ValidUntil < CurTime() then
 		mem.CanSeeTargetCache = {}
-		mem.CanSeeTargetCache.ValidUntil = CurTime() + 0.9 + math.random() * 0.2 -- Invalidate after a second (With some jitter)
+		mem.CanSeeTargetCache.ValidUntil = CurTime() + 0.4 + math.random() * 0.2 -- Invalidate after a second (With some jitter)
 		mem.CanSeeTargetCache.Result = self:D3bot_CanSeeTarget(fraction, target)
 	end
 	return mem.CanSeeTargetCache.Result
@@ -101,7 +101,14 @@ function meta:D3bot_CanSeeTarget(fraction, target)
 	tr.start = self:EyePos()
 	tr.endpos = attackPos
 	tr.filter = player.GetAll()
-	return attackPos and not util.TraceHull(tr).Hit
+
+	local result = attackPos and not util.TraceHull(tr).Hit
+	if mem.BarricadeAttackEntity and mem.BarricadeAttackPos and mem.BarricadeAttackEntity:IsValid() then
+		if attackPos:DistToSqr(tr.start) >= 52*52 then
+			return false
+		end
+	end
+	return result
 end
 
 ---Slowly (lerpFactor) rotates the bot (mem.Angs) towards the given angle.
