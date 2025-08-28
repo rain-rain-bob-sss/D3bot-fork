@@ -344,6 +344,7 @@ end
 -----------------------------------
 
 local potTargetEntClasses = {"prop_*turret*", "prop_arsenalcrate", "prop_manhack*", "prop_obj_sigil", "prop_zapper*"}
+local potTargetEntClasses_Obj = {"prop_*turret*", "prop_zapper*"}
 
 ---Returns whether a target is valid.
 ---@param bot GPlayer
@@ -379,7 +380,7 @@ function HANDLER.RerollTarget(bot)
 		players = D3bot.RemoveObsDeadTgts(player.GetAll())
 	end
 	local potEntTargets2 = {}
-	local potEntTargets = D3bot.GetEntsOfClss(potTargetEntClasses, function(class)
+	local potEntTargets = D3bot.GetEntsOfClss(GAMEMODE.ObjectiveMap and potTargetEntClasses_Obj or potTargetEntClasses, function(class)
 		local _ents = {}
 		local c = 0
 		for _,v in ipairs(ents.FindByClass(class)) do 

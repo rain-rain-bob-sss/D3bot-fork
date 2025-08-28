@@ -147,6 +147,9 @@ function HANDLER.OnDeathFunction(bot)
 	HANDLER.RerollTarget(bot)
 end
 
+--[[
+
+
 -----------------------------------
 -- Custom functions and settings --
 -----------------------------------
@@ -179,3 +182,8 @@ function HANDLER.RerollTarget(bot)
 	local potTargets = table.Add(players, potEntTargets)
 	bot:D3bot_SetTgtOrNil(table.Random(potTargets), false, nil)
 end
+
+]]
+
+HANDLER.CanBeTgt = D3bot.Handlers.Undead_Fallback.CanBeTgt
+HANDLER.RerollTarget = D3bot.Handlers.Undead_Fallback.RerollTarget
