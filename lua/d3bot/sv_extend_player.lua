@@ -339,6 +339,8 @@ function meta:D3bot_InitializeOrReset(inittype)
 	mem.WeaponColor = {wepcolor.r/255,wepcolor.g/255,wepcolor.b/255}
 	mem.PlayerColor = {plycolor.r/255,plycolor.g/255,plycolor.b/255}
 
+	self:SetPlayerColor(Vector(mem.PlayerColor[1],mem.PlayerColor[2],mem.PlayerColor[3]))
+
 	mem.Type = inittype
 
 	mem.CadeAttackStrat = 0

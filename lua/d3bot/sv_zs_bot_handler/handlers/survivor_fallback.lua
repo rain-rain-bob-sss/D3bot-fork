@@ -85,7 +85,7 @@ function HANDLER.ThinkFunction(bot)
 		local closerEnemies = D3bot.From(closeEnemies):Where(function(k, v) return botPos:DistToSqr(v:GetPos()) < 600*600 end).R -- TODO: Constant for the distance
 		local ownTeam = bot:Team()
 		local canDamageTeam = PlayerCanDamageTeam or function() end
-		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return (botPos:DistToSqr(v:GetPos()) < 300*300) and not (ownTeam == v:Team() and canDamageTeam(bot,v)) end).R -- TODO: Constant for the distance
+		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) if (ownTeam == v:Team() and canDamageTeam(bot,v)) then return true end return (botPos:DistToSqr(v:GetPos()) < 300*300) end).R -- TODO: Constant for the distance
 		local newAttackTarget = table.Random(closerEnemies) or table.Random(closeEnemies) or table.Random(enemies)
 		if HANDLER.CanShootTarget(bot, newAttackTarget) then mem.AttackTgtOrNil = newAttackTarget end
 		if table.Count(dangerouscloseEnemies) > 0 then
@@ -105,7 +105,7 @@ function HANDLER.ThinkFunction(bot)
 				bot:D3bot_ResetTgt()
 			end
 			if not mem.NextNodeOrNil and ((mem.nextHumanPath or 0) < CurTime() or bot:WaterLevel() == 3) then
-				mem.nextHumanPath = CurTime() + 10
+				mem.nextHumanPath = CurTime() + 5
 				local path = HANDLER.FindPathToRandomNode(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))--HANDLER.FindPathToHuman(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))
 				if path then
 					--D3bot.Debug.DrawPath(GetPlayerByName("D3"), path, nil, Color(0, 0, 255), true)
@@ -134,7 +134,7 @@ function HANDLER.ThinkFunction(bot)
 	
 	-- Change held weapon based on target distance
 	if not mem.nextHeldWeaponUpdate or (mem.nextHeldWeaponUpdate and mem.nextHeldWeaponUpdate < CurTime()) then
-		mem.nextHeldWeaponUpdate = CurTime() + 1 + math.random() * 1
+		mem.nextHeldWeaponUpdate = CurTime() + 1 + 10 * math.Rand(0.1,1)
 		local weapons = bot:GetWeapons()
 		local filteredWeapons = {}
 		local bestRating, bestWeapon, bestMaxDistance = 0, nil, nil
@@ -151,6 +151,8 @@ function HANDLER.ThinkFunction(bot)
 					bot:ConCommand("zs_quickbuyammo")
 				end
 			end
+
+			rating = rating + math.random(-1000,1000)
 			
 			if ammo > 0 and enemyDistance < maxDistance and bestRating < rating and weaponType == HANDLER.Weapon_Types.RANGED then
 				bestRating, bestWeapon, bestMaxDistance = rating, v.ClassName, maxDistance
@@ -159,6 +161,10 @@ function HANDLER.ThinkFunction(bot)
 		if bestWeapon then
 			bot:SelectWeapon(bestWeapon)
 			mem.MaxShootingDistance = bestMaxDistance
+		end
+
+		for i,item in ipairs(GAMEMODE.Items) do
+			if item.SWEP and item.PointShop and GAMEMODE:GetInventoryItemType(item.SWEP) ~= INVCAT_TRINKETS and not item.CanMakeFromScrap and not bot:HasWeapon(item.SWEP) and math.random(1,5) == 1 then HANDLER.Purchase(bot,tostring(i)) if math.random(1,10) == 1 then break end end
 		end
 	end
 	
@@ -301,7 +307,9 @@ function HANDLER.FindPathToRandomNode(node)
 		return node.Pos:Distance(linkedNode.Pos) * 0.1
 	end
 	local function heuristicCostFunction(node)
-		return math.random(-99999,99999)
+		local playerFactorBySurvivors = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_SURVIVOR] or 0
+		local playerFactorByUndead = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_UNDEAD] or 0
+		return math.random(-99999,99999) - playerFactorBySurvivors * 500000
 	end
 	--D3bot.Debug.DrawNodeMetadata(GetPlayerByName("D3"), D3bot.NodeMetadata, 5)
 	--D3bot.Debug.DrawPath(GetPlayerByName("D3"), D3bot.GetEscapeMeshPathOrNil(node, 400, pathCostFunction, heuristicCostFunction, {Walk = true}), 5, Color(255, 0, 0), true)
@@ -332,17 +340,31 @@ end
 function HANDLER.IsEnemy(bot, ply)
 	local ownTeam = bot:Team()
 	local canDamageTeam = PlayerCanDamageTeam and PlayerCanDamageTeam(bot,ply)
-	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() ~= ownTeam or canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() then return true end
+	local testTarget = D3bot.TestTarget
+	if IsValid(testTarget) and ply ~= testTarget then return false end
+	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() ~= ownTeam or canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() and not ply:IsFlagSet(FL_NOTARGET) then return true end
 end
 
 function HANDLER.IsFriend(bot, ply)
 	local ownTeam = bot:Team()
 	local canDamageTeam = PlayerCanDamageTeam and PlayerCanDamageTeam(bot,ply)
-	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() ~= ownTeam and not canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() then return true end
+	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() ~= ownTeam and not canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() and not ply:IsFlagSet(FL_NOTARGET) then return true end
 end
 
 function HANDLER.CanBeAttackTgt(bot, target)
 	if not target or not IsValid(target) then return end
 	local ownTeam = bot:Team()
-	if target:IsPlayer() and target ~= bot and target:Team() ~= ownTeam and target:GetObserverMode() == OBS_MODE_NONE and target:Alive() then return true end
+	local canDamageTeam = PlayerCanDamageTeam and PlayerCanDamageTeam(bot,target)
+	local testTarget = D3bot.TestTarget
+	if IsValid(testTarget) and target ~= testTarget then return false end
+	if target:IsPlayer() and target ~= bot and (target:Team() ~= ownTeam or canDamageTeam) and target:GetObserverMode() == OBS_MODE_NONE and target:Alive() and not target:IsFlagSet(FL_NOTARGET) then return true end
 end
+
+function HANDLER.Purchase(bot,item,scrap)
+	bot.ArsenalZone = bot
+	concommand.Run(bot,"zs_pointsshopbuy",{item,scrap})
+end
+
+hook.Add("PlayerCanPurchase",D3bot.BotHooksId,function(bot)
+	if bot:IsBot() then return true end
+end)

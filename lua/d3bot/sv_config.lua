@@ -60,7 +60,7 @@ D3bot.UseConsoleBots = false			-- If true, bots will be spawned "the old way". B
 D3bot.DisableNodeDamage = false			-- Prevents players taking damage from any "DMGPerSecond" parameter.
 D3bot.NodeDamageInterval = 1			-- Time in seconds between taking damage from any "DMGPerSecond" parameter.
 
-D3bot.BotUpdateDelay = 0.5 				-- Delay in seconds on how long it takes for a bot to update. (Joining, leaving, suiciding, etc.)
+D3bot.BotUpdateDelay = 0.25 				-- Delay in seconds on how long it takes for a bot to update. (Joining, leaving, suiciding, etc.)
 										-- Due to small lag when a bot joins/leaves, having this set to 0 and spawning lots of bots at once will heavily lag for a few seconds.
 										-- Sigilmare EDIT: I tested this with 0 delay and I didn't seem to lag, but that might just be on my end. So don't take my word for it.
 
