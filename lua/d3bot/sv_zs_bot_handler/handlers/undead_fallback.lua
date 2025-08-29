@@ -93,6 +93,8 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		return
 	end
 
+	if bot:IsFrozen() then return end
+
 	if not bot:Alive() then
 		-- Get back into the game.
 		cmd:SetButtons(math.random(1,10) == 1 and IN_RELOAD or IN_ATTACK2) --NEAREST

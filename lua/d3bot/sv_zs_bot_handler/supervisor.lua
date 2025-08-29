@@ -172,3 +172,16 @@ end
 
 -- TODO: Detect situations and coordinate bots accordingly (Attacking cades, hunt down runners, spawncamping prevention)
 -- TODO: If needed force one bot to flesh creeper and let him build a nest at a good place
+
+
+function D3bot.ForceSpawnHuman()
+	spawnAsTeam = TEAM_HUMAN
+	---@type GPlayer|table
+	local bot = player.CreateNextBot(D3bot.GetUsername())
+	spawnAsTeam = nil
+	if IsValid(bot) then
+		bot:Redeem()
+		bot:D3bot_InitializeOrReset()
+		if ulx then ulx.giveHumanLoadout(bot) end
+	end
+end

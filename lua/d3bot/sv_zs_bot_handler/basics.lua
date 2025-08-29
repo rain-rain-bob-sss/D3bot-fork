@@ -393,7 +393,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		mem.AntiStuckCounter = nil
 	end
 
-	actions.Attack = facesHindrance and not shouldClimb -- If the bot should climb, but is using its primary attack, climing will fail.
+	actions.Attack = facesHindrance and not shouldClimb or bot:IsHolding() -- If the bot should climb, but is using its primary attack, climing will fail.
 	actions.Use = actions.Use or facesHindrance
 
 	local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
@@ -697,7 +697,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	else
 		mem.AntiStuckCounter = nil
 	end
-	actions.Attack = preattack or facesTgt or facesHindrance
+	actions.Attack = preattack or facesTgt or facesHindrance or bot:IsHolding()
 	actions.Use = actions.Use or facesHindrance
 
 	if movementVector.x > 0 then actions.MoveForward = true end

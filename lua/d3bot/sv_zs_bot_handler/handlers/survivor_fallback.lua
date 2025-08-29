@@ -83,7 +83,9 @@ function HANDLER.ThinkFunction(bot)
 		local enemies = D3bot.From(player.GetAll()):Where(function(k, v) return HANDLER.IsEnemy(bot, v) end).R
 		local closeEnemies = D3bot.From(enemies):Where(function(k, v) return botPos:DistToSqr(v:GetPos()) < 1000*1000 end).R -- TODO: Constant for the distance
 		local closerEnemies = D3bot.From(closeEnemies):Where(function(k, v) return botPos:DistToSqr(v:GetPos()) < 600*600 end).R -- TODO: Constant for the distance
-		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return botPos:DistToSqr(v:GetPos()) < 300*300 end).R -- TODO: Constant for the distance
+		local ownTeam = bot:Team()
+		local canDamageTeam = PlayerCanDamageTeam or function() end
+		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return (botPos:DistToSqr(v:GetPos()) < 300*300) and not (ownTeam == v:Team() and canDamageTeam(bot,v)) end).R -- TODO: Constant for the distance
 		local newAttackTarget = table.Random(closerEnemies) or table.Random(closeEnemies) or table.Random(enemies)
 		if HANDLER.CanShootTarget(bot, newAttackTarget) then mem.AttackTgtOrNil = newAttackTarget end
 		if table.Count(dangerouscloseEnemies) > 0 then
@@ -103,11 +105,11 @@ function HANDLER.ThinkFunction(bot)
 				bot:D3bot_ResetTgt()
 			end
 			if not mem.NextNodeOrNil and ((mem.nextHumanPath or 0) < CurTime() or bot:WaterLevel() == 3) then
-				mem.nextHumanPath = CurTime() + 10 + math.random() * 20
-				local path = HANDLER.FindPathToHuman(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))
+				mem.nextHumanPath = CurTime() + 10
+				local path = HANDLER.FindPathToRandomNode(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))--HANDLER.FindPathToHuman(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))
 				if path then
 					--D3bot.Debug.DrawPath(GetPlayerByName("D3"), path, nil, Color(0, 0, 255), true)
-					mem.holdPathTime = CurTime() + 20
+					mem.holdPathTime = CurTime() + 3
 					bot:D3bot_SetPath(path, false)
 				end
 			end
@@ -294,6 +296,18 @@ function HANDLER.FindPathToHuman(node)
 	return D3bot.GetEscapeMeshPathOrNil(node, 400, pathCostFunction, heuristicCostFunction, {Walk = true})
 end
 
+function HANDLER.FindPathToRandomNode(node)
+	local function pathCostFunction(node, linkedNode, link)
+		return node.Pos:Distance(linkedNode.Pos) * 0.1
+	end
+	local function heuristicCostFunction(node)
+		return math.random(-99999,99999)
+	end
+	--D3bot.Debug.DrawNodeMetadata(GetPlayerByName("D3"), D3bot.NodeMetadata, 5)
+	--D3bot.Debug.DrawPath(GetPlayerByName("D3"), D3bot.GetEscapeMeshPathOrNil(node, 400, pathCostFunction, heuristicCostFunction, {Walk = true}), 5, Color(255, 0, 0), true)
+	return D3bot.GetEscapeMeshPathOrNil(node, 400, pathCostFunction, heuristicCostFunction, {Walk = true})
+end
+
 function HANDLER.CanShootTarget(bot, target)
 	if not IsValid(target) then return end
 	local origin = bot:EyePos()
@@ -317,12 +331,14 @@ end
 
 function HANDLER.IsEnemy(bot, ply)
 	local ownTeam = bot:Team()
-	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and ply:Team() ~= ownTeam and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() then return true end
+	local canDamageTeam = PlayerCanDamageTeam and PlayerCanDamageTeam(bot,ply)
+	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() ~= ownTeam or canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() then return true end
 end
 
 function HANDLER.IsFriend(bot, ply)
 	local ownTeam = bot:Team()
-	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and ply:Team() == ownTeam and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() then return true end
+	local canDamageTeam = PlayerCanDamageTeam and PlayerCanDamageTeam(bot,ply)
+	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() ~= ownTeam and not canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() then return true end
 end
 
 function HANDLER.CanBeAttackTgt(bot, target)
