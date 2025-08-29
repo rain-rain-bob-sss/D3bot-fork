@@ -160,8 +160,14 @@ function D3bot.GenerateAndConvertNavmesh(initPos, onGround, callback)
 		PrintMessage(HUD_PRINTTALK, "See the valve developer wiki for more information, especially if your mesh is sub-optimal: https://developer.valvesoftware.com/wiki/Nav_Mesh_Editing")
 		PrintMessage(HUD_PRINTTALK, "It is recommended to check before full conversion.")
 
-		navmesh.AddWalkableSeed(initPos, Vector(0, 0, 1))
-		navmesh.BeginGeneration()
+		-- WIP: Use Navmesh Optimizer if able to.
+		-- https://steamcommunity.com/sharedfiles/filedetails/?id=2878197619
+		--local navOpti = superIncrementalGeneration
+
+		--if navOpti then
+			navmesh.AddWalkableSeed(initPos, Vector(0, 0, 1))
+			navmesh.BeginGeneration()
+		--end
 	end
 
 	timer.Simple(1, function()

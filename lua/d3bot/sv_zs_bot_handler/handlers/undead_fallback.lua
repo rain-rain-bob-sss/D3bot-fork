@@ -60,6 +60,21 @@ HANDLER.CreateMoves = {
 	end
 }
 
+HANDLER.StatusCreateMoves = {
+	["disorientation"] = function(self, pl, cmd)
+		local curtime = CurTime()
+		local frametime = FrameTime()
+		local power = self and self:GetPower() or 80
+		power = power * 4
+
+		local ang = cmd:GetViewAngles()
+		ang.pitch = math.Clamp(ang.pitch + math.sin(curtime) * 40 * frametime * power, -89, 89)
+		ang.yaw = math.NormalizeAngle(ang.yaw + math.cos(curtime + (self and self.Seed or 99)) * 50 * frametime * power)
+
+		cmd:SetViewAngles(ang)
+	end
+}
+
 HANDLER.Fallback = true
 function HANDLER.SelectorFunction(zombieClassName, team)
 	return team == TEAM_UNDEAD
@@ -212,6 +227,13 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	local createMove = HANDLER.CreateMoves[GAMEMODE.ZombieClasses[bot:GetZombieClass()].Name]
 	--uncomment to make bots stop cheating
 	--if createMove then createMove(bot, cmd) end
+
+	for name, func in pairs(HANDLER.StatusCreateMoves) do
+		if (IsValid(bot:GetStatus(name)) or (name == "disorientation" and bot._NextLeadPipeEffect and bot._NextLeadPipeEffect > CurTime())) then
+			func(bot:GetStatus(name), bot, cmd)
+		end
+	end
+	bot:SetEyeAngles(cmd:GetViewAngles())
 end
 
 local targetPriorities = {

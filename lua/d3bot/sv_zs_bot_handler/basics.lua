@@ -398,8 +398,9 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 
 	local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
 	local swingtime = math.Clamp(swingendtime - CurTime(),0,10)
+	local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime)
 	local canusestrat1 = weapon and ((weapon.MeleeDelay and weapon.MeleeDelay > 0.5) or (weapon.SwingTime and weapon.SwingTime > 0.5))
-	if bot:GetMoveType() ~= MOVETYPE_LADDER and attackType == "Cade" and (swingtime == 0 or swingtime > 0.5) and mem.CadeAttackStrat == 1 then 
+	if bot:GetMoveType() ~= MOVETYPE_LADDER and attackType == "Cade" and (swingtime == 0 or swingtime > 0.5) and mem.CadeAttackStrat == 1 and canusestrat1 then 
 		movementVector = -posdiff
 		local speed = bot:GetMaxSpeed() * 0.5
 		movementVector.z = 0
@@ -495,16 +496,32 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- We don't have a case that can be handled by the basic walk handler.
 	-- So we just attack something directly.
 	local facesTgt = false -- True if bot is close enough for attacks.
+	local preattack = false
 	local attackType = ""
-	local origin = bot:GetShootPos() -- Attack origin of the bot.
+
+	local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime) or 0
+
+
+	local origin = bot:GetShootPos()
 	local attackPos = bot:D3bot_GetAttackPosOrNilFuture(nil, math.Rand(0, D3bot.BotAimPosVelocityOffshoot)) -- Target attack position, for aiming.
 	local movePos = attackPos or bot:GetPos() -- Target movement position.
+	local diff = (movePos - origin - bot:D3bot_GetTargetVelocity() * meleedelay)
 
-	if attackPos and attackPos:DistToSqr(origin) < math.pow(range, 2) then
+	if diff:Length() >= range then
+		diff:Normalize() diff:Mul(range)
+	end
+
+	local origin2 = bot:GetShootPos() + (diff * meleedelay * 2) -- Attack origin of the bot.
+	--debugoverlay.Box(origin,Vector(-10,-10,-10),Vector(10,10,10),0.08,Color(0,255,0,56))
+
+	local inrange = attackPos and attackPos:DistToSqr(origin) < math.pow(range, 2)
+	local shouldpreattack = (attackPos and attackPos:DistToSqr(origin2) < math.pow(range * 0.8, 2))
+	if inrange or shouldpreattack then
 		--ClDebugOverlay.Line(GetPlayerByName("D3"), bot:GetShootPos(), attackPos, 1, Color(255,255,0), false)
 
 		-- We are within attack range.
-		facesTgt = true
+		facesTgt = inrange
+		preattack = shouldpreattack
 		if attackPos.z < bot:GetPos().z + bot:GetViewOffsetDucked().z then
 			actions.Duck = true
 		end
@@ -525,6 +542,8 @@ function D3bot.Basics.WalkAttackAuto(bot)
 		end
 		attackType = "Cade"
 	end
+
+	--debugoverlay.Box(origin2,Vector(-10,-10,-10),Vector(10,10,10),0.08,preattack and Color(0,255,0) or Color(255,0,0,56))
 
 	local offshootAngle = bot:D3bot_GetOffshoot(facesTgt and D3bot.FaceTargetOffshootFactor or 1)
 	if attackPos then
@@ -678,8 +697,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	else
 		mem.AntiStuckCounter = nil
 	end
-
-	actions.Attack = facesTgt or facesHindrance
+	actions.Attack = preattack or facesTgt or facesHindrance
 	actions.Use = actions.Use or facesHindrance
 
 	if movementVector.x > 0 then actions.MoveForward = true end

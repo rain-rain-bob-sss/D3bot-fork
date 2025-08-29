@@ -39,6 +39,15 @@ function meta:D3bot_GetAttackPosOrNilFuturePlatforms(fraction, t)
 	return tgt:IsPlayer() and LerpVector(fraction or 0.75, tgt:GetPos(), tgt:EyePos()) + phys:GetVelocity()*t or tgt:WorldSpaceCenter()
 end
 
+---Gets target's velocity
+---@return GVector? velocity
+function meta:D3bot_GetTargetVelocity()
+	local mem = self.D3bot_Mem
+	local tgt = mem.TgtOrNil
+	if not tgt or not IsValid(tgt) then return vector_origin end
+	return tgt:GetVelocity()
+end
+
 function meta:D3bot_IsLookingAt(targetPos, conditionCos)
 	return self:GetAimVector():Dot((targetPos - self:EyePos()):GetNormalized()) > (conditionCos or 0.95)
 end
