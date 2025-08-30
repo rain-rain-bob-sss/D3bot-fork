@@ -7,6 +7,12 @@ function D3bot.Basics.SuicideOrRetarget(bot)
 	
 	local nodeOrNil = mem.NodeOrNil
 	local nextNodeOrNil = mem.NextNodeOrNil
+	local currentLinkOrNil
+	if D3bot.UsingSourceNav then
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil)
+	else
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+	end
 	
 	if D3bot.UsingSourceNav then return end
 		
