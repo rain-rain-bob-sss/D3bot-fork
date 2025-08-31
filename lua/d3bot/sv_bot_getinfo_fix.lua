@@ -4,7 +4,13 @@ meta.OldGetInfo_D3Bot = meta.OldGetInfo_D3Bot or meta.GetInfo
 function meta:GetInfo(cvar,...)
     if self.D3bot_Mem then
         if cvar == "zs_nobosspick" and self:IsBot() then
-            return "0"
+            local c = 0
+            for _,zombie in ipairs(player.GetHumans()) do
+                if zombie:Team() == TEAM_UNDEAD and zombie:GetInfo("zs_nobosspick") == "0" then
+                    c = c + 1
+                end
+            end
+            return c <= 0 and "1" or "0"
         elseif cvar == "zs_bossclass" then
             if (self.RefreshBossClass or 0) < CurTime() then
                 local bossclasses = {}

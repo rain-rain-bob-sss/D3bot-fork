@@ -109,6 +109,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	D3bot.Basics.SuicideOrRetarget(bot)
 
 	local trynest = false
+	local nestNode
 
 	local fleshcreeper = bot:GetZombieClassTable().Name == "Flesh Creeper"
 	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, false --[[disabled, bots are stupid as fuck]])
@@ -116,6 +117,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	if fleshcreeper then 
 		local cannest,node,pos = D3bot.Basics.FindNestPoint(bot)
 		if cannest then
+			nestNode = node
 			trynest = true
 			bot:D3bot_SetNodeTgtOrNil(node)
 			--bot:D3bot_SetPosTgtOrNil(pos)
@@ -196,7 +198,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		if actions.Attack and primAttack.SecondaryAttack then actions.Attack = false actions.Attack2 = true end
 	end
 
-	if (trynest and facesHindrance--[[mem.PosTgtOrNil and mem.PosTgtOrNil:DistToSqr(bot:GetPos()) <= 42 * 42]]) then 
+	if (trynest and mem.NodeOrNil == nestNode) then 
 		actions.Attack = false 
 		actions.Attack2 = true 
 		actions.Jump = false 
