@@ -83,6 +83,7 @@ function D3bot.Basics.FindNestPoint(bot,check)
 
 	if not check then
 		for _, human in pairs(team.GetPlayers(TEAM_HUMAN)) do
+			if human:IsFlagSet(FL_NOTARGET) then continue end
 			local distract = 0
 			for _,otherbot in ipairs(player.GetAll())do 
 				if otherbot ~= bot and otherbot.D3bot_Mem and otherbot:GetZombieClassTable().Name ~= "Flesh Creeper" then
