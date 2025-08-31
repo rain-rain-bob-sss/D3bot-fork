@@ -163,8 +163,10 @@ function HANDLER.ThinkFunction(bot)
 			mem.MaxShootingDistance = bestMaxDistance
 		end
 
-		for i,item in ipairs(GAMEMODE.Items) do
-			if item.SWEP and item.PointShop and GAMEMODE:GetInventoryItemType(item.SWEP) ~= INVCAT_TRINKETS and not item.CanMakeFromScrap and not bot:HasWeapon(item.SWEP) and math.random(1,5) == 1 then HANDLER.Purchase(bot,tostring(i)) if math.random(1,10) == 1 then break end end
+		if bot:IsBot() then
+			for i,item in ipairs(GAMEMODE.Items) do
+				if item.SWEP and item.PointShop and GAMEMODE:GetInventoryItemType(item.SWEP) ~= INVCAT_TRINKETS and not item.CanMakeFromScrap and not bot:HasWeapon(item.SWEP) and math.random(1,5) == 1 then HANDLER.Purchase(bot,tostring(i)) if math.random(1,10) == 1 then break end end
+			end
 		end
 	end
 	
