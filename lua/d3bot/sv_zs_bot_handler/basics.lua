@@ -481,7 +481,7 @@ end
 ---@return boolean minorStuck -- True if the bot seems to be stuck on a ladder or similar.
 ---@return boolean majorStuck -- True if the bot seems to be stuck on props, or runs in circles.
 ---@return boolean facesHindrance -- True if the bot is walking slower than expected.
-function D3bot.Basics.WalkAttackAuto(bot)
+function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 	local mem = bot.D3bot_Mem
 
 	if mem.BlockMovementUntil then
@@ -595,7 +595,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 
 	--debugoverlay.Box(origin2,Vector(-10,-10,-10),Vector(10,10,10),0.08,preattack and Color(0,255,0) or Color(255,0,0,56))
 
-	local offshootAngle = bot:D3bot_GetOffshoot(facesTgt and D3bot.FaceTargetOffshootFactor or 1)
+	local offshootAngle = bot:D3bot_GetOffshoot(offshoot or (facesTgt and D3bot.FaceTargetOffshootFactor or 1))
 	if attackPos then
 		bot:D3bot_AngsRotateTo((attackPos - origin):Angle() + offshootAngle, D3bot.BotAttackAngLerpFactor)
 	end
@@ -913,7 +913,14 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	actions.Reload = reloading and math.random(5) == 1
 
 	local origin = bot:GetShootPos()
-	local targetPos = LerpVector(mem.AimHeightFactor or 1, target:GetPos(), target:EyePos())
+	local bonePos = bot:D3bot_GetAttackPosOrNil(mem.AimHeightFactor or 1,target)
+
+	for i = target:GetBoneCount() - 1, 0,-1 do
+		local pos = target:GetBonePosition(i)
+		bonePos = pos
+    end
+
+	local targetPos = bonePos
 
 	if maxDistance and origin:DistToSqr(targetPos) > math.pow(maxDistance, 2) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 
@@ -932,7 +939,7 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	mem.WasPressingAttack = actions.Attack
 
 	if targetPos and canShootTarget then
-		bot:D3bot_AngsRotateTo((targetPos - origin):Angle(), D3bot.BotAimAngLerpFactor)
+		bot:D3bot_AngsRotateTo((targetPos - origin):Angle(), 1)
 	end
 
 	return true, actions, 0, nil, nil, mem.Angs, false, false, false
@@ -953,7 +960,10 @@ end
 function D3bot.Basics.LookAround(bot)
 	local mem = bot.D3bot_Mem
 
-	if math.random(200) == 1 then mem.LookTarget = table.Random(player.GetAll()) end
+	if math.random(200) == 1 then 
+		local randomplys = D3bot.From(player.GetAll()):Where(function(k, v) return bot:D3bot_CallHandlerFunction2("IsFriend",v) end).R
+		mem.LookTarget = table.Random(randomplys)
+	end
 
 	if not IsValid(mem.LookTarget) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 

@@ -2,6 +2,22 @@
 ---@field public D3bot_LastDamage number? -- The last time (CurTime()) the bot has caused damage.
 local meta = FindMetaTable("Player")
 
+function meta:D3bot_CallHandlerFunction(name,...)
+	local handler = FindHandler(self:GetZombieClass(), self:Team())
+	if not handler then return false end
+	if not handler[name] then return false end
+	if not isfunction(handler[name]) then return false end
+	return true,handler[name](self,...)
+end
+function meta:D3bot_CallHandlerFunction2(name,...)
+	local handler = FindHandler(self:GetZombieClass(), self:Team())
+	if not handler then return end
+	if not handler[name] then return end
+	if not isfunction(handler[name]) then return end
+	return handler[name](self,...)
+end
+
+
 ---Get attack position for the player entity.
 ---Works with platform physics.
 ---@param fraction number? Fraction where to attack, 0: feet, 1: head. Defaults to 0.75.

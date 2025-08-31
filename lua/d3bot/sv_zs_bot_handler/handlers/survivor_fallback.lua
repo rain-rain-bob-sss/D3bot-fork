@@ -1,7 +1,7 @@
 D3bot.Handlers.Survivor_Fallback = D3bot.Handlers.Survivor_Fallback or {}
 local HANDLER = D3bot.Handlers.Survivor_Fallback
 
-HANDLER.angOffshoot = 20
+HANDLER.angOffshoot = 5
 
 HANDLER.Fallback = true
 function HANDLER.SelectorFunction(zombieClassName, team)
@@ -27,7 +27,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	
 	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
 	local result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2
-	if result and not mem.DontRun then
+	if result and not mem.DontRun and (math.abs(fowrardSpeed or 0) + math.abs(sideSpeed or 0) + math.abs(upSpeed or 0)) >= 30 then
 		if not mem.Dangerous then
 			result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.AimAndShoot(bot, mem.AttackTgtOrNil, mem.MaxShootingDistance) -- TODO: Make bots walk backwards while shooting
 			if not result2 then
@@ -97,7 +97,14 @@ function HANDLER.ThinkFunction(bot)
 		local canDamageTeam = PlayerCanDamageTeam or function() end
 		local dangerousdist = (150 * math.Clamp(1 / 1 - (bot:Health() / bot:GetMaxHealth()),1,2)) ^ 2
 		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return (botPos:DistToSqr(v:GetPos()) < dangerousdist) end).R -- TODO: Constant for the distance
-		local newAttackTarget = table.Random(closerEnemies) or table.Random(closeEnemies) or table.Random(enemies)
+		local newAttackTarget = table.Random(closerEnemies)
+		local try = function(e)
+			if not HANDLER.CanShootTarget(bot, newAttackTarget) then
+				newAttackTarget = table.Random(e)
+			end
+		end
+		try(closeEnemies)
+		try(enemies)
 		if HANDLER.CanShootTarget(bot, newAttackTarget) then mem.AttackTgtOrNil = newAttackTarget end
 		if table.Count(dangerouscloseEnemies) > 0 then
 			mem.Dangerous = true
@@ -115,7 +122,7 @@ function HANDLER.ThinkFunction(bot)
 			end
 		else
 			mem.Dangerous = false
-			mem.DontRun = (table.Count(closerEnemies) <= 0) and table.Count(enemies) ~= 0
+			mem.DontRun = false --(table.Count(closerEnemies) <= 0) and table.Count(closeEnemies) ~= 0
 			if not mem.holdPathTime or mem.holdPathTime < CurTime() then
 				bot:D3bot_ResetTgt()
 			end
@@ -123,8 +130,7 @@ function HANDLER.ThinkFunction(bot)
 				mem.nextHumanPath = CurTime() + 5
 				local path = HANDLER.FindPathToRandomNode(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))--HANDLER.FindPathToHuman(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))
 				if path then
-					--D3bot.Debug.DrawPath(GetPlayerByName("D3"), path, nil, Color(0, 0, 255), true)
-					mem.holdPathTime = CurTime() + 3
+					mem.holdPathTime = CurTime() + 10
 					bot:D3bot_SetPath(path, false)
 				end
 			end
@@ -164,11 +170,11 @@ function HANDLER.ThinkFunction(bot)
 			local ammo = v:Clip1() + bot:GetAmmoCount(ammoType)
 			-- Silly cheat to prevent bots from running out of ammo TODO: Add buy logic
 			if ammo == 0 then
-				if bot:IsBot() then
+				--if bot:IsBot() then
 					bot:SetAmmo(50, ammoType)
-				else
-					bot:ConCommand("zs_quickbuyammo")
-				end
+				--else
+					--bot:ConCommand("zs_quickbuyammo")
+				--end
 			end
 
 			rating = rating + math.random(-1000,1000)
@@ -330,7 +336,7 @@ function HANDLER.FindPathToRandomNode(node)
 	local function heuristicCostFunction(node)
 		local playerFactorBySurvivors = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_SURVIVOR] or 0
 		local playerFactorByUndead = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_UNDEAD] or 0
-		return math.random(-99999,99999) - playerFactorBySurvivors * 500000 + playerFactorByUndead * 1000000
+		return math.random(-99999,99999) --- playerFactorBySurvivors * 50000 * math.Rand(0,1) + playerFactorByUndead * 1000000 * math.Rand(0,1)
 	end
 	--D3bot.Debug.DrawNodeMetadata(GetPlayerByName("D3"), D3bot.NodeMetadata, 5)
 	--D3bot.Debug.DrawPath(GetPlayerByName("D3"), D3bot.GetEscapeMeshPathOrNil(node, 400, pathCostFunction, heuristicCostFunction, {Walk = true}), 5, Color(255, 0, 0), true)
