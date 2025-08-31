@@ -63,13 +63,18 @@ function D3bot.MaintainBotRoles()
 	-- This can happen in some gamemodes, we fix that here.
 	-- See https://github.com/Dadido3/D3bot/issues/99 for details.
 	for _, bot in ipairs(bots) do
-		if bot:GetBarricadeGhosting() and bot:Team() == TEAM_UNDEAD and bot:Alive() then
-			--bot:Say(string.format("I was a nasty bot that noclips through barricades! (%s)", bot))
-			bot:SetBarricadeGhosting(false)
+		if  bot:Team() == TEAM_UNDEAD and bot:Alive() then
+			if bot:GetBarricadeGhosting() then
+				--bot:Say(string.format("I was a nasty bot that noclips through barricades! (%s)", bot))
+				bot:SetBarricadeGhosting(false)
+			end
+
+			if not bot:GetZombieClassTable().OverrideModel and bot:GetStatus("overridemodel") then
+				bot:RemoveStatus("overridemodel", false, true)
+				bot:SetRenderMode(RENDERMODE_NORMAL)
+			end
 		end
 	end
-
-	-- TODO: Fix invisible bots when CLASS.OverrideModel is used (most common with Frigid Revenant and other OverrideModel zombies in 2018 ZS if they have a low opacity OverrideModel)
 	
 	-- Sort by frags and being boss zombie
 	if botsByTeam[TEAM_UNDEAD] then
