@@ -348,7 +348,7 @@ end
 function HANDLER.IsFriend(bot, ply)
 	local ownTeam = bot:Team()
 	local canDamageTeam = PlayerCanDamageTeam and PlayerCanDamageTeam(bot,ply)
-	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() ~= ownTeam and not canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() and not ply:IsFlagSet(FL_NOTARGET) then return true end
+	if IsValid(ply) and bot ~= ply and ply:IsPlayer() and (ply:Team() == ownTeam and not canDamageTeam) and ply:GetObserverMode() == OBS_MODE_NONE and ply:Alive() and not ply:IsFlagSet(FL_NOTARGET) then return true end
 end
 
 function HANDLER.CanBeAttackTgt(bot, target)

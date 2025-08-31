@@ -581,7 +581,7 @@ function D3bot.Basics.WalkAttackAuto(bot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.7) or vector_origin
+	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.65) or vector_origin
 	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.95, 1)
@@ -862,7 +862,7 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	---@type GWeapon|table
 	local weapon = bot:GetActiveWeapon()
 	if not IsValid(weapon) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
-	if weapon:Clip1() == 0 then reloading = true end
+	if weapon:Clip1() == 0 and not (weapon.CanPrimaryAttack and weapon:CanPrimaryAttack()) then reloading = true end
 	if (weapon.GetNextReload and weapon:GetNextReload() or 0) > CurTime() - 0.5 then -- Subtract half a second, so it will re-trigger reloading if possible
 		reloading = true
 	end
@@ -889,6 +889,75 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 
 	if targetPos and canShootTarget then
 		bot:D3bot_AngsRotateTo((targetPos - origin):Angle(), D3bot.BotAimAngLerpFactor)
+	end
+
+	return true, actions, 0, nil, nil, mem.Angs, false, false, false
+end
+
+---Basic aim and shoot handler for survivor bots.
+---(Or anything that can hold a gun)
+---@param bot GPlayer|table
+---@param target GEntity
+---@param maxDistance number
+---@return boolean valid -- True if the handler ran corrcetly.
+---@return table actions -- Table with a set of actions.
+---@return number? speed -- The needed forwards speed for the bot.
+---@return number? sideSpeed -- The needed side speed for the bot.
+---@return number? upSpeed -- The needed upwards speed for the bot.
+---@return GAngle aimDirection -- The wanted aim direction for the bot.
+---@return boolean minorStuck -- True if the bot seems to be stuck on a ladder or similar.
+---@return boolean majorStuck -- True if the bot seems to be stuck on props, or runs in circles.
+---@return boolean facesHindrance -- True if the bot is walking slower than expected.
+function D3bot.Basics.AimAndShoot_Projectile(bot, target, maxDistance)
+	local mem = bot.D3bot_Mem
+
+	if mem.BlockMovementUntil then
+		if mem.BlockMovementUntil >= CurTime() then
+			return false, {}, nil, nil, nil, mem.Angs, false, false, false
+		else
+			mem.BlockMovementUntil = nil
+		end
+	end
+
+	local actions = {}
+	local reloading
+
+	if not IsValid(target) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+
+	---@type GWeapon|table
+	local weapon = bot:GetActiveWeapon()
+	if not IsValid(weapon) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+	if weapon:Clip1() == 0 and not (weapon.CanPrimaryAttack and weapon:CanPrimaryAttack()) then reloading = true end
+	if (weapon.GetNextReload and weapon:GetNextReload() or 0) > CurTime() - 0.5 then -- Subtract half a second, so it will re-trigger reloading if possible
+		reloading = true
+	end
+	actions.Reload = reloading and math.random(5) == 1
+
+	local origin = bot:GetShootPos()
+	local targetPos = self:D3bot_GetAttackPosOrNilFuture(mem.AimHeightFactor or 1,target,0.5) --LerpVector(mem.AimHeightFactor or 1, target:GetPos(), target:EyePos())
+
+	if maxDistance and origin:DistToSqr(targetPos) > math.pow(maxDistance, 2) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+
+	-- TODO: Use fewer traces, cache result for a few frames
+	local tr = util.TraceLine({
+		start = origin,
+		endpos = targetPos,
+		filter = player.GetAll(),
+		mask = MASK_SHOT_HULL
+	})
+	local canShootTarget = not tr.Hit
+
+	if not canShootTarget then mem.AimHeightFactor = math.Rand(0.5, 1) end
+
+	actions.Attack = not reloading and bot:D3bot_IsLookingAt(targetPos, 0.8) and canShootTarget and not mem.WasPressingAttack
+	mem.WasPressingAttack = actions.Attack
+
+	if targetPos and canShootTarget then
+		local angs = (targetPos - origin):Angle()
+		if trajectory then
+			angs = Angle(-math.deg(trajectory.pitch), math.deg(trajectory.yaw), 0)
+		end
+		bot:D3bot_AngsRotateTo(angs, D3bot.BotAimAngLerpFactor)
 	end
 
 	return true, actions, 0, nil, nil, mem.Angs, false, false, false

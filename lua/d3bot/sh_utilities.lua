@@ -64,8 +64,8 @@ function D3bot.GetTrajectory2DPoints(trajectory, segments)
 	return trajectory
 end
 
-function D3bot.GetTrajectories(initVel, r0, r1, segments)
-	local g = 600 -- Hard coded acceleration, should be read from gmod later
+function D3bot.GetTrajectories(initVel, r0, r1, segments, gravity)
+	local g = gravity or 600 -- Hard coded acceleration, should be read from gmod later
 	
 	local distZ = r1.z - r0.z
 	local distRad = math.sqrt((r1.x - r0.x)^2 + (r1.y - r0.y)^2)

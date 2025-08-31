@@ -90,6 +90,49 @@ function meta:D3bot_CanPounceToPos(pos)
 	return resultTrajectories
 end
 
+function meta:D3bot_CanFireProjectile(pos)
+	if not pos then return end
+
+	---@type GWeapon|table
+	local weapon = self:GetActiveWeapon()
+
+	local initVel
+	if weapon then
+		initVel = weapon.ThrowVel or (weapon.Primary and weapon.Primary.ProjVelocity) or 1500
+		if weapon.ThrowVel then 
+			initVel = initVel * (self.ObjectThrowStrengthMul or 1)
+		elseif weapon.ProjectileVelocity then
+			initVel = initVel * (self.ProjectileSpeedMul or 1)
+		end
+	else
+		return
+	end
+	
+	local selfPos = self:EyePos()--LerpVector(0.75, self:GetPos(), self:EyePos())
+	local trajectories = D3bot.GetTrajectories(initVel, selfPos, pos, 8, 600)
+	local resultTrajectories = {}
+	for _, trajectory in ipairs(trajectories) do
+		local lastPoint = nil
+		local hit = false
+		for _, point in ipairs(trajectory.points) do
+			if lastPoint then
+				local tr = util.TraceEntity({start = point, endpos = lastPoint, mask = CONTENTS_SOLID + CONTENTS_GRATE + CONTENTS_MOVEABLE + CONTENTS_PLAYERCLIP}, self)
+				if tr.Hit and pos:DistToSqr(tr.HitPos) > 32 * 32 then
+					-- We consider this path invalid, since the bot would hit something and end up further away from the target than about a normal hull box half width.
+					hit = true
+					break
+				end
+			end
+			lastPoint = point
+		end
+		if not hit then
+			table.insert(resultTrajectories, trajectory)
+		end
+	end
+	if #resultTrajectories == 0 then resultTrajectories = nil end
+	return resultTrajectories
+end
+
 function meta:D3bot_CanSeeTargetCached(fraction, target)
 	local mem = self.D3bot_Mem
 	if not mem then return end
@@ -185,6 +228,9 @@ function meta:D3bot_ShouldNest()
 end
 
 function meta:D3bot_RerollClass(classes)
+
+	classes = table.Copy(classes)
+
 	if not GAMEMODE:GetWaveActive() then return end
 	--if self:GetZombieClassTable().Name == "Zombie Torso" then return end -- ???
 	if GAMEMODE.ZombieEscape or GAMEMODE.PantsMode or GAMEMODE:IsClassicMode() or GAMEMODE:IsBabyMode() then return end
