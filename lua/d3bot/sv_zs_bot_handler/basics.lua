@@ -92,7 +92,7 @@ function D3bot.Basics.FindNestPoint(bot,check)
 					end
 				end
 			end
-			if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 500 and distract <= 3 then
+			if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 500 and distract <= 2 then
 				return false
 			end
 		end
@@ -416,7 +416,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		actions.Attack = true and not shouldClimb
 	end
 
-	if attackType == "Cade" then actions.Jump = false end
+	if attackType == "Cade" and mem.CadeAttackStrat == 1 and canusestrat1 and math.random(1,100) ~= 1 then actions.Jump = false end
 
 	if movementVector.x > 0 then actions.MoveForward = true end
 	if movementVector.x < 0 then actions.MoveBackward = true end
