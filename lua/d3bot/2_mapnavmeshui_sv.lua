@@ -354,6 +354,7 @@ return function(lib)
 
 				pl:KillSilent()
 				pl:Spectate(OBS_MODE_ROAMING)
+				pl:SetNWBool("D3Bot_NoWeapons",true)
 			elseif subscriptionTypeOrNil ~= "view" then
 				pl:SetNWBool("D3Bot_NoWeapons",true)
 				pl:SetActiveWeapon(NULL)

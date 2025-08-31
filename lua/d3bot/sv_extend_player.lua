@@ -387,7 +387,7 @@ function meta:D3bot_InitializeOrReset(inittype)
 
 	self:SetPlayerColor(Vector(mem.PlayerColor[1],mem.PlayerColor[2],mem.PlayerColor[3]))
 
-	mem.Type = inittype
+	mem.Type = inittype or mem.Type
 
 	mem.CadeAttackStrat = 0
 	mem.nextUpdateCadeAttackStrat = CurTime()

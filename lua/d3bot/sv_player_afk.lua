@@ -7,6 +7,7 @@ end
 local function Control(ply)
     if ply.D3bot_Mem then return end
     ply:D3bot_InitializeOrReset("afk")
+    ply.D3bot_Mem.Type = "afk"
     local message = translate.ClientGet(ply, "D3bot_afk")
     ply:ChatPrint(message)
     ply:PrintMessage(HUD_PRINTCENTER, message)
