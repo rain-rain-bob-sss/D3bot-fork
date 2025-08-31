@@ -299,7 +299,7 @@ function HANDLER.ThinkFunction(bot)
 
 	if mem.nextUpdateCadeAttackStrat and mem.nextUpdateCadeAttackStrat < CurTime() or not mem.nextUpdateCadeAttackStrat then
 		mem.nextUpdateCadeAttackStrat = CurTime() + 7
-		mem.CadeAttackStrat = math.random(0,1)
+		mem.CadeAttackStrat = math.min(1,math.random(0,3))
 		--print("strat: ",mem.CadeAttackStrat)
 	end
 

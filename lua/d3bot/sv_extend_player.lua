@@ -407,6 +407,12 @@ function meta:D3bot_InitializeOrReset(inittype)
 		local myClass = self.GetZombieClassTable and self:GetZombieClassTable() or {
 			JumpPower = self:GetJumpPower(),
 		}
+		local mins,maxs = self:GetHull()
+		mem.MinsHull = mins * self:GetModelScale()
+		mem.MaxsHull = maxs * self:GetModelScale()
+		mins,maxs = self:GetHullDuck()
+		mem.MinsHullDuck = mins * self:GetModelScale()
+		mem.MaxsHullDuck = maxs * self:GetModelScale()
 		mem.Height = (myClass.Hull and myClass.Hull[2].z or 72) * self:GetModelScale()
 		mem.CrouchHeight = (myClass.HullDuck and myClass.HullDuck[2].z or 36) * self:GetModelScale()
 

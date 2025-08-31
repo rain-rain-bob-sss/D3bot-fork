@@ -383,7 +383,10 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	if duckParam == "Disabled" or duckToParam == "Disabled" then
 		actions.Duck = false
 	end
-	if math.random(1, 2) == 1 or jumpParam == "Disabled" or jumpToParam == "Disabled" or (not actions.Duck and bot:Crouching()) then
+
+
+	local canjump = not (jumpParam == "Disabled" or jumpToParam == "Disabled" or (not actions.Duck and bot:Crouching()))
+	if math.random(1, 2) == 1 or not canjump then
 		actions.Jump = false
 	end
 
@@ -402,10 +405,52 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	actions.Attack = facesHindrance and not shouldClimb or bot:IsHolding() -- If the bot should climb, but is using its primary attack, climing will fail.
 	actions.Use = actions.Use or facesHindrance
 
+	local canusestrat1 = weapon and ((weapon.MeleeDelay and weapon.MeleeDelay > 0.5) or (weapon.SwingTime and weapon.SwingTime > 0.5))
+
+	local crouchJumpHeight = mem.CrouchJumpHeight
+	local jumphit = util.TraceHull({
+		start = bot:GetPos(),
+		endpos = bot:GetPos() + vector_up * crouchJumpHeight,
+		filter = function(ent) 
+			if ent:IsPlayer() and bot:Team() == ent:Team() then return false end
+			return (ent ~= bot)
+		end,
+		mins = mem.MinsHullDuck,
+		maxs = mem.MaxsHullDuck,
+	})
+
+	--debugoverlay.Box(jumphit.HitPos,mem.MinsHullDuck,mem.MaxsHullDuck,0.08,Color(255,0,0))
+
+	local jumpforward = util.TraceHull({
+		start = jumphit.HitPos,
+		endpos = jumphit.HitPos + bot:GetForward() * 32,
+		filter = function(ent) 
+			if ent:IsPlayer() and bot:Team() == ent:Team() then return false end
+			return (ent ~= bot)
+		end,
+		mins = mem.MinsHullDuck,
+		maxs = mem.MaxsHullDuck,
+	})
+
+	--debugoverlay.Box(jumpforward.HitPos,mem.MinsHullDuck,mem.MaxsHullDuck,0.08,Color(0,255,0))
+
+	if attackType == "Cade" and not jumpforward.Hit and canjump then
+		movementVector = posdiff
+		local speed = bot:GetMaxSpeed()
+		movementVector.z = 0
+		movementVector:Normalize()
+		movementVector:Mul(speed)
+		movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
+		actions.Jump = true
+		canusestrat1 = false
+		--if mem.CadeAttackStrat == 1 then print("disabled strat1") end
+	elseif mem.CadeAttackStrat == 1 and canusestrat1 then
+		actions.Jump = false
+	end
+
 	local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
 	local swingtime = math.Clamp(swingendtime - CurTime(),0,10)
 	local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime)
-	local canusestrat1 = weapon and ((weapon.MeleeDelay and weapon.MeleeDelay > 0.5) or (weapon.SwingTime and weapon.SwingTime > 0.5))
 	if bot:GetMoveType() ~= MOVETYPE_LADDER and attackType == "Cade" and (swingtime == 0 or swingtime > 0.5) and mem.CadeAttackStrat == 1 and canusestrat1 then 
 		movementVector = -posdiff
 		local speed = bot:GetMaxSpeed() * 0.5
@@ -415,8 +460,6 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
 		actions.Attack = true and not shouldClimb
 	end
-
-	if attackType == "Cade" and mem.CadeAttackStrat == 1 and canusestrat1 and math.random(1,100) ~= 1 then actions.Jump = false end
 
 	if movementVector.x > 0 then actions.MoveForward = true end
 	if movementVector.x < 0 then actions.MoveBackward = true end
