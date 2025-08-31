@@ -420,7 +420,10 @@ function HANDLER.RerollTarget(bot)
 	end)
 	local potTargets = table.Add(players, potEntTargets)
 	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
-	for _,target in ipairs(potTargets) do
+	local nums = {}
+	for i = 1,3 do if potTargets[i] then nums[i] = i else break end end
+	for _,target in RandomPairs(nums) do
+		target = potTargets[target]
 		if HANDLER.CanBeTgt(bot, target, potEntTargets2) then
 			bot:D3bot_SetTgtOrNil(target, false, nil)
 			break
