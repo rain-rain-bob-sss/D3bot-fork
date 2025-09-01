@@ -873,6 +873,23 @@ function D3bot.Basics.PounceAuto(bot, crab, fleshcreeper)
 	return false, {}, nil, nil, nil, angle_zero, false, false, false
 end 
 
+--????
+local function get_function_source(fn)
+	local info = debug.getinfo(fn)
+	if info.short_src == "[C]" then
+		return tostring(fn), "Native", -1, -1
+	end
+
+	local start_line, end_line = info.linedefined, info.lastlinedefined
+	local file_path = info.source:gsub("^@", "")
+	local content = file.Read(file_path, "MOD")
+	if not content or #content:Trim() == 0 then return tostring(fn), "Anonymous", -1, -1 end
+
+	local lines = ("\n"):Explode(content)
+	local fn_source = table.concat(lines, "\n", start_line, end_line)
+	return fn_source, file_path, start_line, end_line
+end
+
 ---Basic aim and shoot handler for survivor bots.
 ---(Or anything that can hold a gun)
 ---@param bot GPlayer|table
@@ -906,7 +923,7 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	---@type GWeapon|table
 	local weapon = bot:GetActiveWeapon()
 	if not IsValid(weapon) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
-	if weapon:Clip1() == 0 and not weapon.AmmoIfHas then reloading = true end
+	if weapon:Clip1() <= 0 and not weapon.AmmoIfHas then reloading = true end
 	if (weapon.GetNextReload and weapon:GetNextReload() or 0) > CurTime() - 0.5 then -- Subtract half a second, so it will re-trigger reloading if possible
 		reloading = true
 	end
@@ -916,13 +933,16 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	local bonePos = bot:D3bot_GetAttackPosOrNil(mem.AimHeightFactor or 1,target)
 
 	for i = target:GetBoneCount() - 1, 0,-1 do
-		local pos = target:GetBonePosition(i)
-		bonePos = pos
+		local mat = target:GetBoneMatrix(i)
+		if mat then
+			bonePos = mat:GetTranslation()
+		end
     end
 
 	local targetPos = bonePos
+	local dist = origin:DistToSqr(targetPos)
 
-	if maxDistance and origin:DistToSqr(targetPos) > math.pow(maxDistance, 2) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+	if maxDistance and dist > math.pow(maxDistance, 2) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 
 	-- TODO: Use fewer traces, cache result for a few frames
 	local tr = util.TraceLine({
@@ -935,13 +955,44 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 
 	if not canShootTarget then mem.AimHeightFactor = math.Rand(0.5, 1) end
 
-	actions.Attack = not reloading and bot:D3bot_IsLookingAt(targetPos, 0.8) and canShootTarget and not mem.WasPressingAttack
+	actions.Attack = not reloading and bot:D3bot_IsLookingAt(targetPos, 0.9) and canShootTarget and not mem.WasPressingAttack and not target.SpawnProtection
 	mem.WasPressingAttack = actions.Attack
 
 	if targetPos and canShootTarget then
-		bot:D3bot_AngsRotateTo((targetPos - origin):Angle(), 1)
+		bot:D3bot_AngsRotateTo((targetPos - origin):Angle(), D3bot.BotAngLerpFactor * 2)
 	end
 
+	if (not maxDistance or dist > math.pow(400,2)) and weapon.SecondaryAttack then
+		local base = get_function_source(weapons.Get("weapon_zs_base").SecondaryAttack)
+		local wep = get_function_source(weapon.SecondaryAttack)
+		if base == wep then actions.Attack2 = true end
+	end
+
+	return (not reloading) and canShootTarget, actions, 0, nil, nil, mem.Angs, false, false, false
+end
+
+function D3bot.Basics.Reload(bot)
+	local mem = bot.D3bot_Mem
+
+	if mem.BlockMovementUntil then
+		if mem.BlockMovementUntil >= CurTime() then
+			return false, {}, nil, nil, nil, mem.Angs, false, false, false
+		else
+			mem.BlockMovementUntil = nil
+		end
+	end
+
+	local actions = {}
+	local reloading
+
+	---@type GWeapon|table
+	local weapon = bot:GetActiveWeapon()
+	if not IsValid(weapon) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
+	if weapon:Clip1() <= weapon:GetMaxClip1() * 0.5 and not weapon.AmmoIfHas then reloading = true end
+	if (weapon.GetNextReload and weapon:GetNextReload() or 0) > CurTime() - 0.5 then -- Subtract half a second, so it will re-trigger reloading if possible
+		reloading = true
+	end
+	actions.Reload = reloading and math.random(5) == 1
 	return true, actions, 0, nil, nil, mem.Angs, false, false, false
 end
 

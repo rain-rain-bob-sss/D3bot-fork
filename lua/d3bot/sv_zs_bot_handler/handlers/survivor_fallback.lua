@@ -25,23 +25,33 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	local mem = bot.D3bot_Mem
 	local botPos = bot:GetPos()
 	
+	local memAngs = mem.Angs or angle_zero
 	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
 	local result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2
-	if result and not mem.DontRun and (math.abs(fowrardSpeed or 0) + math.abs(sideSpeed or 0) + math.abs(upSpeed or 0)) >= 30 then
+	if result and (math.abs(forwardSpeed or 0) + math.abs(sideSpeed or 0) + math.abs(upSpeed or 0)) >= 30 then
 		if not mem.Dangerous then
-			result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.AimAndShoot(bot, mem.AttackTgtOrNil, mem.MaxShootingDistance) -- TODO: Make bots walk backwards while shooting
+			local walkAngs = mem.Angs
+			mem.Angs = memAngs
+			result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.AimAndShoot(bot, mem.AttackTgtOrNil, mem.MaxShootingDistance)
 			if not result2 then
-				result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.LookAround(bot)
-				if not result then return end
+				--result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.LookAround(bot)
+				--if not result then return end
+				result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.Reload(bot)
+				mem.Angs = walkAngs
 			else
 				aimAngle = aimAngle2
+				mem.Angs = aimAngle2
 			end
 			actions.Attack = actions2.Attack
+			actions.Attack2 = actions2.Attack2
+			actions.Reload = actions2.Reload
 		end
 	else
 		result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle = D3bot.Basics.AimAndShoot(bot, mem.AttackTgtOrNil, mem.MaxShootingDistance) -- TODO: Make bots walk backwards while shooting
 		if not result then
 			result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle = D3bot.Basics.LookAround(bot)
+			result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.Reload(bot)
+			actions.Reload = actions2.Reload
 			if not result then return end
 		end
 	end
@@ -95,21 +105,24 @@ function HANDLER.ThinkFunction(bot)
 		local closerEnemies = D3bot.From(closeEnemies):Where(function(k, v) return botPos:DistToSqr(v:GetPos()) < 600*600 end).R -- TODO: Constant for the distance
 		local ownTeam = bot:Team()
 		local canDamageTeam = PlayerCanDamageTeam or function() end
-		local dangerousdist = (150 * math.Clamp(1 / 1 - (bot:Health() / bot:GetMaxHealth()),1,2)) ^ 2
-		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return (botPos:DistToSqr(v:GetPos()) < dangerousdist) end).R -- TODO: Constant for the distance
-		local newAttackTarget = table.Random(closerEnemies)
+		local dangerousdist = (100 * math.Clamp(1 / 1 - (bot:Health() / bot:GetMaxHealth()),1,2)) ^ 2
+		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return (botPos:DistToSqr(v:GetPos()) < dangerousdist) or v.SpawnProtection end).R -- TODO: Constant for the distance
+		local newAttackTarget = table.Random(dangerouscloseEnemies)
 		local try = function(e)
 			if not HANDLER.CanShootTarget(bot, newAttackTarget) then
 				newAttackTarget = table.Random(e)
 			end
 		end
+		try(closerEnemies)
 		try(closeEnemies)
 		try(enemies)
 		if HANDLER.CanShootTarget(bot, newAttackTarget) then mem.AttackTgtOrNil = newAttackTarget end
 		if table.Count(dangerouscloseEnemies) > 0 then
 			mem.Dangerous = true
-			mem.AttackTgtOrNil = table.Random(dangerouscloseEnemies)
-			mem.DontRun = false
+			local rand = table.Random(dangerouscloseEnemies)
+			--if HANDLER.CanShootTarget(bot, rand) then
+				mem.AttackTgtOrNil = rand
+			--end
 			-- Check if undead can see/walk to bot, and then calculate escape path.
 			if mem.AttackTgtOrNil:D3bot_CanSeeTarget(nil, bot) and (not mem.NextNodeOrNil or (mem.lastEscapePath or 0) < CurTime() - 2) then
 				mem.lastEscapePath = CurTime()
@@ -122,7 +135,6 @@ function HANDLER.ThinkFunction(bot)
 			end
 		else
 			mem.Dangerous = false
-			mem.DontRun = false --(table.Count(closerEnemies) <= 0) and table.Count(closeEnemies) ~= 0
 			if not mem.holdPathTime or mem.holdPathTime < CurTime() then
 				bot:D3bot_ResetTgt()
 			end
@@ -130,7 +142,7 @@ function HANDLER.ThinkFunction(bot)
 				mem.nextHumanPath = CurTime() + 5
 				local path = HANDLER.FindPathToRandomNode(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))--HANDLER.FindPathToHuman(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))
 				if path then
-					mem.holdPathTime = CurTime() + 10
+					mem.holdPathTime = CurTime() + 5
 					bot:D3bot_SetPath(path, false)
 				end
 			end
@@ -149,7 +161,7 @@ function HANDLER.ThinkFunction(bot)
 		return playerFactorByUndead * 3000 - playerFactorBySurvivors * 4000
 	end
 	if mem.nextUpdatePath and mem.nextUpdatePath < CurTime() or not mem.nextUpdatePath then
-		mem.nextUpdatePath = CurTime() + 0.9 + math.random() * 0.2
+		mem.nextUpdatePath = CurTime() + 0.4
 		bot:D3bot_UpdatePath(pathCostFunction, nil) -- This will not do anything as long as there is no target set (TgtOrNil, PosTgtOrNil, NodeTgtOrNil), the real magic happens in this handlers think function.
 	end
 	
@@ -166,19 +178,11 @@ function HANDLER.ThinkFunction(bot)
 				continue 
 			end
 			local weaponType, rating, maxDistance = HANDLER.WeaponRatingFunction(v, enemyDistance)
-			local ammoType = v:GetPrimaryAmmoType()
-			local ammo = v:Clip1() + bot:GetAmmoCount(ammoType)
-			-- Silly cheat to prevent bots from running out of ammo TODO: Add buy logic
-			if ammo == 0 then
-				--if bot:IsBot() then
-					bot:SetAmmo(50, ammoType)
-				--else
-					--bot:ConCommand("zs_quickbuyammo")
-				--end
-			end
 
 			rating = rating + math.random(-1000,1000)
 			
+			local ammoType = v:GetPrimaryAmmoType()
+			local ammo = v:Clip1() + bot:GetAmmoCount(ammoType)
 			if ammo > 0 and enemyDistance < maxDistance and bestRating < rating and weaponType == HANDLER.Weapon_Types.RANGED then
 				bestRating, bestWeapon, bestMaxDistance = rating, v.ClassName, maxDistance
 			end
@@ -192,6 +196,16 @@ function HANDLER.ThinkFunction(bot)
 			for i,item in ipairs(GAMEMODE.Items) do
 				if item.SWEP and item.PointShop and GAMEMODE:GetInventoryItemType(item.SWEP) ~= INVCAT_TRINKETS and not item.CanMakeFromScrap and not bot:HasWeapon(item.SWEP) and math.random(1,5) == 1 then HANDLER.Purchase(bot,tostring(i)) if math.random(1,10) == 1 then break end end
 			end
+		end
+	end
+
+	local weapon = bot:GetActiveWeapon()
+	if IsValid(weapon) then
+		local ammoType = weapon:GetPrimaryAmmoType()
+		local ammo = bot:GetAmmoCount(ammoType)
+		-- Silly cheat to prevent bots from running out of ammo TODO: Add buy logic
+		if ammo <= 15 then
+			bot:SetAmmo(100, ammoType)
 		end
 	end
 	
@@ -336,7 +350,12 @@ function HANDLER.FindPathToRandomNode(node)
 	local function heuristicCostFunction(node)
 		local playerFactorBySurvivors = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_SURVIVOR] or 0
 		local playerFactorByUndead = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_UNDEAD] or 0
-		return math.random(-99999,99999) --- playerFactorBySurvivors * 50000 * math.Rand(0,1) + playerFactorByUndead * 1000000 * math.Rand(0,1)
+		for _, ent in ipairs(ents.FindByClass("zombiegasses")) do
+			if ent:GetPos():DistToSqr(node.Pos) <= math.pow(ent:GetRadius(),2) then
+				return -5000000
+			end
+		end
+		return math.random(-99999,99999) - playerFactorBySurvivors * 50000 * math.Rand(0,1) + playerFactorByUndead * 1000000 * math.Rand(0,1)
 	end
 	--D3bot.Debug.DrawNodeMetadata(GetPlayerByName("D3"), D3bot.NodeMetadata, 5)
 	--D3bot.Debug.DrawPath(GetPlayerByName("D3"), D3bot.GetEscapeMeshPathOrNil(node, 400, pathCostFunction, heuristicCostFunction, {Walk = true}), 5, Color(255, 0, 0), true)
