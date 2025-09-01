@@ -352,7 +352,7 @@ function HANDLER.FindPathToRandomNode(node)
 		local playerFactorByUndead = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_UNDEAD] or 0
 		for _, ent in ipairs(ents.FindByClass("zombiegasses")) do
 			if ent:GetPos():DistToSqr(node.Pos) <= math.pow(ent:GetRadius(),2) then
-				return -5000000
+				return 5000000
 			end
 		end
 		return math.random(-99999,99999) - playerFactorBySurvivors * 50000 * math.Rand(0,1) + playerFactorByUndead * 1000000 * math.Rand(0,1)
