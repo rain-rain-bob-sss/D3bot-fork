@@ -116,15 +116,13 @@ end)
 local hadBonusByPl = {}
 hook.Add("PlayerSpawn", D3bot.BotHooksId.."PlayerSpawn", function(pl)
 	if not D3bot.IsEnabledCached then return end
+	timer.Simple(1,function()
+		if IsValid(pl) and pl.D3bot_Mem and pl:Team() == TEAM_SURVIVOR then
+			gamemode.Call("GiveRandomEquipment", pl)
+		end
+	end)
 	if pl.D3bot_Mem then 
 		pl:D3bot_InitializeOrReset()
-		if pl:Team() == TEAM_SURVIVOR then
-			timer.Simple(1,function()
-				if IsValid(pl) and pl:Team() == TEAM_SURVIVOR then
-					gamemode.Call("GiveRandomEquipment", pl)
-				end
-			end)
-		end
 	end
 	if D3bot.IsEnabledCached and D3bot.StartBonus and D3bot.StartBonus > 0 and pl:Team() == TEAM_SURVIVOR then
 		local hadBonus = hadBonusByPl[pl]
