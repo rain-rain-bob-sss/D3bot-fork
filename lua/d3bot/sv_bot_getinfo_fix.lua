@@ -10,7 +10,7 @@ function meta:GetInfo(cvar,...)
                     c = c + 1
                 end
             end
-            return c > 0 and "1" or "0"
+            return (c > 0 or GAMEMODE:GetWave() <= 2) and "1" or "0"
         elseif cvar == "zs_bossclass" then
             if (self.RefreshBossClass or 0) < CurTime() then
                 local bossclasses = {}
