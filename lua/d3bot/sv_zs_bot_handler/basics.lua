@@ -436,15 +436,18 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	--debugoverlay.Box(jumpforward.HitPos,mem.MinsHullDuck,mem.MaxsHullDuck,0.08,Color(0,255,0))
 
 	if attackType == "Cade" and not jumpforward.Hit and canjump then
-		movementVector = posdiff
-		local speed = bot:GetMaxSpeed()
-		movementVector.z = 0
-		movementVector:Normalize()
-		movementVector:Mul(speed)
-		movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
-		actions.Jump = true
-		canusestrat1 = false
-		--if mem.CadeAttackStrat == 1 then print("disabled strat1") end
+		if ((mem.LastJumpTime or 0) + 2) < CurTime() then
+			movementVector = posdiff
+			local speed = bot:GetMaxSpeed()
+			movementVector.z = 0
+			movementVector:Normalize()
+			movementVector:Mul(speed)
+			movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
+			actions.Jump = true
+			canusestrat1 = false
+			--if mem.CadeAttackStrat == 1 then print("disabled strat1") end
+			mem.LastJumpTime = CurTime()
+		end
 	elseif mem.CadeAttackStrat == 1 and canusestrat1 then
 		actions.Jump = false
 	end
