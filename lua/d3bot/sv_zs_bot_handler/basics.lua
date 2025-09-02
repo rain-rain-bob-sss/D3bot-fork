@@ -46,6 +46,32 @@ function D3bot.Basics.SuicideOrRetarget(bot)
 	end
 end
 
+function D3bot.Basics.AttackStrat(bot,cade)
+	local mem = bot.D3bot_Mem
+
+	if D3bot.UsingSourceNav then return not cade end
+
+	local target = bot.TgtOrNil
+
+	if cade then
+		if target and target:GetClass() == "prop_obj_sigil" then return 0 end
+		return mem.CadeAttackStrat
+	else
+		local nodeOrNil = mem.NodeOrNil
+		local nextNodeOrNil = mem.NextNodeOrNil
+		local currentLinkOrNil
+		if D3bot.UsingSourceNav then
+			currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil)
+		else
+			currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+		end
+
+		if (nodeorNil and nodeOrNil.Params.AttackStrat == "Disabled") or (nextNodeOrNil and nextNodeOrNil.Params.AttackStrat == "Disabled") then
+			return 0
+		end
+		return 1
+	end
+end
 
 ---Find nest point.
 ---@param bot GPlayer
@@ -247,7 +273,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
 
 		if not jumpToParam and currentLinkOrNil and currentLinkOrNil.Params.Jumping == "Needed" and nextNodeOrNil and nodeOrNil and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
-			jumpToParam = "Close"
+			jumpToParam = "Close2"
 		end
 
 		maxHeightParam = nodeOrNil and nodeOrNil.Params.MaxHeight
@@ -335,10 +361,10 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 				actions.Jump = true
 			end
 			-- If there is a JumpTo parameter with "Close" as the value, determine if we are close enough to jump.
-			if jumpToParam == "Close" and nextNodeOrNil then
+			if (jumpToParam == "Close" or jumpToParam == "Close2") and nextNodeOrNil then
 				local _, hullTop = bot:GetHull() -- Assume the hull is symmetrical.
 				local hullX, hullY, _ = hullTop:Unpack()
-				local halfHullWidth = math.max(hullX, hullY) + 5 -- Just add a small margin to let the bot jump before it "touches" the next node's area.
+				local halfHullWidth = (math.max(hullX, hullY) + 5) + (jumpToParam == "Close2" and 32 or 0) -- Just add a small margin to let the bot jump before it "touches" the next node's area.
 
 				---@type GVector
 				local closestDiff = origin - nextNodeOrNil:GetClosestPointOnArea(origin)
@@ -455,7 +481,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
 	local swingtime = math.Clamp(swingendtime - CurTime(),0,10)
 	local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime)
-	if bot:GetMoveType() ~= MOVETYPE_LADDER and attackType == "Cade" and (swingtime == 0 or swingtime > 0.5) and mem.CadeAttackStrat == 1 and canusestrat1 then 
+	if bot:GetMoveType() ~= MOVETYPE_LADDER and attackType == "Cade" and (swingtime == 0 or swingtime > 0.5) and (D3bot.Basics.AttackStrat(bot,true) == 1) and canusestrat1 then 
 		movementVector = -posdiff
 		local speed = bot:GetMaxSpeed() * 0.5
 		movementVector.z = 0
@@ -628,7 +654,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movePosOffset = attackType == "Target" and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.65) or vector_origin
+	local movePosOffset = (attackType == "Target" and D3bot.Basics.AttackStrat(bot) == 1) and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.65) or vector_origin
 	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.95, 1)
