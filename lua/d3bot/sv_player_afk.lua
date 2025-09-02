@@ -32,8 +32,8 @@ end)
 
 hook.Add("PlayerPostThink","D3bot_AFK",function(ply)
     if ply:IsBot() then return end
-    if GAMEMODE:GetWave() <= 0 then return end
     if ply:Team() == TEAM_HUMAN then ply.D3bot_AFK = CurTime() + 60 UnControl(ply) return end
+    if GAMEMODE:GetWave() <= 0 then return end
     if not ply.D3bot_AFK then ply.D3bot_AFK = CurTime() + 30 end
     if ply.D3bot_AFK < CurTime() then 
         Control(ply)
