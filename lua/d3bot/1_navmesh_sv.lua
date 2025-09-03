@@ -1,3 +1,4 @@
+--- TODO: Implement LZMA navmesh saving
 
 return function(lib)
 	lib.MapNavMeshDir = "d3bot/navmesh/map/"
@@ -5,11 +6,20 @@ return function(lib)
 	function lib.GetMapNavMeshPath(mapName)
 		return lib.MapNavMeshDir .. mapName .. ".txt"
 	end
+	function lib.GetMapNavMeshPath_LZMA(mapName)
+		return lib.MapNavMeshDir .. mapName .. ".lzma.txt"
+	end
 	function lib.GetMapNavMeshParamsPath(mapName)
 		return lib.MapNavMeshDir .. mapName .. ".params.txt"
 	end
+	function lib.GetMapNavMeshParamsPath_LZMA(mapName)
+		return lib.MapNavMeshDir .. mapName .. ".lzma.params.txt"
+	end
 	lib.MapNavMeshPath = lib.GetMapNavMeshPath(game.GetMap())
+	lib.MapNavMeshPath_LZMA = lib.GetMapNavMeshPath(game.GetMap())
 	lib.MapNavMeshParamsPath = lib.GetMapNavMeshParamsPath(game.GetMap())
+	lib.MapNavMeshParamsPath_LZMA = lib.GetMapNavMeshParamsPath(game.GetMap())
+
 	
 	function lib.CheckMapNavMesh(mapName)
 		return file.Exists(lib.GetMapNavMeshPath(mapName), "DATA")

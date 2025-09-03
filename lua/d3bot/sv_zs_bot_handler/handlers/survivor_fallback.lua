@@ -130,7 +130,15 @@ function HANDLER.ThinkFunction(bot)
 		try(enemies)
 		if HANDLER.CanShootTarget(bot, newAttackTarget) then mem.AttackTgtOrNil = newAttackTarget end
 		if table.Count(dangerouscloseEnemies) > 0 then
-			mem.Dangerous = true
+			local faster = false
+			local speed = bot:GetWalkSpeed()
+			for _, v in ipairs(dangerouscloseEnemies) do
+				if v:GetWalkSpeed() >= speed then
+					faster = true
+					break
+				end
+			end
+			mem.Dangerous = not faster
 			local rand = table.Random(dangerouscloseEnemies)
 			--if HANDLER.CanShootTarget(bot, rand) then
 				mem.AttackTgtOrNil = rand
@@ -367,7 +375,7 @@ function HANDLER.FindPathToRandomNode(node)
 				return 5000000
 			end
 		end
-		return math.random(-99999,99999) - playerFactorBySurvivors * 50000 * math.Rand(0,1) + playerFactorByUndead * 1000000 * math.Rand(0,1)
+		return math.random(-99999,99999) - playerFactorBySurvivors * 50000 * math.Rand(0.5,1) + playerFactorByUndead * 1000000 * math.Rand(0.5,1)
 	end
 	--D3bot.Debug.DrawNodeMetadata(GetPlayerByName("D3"), D3bot.NodeMetadata, 5)
 	--D3bot.Debug.DrawPath(GetPlayerByName("D3"), D3bot.GetEscapeMeshPathOrNil(node, 400, pathCostFunction, heuristicCostFunction, {Walk = true}), 5, Color(255, 0, 0), true)
