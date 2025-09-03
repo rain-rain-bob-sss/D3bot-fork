@@ -24,9 +24,18 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	bot:D3bot_UpdatePathProgress()
 	local mem = bot.D3bot_Mem
 	local botPos = bot:GetPos()
+
+	local nodeOrNil = mem.NodeOrNil
+	local nextNodeOrNil = mem.NextNodeOrNil
+	local currentLinkOrNil
+	if D3bot.UsingSourceNav then
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil)
+	else
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+	end
 	
 	local memAngs = mem.Angs or angle_zero
-	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
+	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.Walk(bot, nextNodeOrNil and nextNodeOrNil.Pos or bot:GetPos(), nil)--D3bot.Basics.WalkAttackAuto(bot)
 	local result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2
 	if result and (math.abs(forwardSpeed or 0) + math.abs(sideSpeed or 0) + math.abs(upSpeed or 0)) >= 30 then
 		if not mem.Dangerous then
@@ -44,6 +53,9 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 			end
 			actions.Attack = actions2.Attack
 			actions.Attack2 = actions2.Attack2
+			actions.Reload = actions2.Reload
+		else
+			result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.Reload(bot)
 			actions.Reload = actions2.Reload
 		end
 	else
@@ -183,7 +195,7 @@ function HANDLER.ThinkFunction(bot)
 			
 			local ammoType = v:GetPrimaryAmmoType()
 			local ammo = v:Clip1() + bot:GetAmmoCount(ammoType)
-			if ammo > 0 and enemyDistance < maxDistance and bestRating < rating and weaponType == HANDLER.Weapon_Types.RANGED then
+			if enemyDistance < maxDistance and bestRating < rating and weaponType == HANDLER.Weapon_Types.RANGED then
 				bestRating, bestWeapon, bestMaxDistance = rating, v.ClassName, maxDistance
 			end
 		end

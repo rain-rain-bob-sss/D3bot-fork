@@ -247,10 +247,10 @@ local targetPriorities = {
 	["prop_obj_sigil"] = 100,
 }
 
-function HANDLER.TargetScore(bot,target,botPos,maxDist)
-	if not IsValid(target) then return -math.huge end
+function HANDLER.TargetScore(bot,target,botPos,maxDist,ignoreDist)
+	if (not IsValid(target)) then return -math.huge end
 	botPos = botPos or bot:GetPos()
-	local dist = botPos:DistToSqr(target:GetPos())
+	local dist = ignoreDist and 1 or botPos:DistToSqr(target:GetPos())
 	local score = ((maxDist or 500*500) - math.min(maxDist or 500*500,dist)) * 0.5
 		+ (targetPriorities[target:GetClass()] or 0)
 	for _,otherbot in ipairs(player.GetAll())do 
@@ -338,9 +338,14 @@ function HANDLER.OnTakeDamageFunction(bot, dmg)
 	local attacker = dmg:GetAttacker()
 	if not HANDLER.CanBeTgt(bot, attacker) then return end
 	local mem = bot.D3bot_Mem
-	if IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():DistToSqr(bot:GetPos()) <= math.pow(HANDLER.BotTgtFixationDistMin, 2) then return end
-	mem.TgtOrNil = attacker
-	--bot:Say("Ouch! Fuck you "..attacker:GetName().."! I'm gonna kill you!")
+	if IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():DistToSqr(bot:GetPos()) >= math.pow(HANDLER.BotTgtFixationDistMin, 2) then
+		if HANDLER.CanBeTgt(bot,attacker) and (HANDLER.TargetScore(bot,mem.TgtOrNil,bot:GetPos(),5000,true) < HANDLER.TargetScore(bot,attacker,bot:GetPos(),5000,true)) then
+			if ((mem.LastChangeTgt or 0)) + 5 > CurTime() then return end
+			mem.TgtOrNil = attacker
+			mem.LastChangeTgt = CurTime()
+		end
+		--bot:Say("Ouch! Fuck you "..attacker:GetName().."! I'm gonna kill you!")
+	end
 end
 
 ---Called when the bot damages something.

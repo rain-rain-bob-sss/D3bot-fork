@@ -116,13 +116,12 @@ end)
 local hadBonusByPl = {}
 hook.Add("PlayerSpawn", D3bot.BotHooksId.."PlayerSpawn", function(pl)
 	if not D3bot.IsEnabledCached then return end
-	timer.Simple(10,function()
+	timer.Simple(0,function()
 		if IsValid(pl) and pl.D3bot_Mem and pl:Team() == TEAM_SURVIVOR then
 			gamemode.Call("GiveRandomEquipment", pl)
 			local skills = {}
 			for id,v in RandomPairs(GAMEMODE.Skills) do
 				if not v.Trinket and not v.Disabled then
-					print(v.Name)
 					skills[#skills + 1] = id
 					if #skills >= math.random(15,50) then break end
 				end
@@ -143,7 +142,7 @@ hook.Add("PreRestartRound", D3bot.BotHooksId.."PreRestartRound", function() hadB
 
 hook.Add("PlayerPointsAdded", D3bot.BotHooksId.."PlayerPointsAdded", function(pl, points)
 	if pl:IsBot() and not _RB_D3BOT_FORK_NOBOTPOINTSGIVE then
-		local give = points * 0.65
+		local give = points * 0.25
 		local humans = D3bot.From(player.GetHumans()):Where(function(k, v) return v:Team() == TEAM_HUMAN end).R
 		local point = give / table.Count(humans)
 		for _, v in pairs(humans) do

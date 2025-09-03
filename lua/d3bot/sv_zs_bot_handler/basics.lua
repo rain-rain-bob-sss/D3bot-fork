@@ -119,7 +119,7 @@ function D3bot.Basics.FindNestPoint(bot,check)
 					end
 				end
 			end
-			if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 500 and distract <= 2 then
+			if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 500 and distract <= 2 and not bot:D3bot_CanSeeTarget(0.5,human) then
 				return false
 			end
 		end
@@ -129,9 +129,9 @@ function D3bot.Basics.FindNestPoint(bot,check)
 		if node.Params.Nest == "Enabled" and not nestedNodes[node] then 
 			local pos = node:GetClosestPointOnArea(bot:GetPos())
 
-			if not check and IsValid(bot.TgtOrNil) and bot:D3bot_CanSeeTargetCached() then
+			if not check and IsValid(bot.TgtOrNil) then
 				local dist = bot.TgtOrNil:GetPos():Distance(pos)
-				if (dist >= 2000) then continue end
+				if (dist >= 1500) then continue end
 			end
 
 			local skip = false
@@ -450,7 +450,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 
 	local jumpforward = util.TraceHull({
 		start = jumphit.HitPos,
-		endpos = jumphit.HitPos + bot:GetForward() * 32,
+		endpos = jumphit.HitPos + bot:GetForward() * 64,
 		filter = function(ent) 
 			if ent:IsPlayer() and bot:Team() == ent:Team() then return false end
 			return (ent ~= bot)
@@ -462,7 +462,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	--debugoverlay.Box(jumpforward.HitPos,mem.MinsHullDuck,mem.MaxsHullDuck,0.08,Color(0,255,0))
 
 	if attackType == "Cade" and not jumpforward.Hit and canjump then
-		if ((mem.LastJumpTime or 0) + 2) < CurTime() then
+		if ((mem.LastJumpTime or 0) + 4) < CurTime() then
 			movementVector = posdiff
 			local speed = bot:GetMaxSpeed()
 			movementVector.z = 0
@@ -471,10 +471,9 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
 			actions.Jump = true
 			canusestrat1 = false
-			--if mem.CadeAttackStrat == 1 then print("disabled strat1") end
 			mem.LastJumpTime = CurTime()
 		end
-	elseif mem.CadeAttackStrat == 1 and canusestrat1 then
+	elseif D3bot.Basics.AttackStrat(bot,true) == 1 and canusestrat1 then
 		actions.Jump = false
 	end
 
@@ -933,6 +932,10 @@ end
 ---@return boolean minorStuck -- True if the bot seems to be stuck on a ladder or similar.
 ---@return boolean majorStuck -- True if the bot seems to be stuck on props, or runs in circles.
 ---@return boolean facesHindrance -- True if the bot is walking slower than expected.
+
+local aimTr = {
+	mask = MASK_SHOT_HULL
+}
 function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	local mem = bot.D3bot_Mem
 
@@ -961,12 +964,18 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	local origin = bot:GetShootPos()
 	local bonePos = bot:D3bot_GetAttackPosOrNil(mem.AimHeightFactor or 1,target)
 
-	for i = target:GetBoneCount() - 1, 0,-1 do
-		local mat = target:GetBoneMatrix(i)
-		if mat then
-			bonePos = mat:GetTranslation()
+	local hitBones = {
+		"ValveBiped.Bip01_Head1",
+		"ValveBiped.Bip01_Spine",
+	}
+
+	for _,name in ipairs(hitBones) do
+		local bone = target:LookupBone(name)
+		if bone then
+			bonePos = target:GetBonePosition(bone)
+			break
 		end
-    end
+	end
 
 	local targetPos = bonePos
 	local dist = origin:DistToSqr(targetPos)
@@ -974,12 +983,10 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 	if maxDistance and dist > math.pow(maxDistance, 2) then return false, {}, nil, nil, nil, angle_zero, false, false, false end
 
 	-- TODO: Use fewer traces, cache result for a few frames
-	local tr = util.TraceLine({
-		start = origin,
-		endpos = targetPos,
-		filter = player.GetAll(),
-		mask = MASK_SHOT_HULL
-	})
+	aimTr.start = origin
+	aimTr.endpos = targetPos
+	aimTr.filter = player.GetAll()
+	local tr = util.TraceLine(aimTr)
 	local canShootTarget = not tr.Hit
 
 	if not canShootTarget then mem.AimHeightFactor = math.Rand(0.5, 1) end
