@@ -384,7 +384,7 @@ local potTargetEntClasses_Obj = {"prop_*turret*", "prop_zapper*"}
 ---@param target GPlayer|GEntity|any
 function HANDLER.CanBeTgt(bot, target, potEntTargets)
 	if not target or not IsValid(target) then return false end
-	if target:IsPlayer() and target ~= bot and (target:Team() ~= TEAM_UNDEAD or GAMEMODE:GetEndRound()) and target:GetObserverMode() == OBS_MODE_NONE and not target:IsFlagSet(FL_NOTARGET) and target:Alive() then return true end
+	if target:IsPlayer() and target ~= bot and (target:Team() ~= TEAM_UNDEAD or GAMEMODE:GetEndRound()) and target:GetObserverMode() == OBS_MODE_NONE and not target:IsFlagSet(FL_NOTARGET) and target:Alive() and not target:GetStatus("d3botredeem") then return true end
 	if target:GetClass() == "prop_obj_sigil" and (LASTHUMAN or target:GetSigilCorrupted()) then return false end -- Special case to ignore useless sigils.
 	if potEntTargets and potEntTargets[target] then return true end
 
@@ -431,7 +431,9 @@ function HANDLER.RerollTarget(bot)
 		target = potTargets[target]
 		if HANDLER.CanBeTgt(bot, target, potEntTargets2) then
 			bot:D3bot_SetTgtOrNil(target, false, nil)
-			break
+			return
 		end
 	end
+
+	bot:D3bot_SetTgtOrNil(nil, false, nil)
 end

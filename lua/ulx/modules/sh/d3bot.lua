@@ -150,9 +150,9 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 	
 	local nextByPl = {}
 	local tierByPl = {}
-	function ulx.human(pl)
+	function ulx.human(pl,force)
 
-		if GAMEMODE.ZombieEscape then
+		if GAMEMODE.ZombieEscape and not force then
 			local response = translate.ClientGet(pl, "D3bot_noredeemzombieescape")
 			pl:ChatPrint(response)
 			pl:PrintMessage(HUD_PRINTCENTER, response)
@@ -161,7 +161,7 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 
 		local isRedeem = pl:Team() == TEAM_UNDEAD and (pl:Frags() >= GAMEMODE:GetRedeemBrains())
 
-		if not isRedeem then
+		if not isRedeem and not force then
 
 			if not D3bot.IsEnabledCached then
 				local response = translate.ClientGet(pl, "D3bot_botmapsonly")
@@ -224,11 +224,30 @@ if engine.ActiveGamemode() == "zombiesurvival" then
 			ulx.giveHumanLoadout(pl)
 			ulx.tryBringToHumans(pl)
 		end
+
+		pl:GiveStatus("d3botredeem",isRedeem and 10 or 5)
 		
 	end
 	local cmd = ulx.command("Zombie Survival", "ulx human", ulx.human, "!human", true)
 	cmd:defaultAccess(ULib.ACCESS_ALL)
 	cmd:help("If you're a zombie, you can use this command to instantly respawn as a human with a default loadout.")
+
+	function ulx.forcehuman(pl,plys,nohumans)
+		local affected = {}
+		for _,v in ipairs(plys) do
+			if not nohumans or v:Team() == TEAM_ZOMBIE then
+				ulx.human(v,true)
+				table.insert(affected,v)
+			end
+		end
+
+		ulx.fancyLogAdmin(pl, "#A made #T respawned as a human.", affected)
+	end
+	local cmd = ulx.command("Zombie Survival", "ulx forcehuman", ulx.forcehuman, "!forcehuman", true)
+	cmd:addParam({ type = ULib.cmds.PlayersArg })
+	cmd:addParam({ type = ULib.cmds.BoolArg, hint = "ignore humans" })
+	cmd:defaultAccess(ULib.ACCESS_ADMIN)
+	cmd:help("Make target(s) respawn as a human.")
 end
 
 local function registerCmd(camelCaseName, access, ...)
