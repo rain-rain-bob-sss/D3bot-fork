@@ -99,6 +99,7 @@ function D3bot.MaintainBotRoles()
 		if #(playersByTeam[TEAM_SURVIVOR] or {}) > desiredCountByTeam[TEAM_SURVIVOR] and #(playersByTeam[TEAM_UNDEAD] or {}) < desiredCountByTeam[TEAM_UNDEAD] and botsByTeam[TEAM_SURVIVOR] then
 			local randomBot = table.remove(botsByTeam[TEAM_SURVIVOR], 1)
 			randomBot:StripWeapons()
+			randomBot:RemoveAllAmmo()
 			--randomBot:KillSilent()
 			randomBot:Kill()
 			return
