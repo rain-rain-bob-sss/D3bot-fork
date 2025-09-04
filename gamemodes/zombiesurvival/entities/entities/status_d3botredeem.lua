@@ -95,7 +95,7 @@ function ENT:EntityTakeDamage(ent, dmginfo)
 		return
 	end
 	local attacker = dmginfo:GetAttacker()
-	if attacker:IsWorld() or (IsValid(attacker) and attacker:IsPlayer()) then
+	if attacker:IsWorld() or (IsValid(attacker) and attacker:IsPlayer()) or (dmginfo:IsDamageType(DMG_CRUSH)) then
 		return true
 	end
 end
