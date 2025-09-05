@@ -14,6 +14,8 @@ function ENT:PlayerSet(ply)
 		ply.OldFriction = ply:GetFriction()
 		ply:SetFriction(1.5)
 	end
+
+	ply:CollisionRulesChanged()
 end
 
 if SERVER then
@@ -25,6 +27,15 @@ if SERVER then
 		else
 			self.DieTime = CurTime() + fTime
 			self:SetDuration(fTime)
+		end
+	end
+
+	function ENT:Think()
+		self.BaseClass.Think(self)
+		local pl = self:GetOwner()
+		if pl:IsValidLivingHuman() then
+			pl:RemoveStatus("confusion", false, true)
+			pl:RemoveStatus("knockdown", false, true)
 		end
 	end
 end
@@ -96,6 +107,10 @@ function ENT:EntityTakeDamage(ent, dmginfo)
 	end
 	local attacker = dmginfo:GetAttacker()
 	if attacker:IsWorld() or (IsValid(attacker) and attacker:IsPlayer()) or (dmginfo:IsDamageType(DMG_CRUSH)) then
+		if attacker:IsPlayer() then
+			--attacker:AddLegDamageExt(100, ent, self, SLOWTYPE_COLD)
+			--attacker:AddArmDamage(50)
+		end
 		return true
 	end
 end
@@ -168,7 +183,12 @@ if SERVER then
 	hook.Add("Think","status_d3bot_redeem_fix_locked_door", function()
 		if engine.TickCount() % 2 ~= 0 then return end
 		for _,door in ipairs(ents.FindByClass("prop_door_rotating")) do
+			local bool = b:GetNWBool("door_locked")
 			door:SetNWBool("door_locked",door:IsDoorLocked())
+			door:SetCustomCollisionCheck(true)
+			if bool ~= door:IsDoorLocked() then
+				door:CollisionRulesChanged()
+			end
 		end
 	end)
 end

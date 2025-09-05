@@ -368,6 +368,7 @@ function HANDLER.FindPathToRandomNode(node)
 		return node.Pos:Distance(linkedNode.Pos) * 0.1
 	end
 	local function heuristicCostFunction(node)
+		local nodeMetadata = D3bot.NodeMetadata[node]
 		local playerFactorBySurvivors = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_SURVIVOR] or 0
 		local playerFactorByUndead = nodeMetadata and nodeMetadata.PlayerFactorByTeam and nodeMetadata.PlayerFactorByTeam[TEAM_UNDEAD] or 0
 		for _, ent in ipairs(ents.FindByClass("zombiegasses")) do

@@ -431,6 +431,7 @@ function meta:D3bot_InitializeOrReset(inittype)
 		mem.MaxsHullDuck = maxs * self:GetModelScale()
 		mem.Height = (myClass.Hull and myClass.Hull[2].z or 72) * self:GetModelScale()
 		mem.CrouchHeight = (myClass.HullDuck and myClass.HullDuck[2].z or 36) * self:GetModelScale()
+		mem.TooTall = mem.Height > 72 * 1.25
 
 		-- Calculate jump heights.
 

@@ -377,7 +377,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 				if math.random(D3bot.BotJumpAntichance) == 1 then
 					actions.Jump = true
 				end
-				if math.random(D3bot.BotDuckAntichance) == 1 then
+				if math.random(D3bot.BotDuckAntichance) == 1 or (mem.TooTall and math.random(1,2) == 1) then
 					actions.Duck = true
 				end
 			end
