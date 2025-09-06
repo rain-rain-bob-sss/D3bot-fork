@@ -25,6 +25,9 @@ function D3bot.Basics.AirStrafe(bot, forwardSpeed, sideSpeed)
     local wishDir = wishVel:Angle()
     local curDir = bot:GetVelocity():Angle()
     local delta = math.NormalizeAngle(wishDir.y - curDir.y)
+
+	if delta >= 170 then return forwardSpeed, sideSpeed end --stop doing these silly turns
+
     local rotation = math.rad((delta > 0 and -90 or 90) + delta)
     local cosrot = math.cos(rotation)
     local sinrot = math.sin(rotation)
@@ -770,7 +773,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 				end
 			end
 
-			if ((movementVector.z > (origin.z + 32)) or math.random(1,100) <= 10) and ((mem.LastJumpTime or 0) + math.Rand(0.5,1.9) < CurTime()) then
+			if (((movementVector.z > (origin.z + 32)) or math.random(1,100) <= 10) and ((mem.LastJumpTime or 0) + math.Rand(0.5,1.9) < CurTime())) or D3bot.BHOPMode then
 				actions.Jump = true
 				mem.LastJumpTime = CurTime()
 			end
@@ -784,7 +787,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 		actions.Use = true
 	end
 
-	if duckParam == "Disabled" or duckToParam == "Disabled" then
+	if duckParam == "Disabled" or duckToParam == "Disabled" or D3bot.BHOPMode then
 		actions.Duck = false
 	end
 	if math.random(1, 2) == 1 or jumpParam == "Disabled" or jumpToParam == "Disabled" or (not actions.Duck and bot:Crouching()) then
