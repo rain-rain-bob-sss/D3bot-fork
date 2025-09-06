@@ -16,7 +16,7 @@ end
 function D3bot.Basics.AirStrafe(bot, forwardSpeed, sideSpeed)
 	sideSpeed = sideSpeed or 0
 	forwardSpeed = forwardSpeed or 0
-	if bot:GetGroundEntity() ~= NULL or bot:GetMoveType() ~= MOVETYPE_WALK then return forwardSpeed, sideSpeed end
+	if bot:GetGroundEntity() ~= NULL or bot:GetMoveType() ~= MOVETYPE_WALK or bot:WaterLevel() ~= 0 then return forwardSpeed, sideSpeed end
 	local vForward,vRight = bot:EyeAngles():Forward(),bot:EyeAngles():Right()
     normalize2d(vForward)
     normalize2d(vRight)
