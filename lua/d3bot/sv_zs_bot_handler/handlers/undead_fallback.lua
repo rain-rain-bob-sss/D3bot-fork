@@ -112,8 +112,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	local nestNode
 
 	local fleshcreeper = bot:GetZombieClassTable().Name == "Flesh Creeper"
-	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, false --[[disabled, bots are stupid as fuck]])
-	if fleshcreeper and actions.Reload and IsValid(bot:GetActiveWeapon()) then bot:GetActiveWeapon():Reload() end --WHAT THE FUCK,STUPID HACK
+
 	if fleshcreeper then 
 		local cannest,node,pos = D3bot.Basics.FindNestPoint(bot)
 		if cannest then
@@ -130,12 +129,17 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 			end
 		end
 	end
+	
+	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, mem.NodeOrNil ~= nestNode and fleshcreeper)
+	if fleshcreeper and actions.Reload and IsValid(bot:GetActiveWeapon()) then bot:GetActiveWeapon():Reload() end --WHAT THE FUCK,STUPID HACK
 	if not result then
 		result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
 		if not result then
 			return
 		end
 	end
+
+	forwardSpeed,sideSpeed = D3bot.Basics.AirStrafe(bot,forwardSpeed,sideSpeed)
 
 	-- If facesHindrance is true, let the bot search for nearby barricade objects.
 	-- But only if the bot didn't do damage for some time.
@@ -435,5 +439,11 @@ function HANDLER.RerollTarget(bot)
 		end
 	end
 
-	--bot:D3bot_SetTgtOrNil(nil, false, nil)
+	local target = table.Random(potTargets)
+	if HANDLER.CanBeTgt(bot, target, potEntTargets2) then
+		bot:D3bot_SetTgtOrNil(target, false, nil)
+		return
+	end
+
+	bot:D3bot_SetTgtOrNil(nil, false, nil)
 end

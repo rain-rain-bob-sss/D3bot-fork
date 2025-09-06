@@ -40,12 +40,12 @@ if SERVER then
 			end
 
 			if self.NextBreakDoors < CurTime() then
-				for _,ent in ipairs(util.BlastAlloc(self, pl, pl:GetPos(), 100)) do
+				for _,ent in ipairs(util.BlastAlloc(self, pl, pl:GetPos(), 24)) do
 					if ent:GetClass() == "prop_door_rotating" then
-						ent:TakeDamage(1000,pl,self)
+						ent:TakeDamage(200,pl,self)
 					end
 				end
-				self.NextBreakDoors = CurTime() + 0.5
+				self.NextBreakDoors = CurTime() + 0.1
 			end
 		end
 	end
@@ -61,6 +61,27 @@ function ENT:Initialize()
 			hook.Add("HUDPaint", self, self.HUDPaint)
 		end
 	end
+
+	if SERVER then
+		hook.Add("EntityTakeDamage", self, self.EntityTakeDamage)
+	end
+end
+
+function ENT:EntityTakeDamage(ent, dmginfo)
+	local owner = self:GetOwner()
+	if ent ~= owner then 
+		local attacker = dmginfo:GetAttacker()
+		if attacker == owner then
+			dmginfo:ScaleDamage(2)
+		end
+	end
+end
+
+function ENT:Move(pl, move)
+	if pl ~= self:GetOwner() then return end
+
+	move:SetMaxSpeed(move:GetMaxSpeed() * 1.35)
+	move:SetMaxClientSpeed(move:GetMaxSpeed())
 end
 
 if CLIENT then
@@ -78,8 +99,8 @@ if CLIENT then
 	function ENT:RenderScreenspaceEffects()
 		local f = math.Clamp(self:GetStartTime() + self:GetDuration() - CurTime(),0,1)
 		local p = math.abs(math.sin((CurTime() - self:GetStartTime()) * 2.5)) * f
-		tab["$pp_colour_addg"] = f * 0.1 + p * 0.1
-		tab["$pp_colour_brightness"] = math.ease.InQuad(f) * 0.02
+		tab["$pp_colour_addg"] = f * 0.05 + p * 0.05
+		tab["$pp_colour_brightness"] = math.ease.InQuad(f) * 0.015
 		DrawColorModify( tab )
 	end
 

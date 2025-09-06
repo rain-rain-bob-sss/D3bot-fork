@@ -40,7 +40,7 @@ if SERVER then
 			pl:RemoveStatus("knockdown", false, true)
 			if self.NextHeal < CurTime() then
 				pl:SetHealth(math.min(math.max(pl:GetMaxHealth(),pl:Health()),pl:Health() + 50))
-				self.NextHeal = CurTime() + 0.5
+				self.NextHeal = CurTime() + 0.35
 			end
 		end
 	end
@@ -108,7 +108,7 @@ function ENT:EntityTakeDamage(ent, dmginfo)
 	if ent ~= owner then 
 		local attacker = dmginfo:GetAttacker()
 		if attacker == owner then
-			dmginfo:ScaleDamage(2)
+			dmginfo:ScaleDamage(3)
 		end
 		return
 	end
@@ -190,7 +190,7 @@ if SERVER then
 	hook.Add("Think","status_d3bot_redeem_fix_locked_door", function()
 		if engine.TickCount() % 2 ~= 0 then return end
 		for _,door in ipairs(ents.FindByClass("prop_door_rotating")) do
-			local bool = b:GetNWBool("door_locked")
+			local bool = door:GetNWBool("door_locked")
 			door:SetNWBool("door_locked",door:IsDoorLocked())
 			door:SetCustomCollisionCheck(true)
 			if bool ~= door:IsDoorLocked() then

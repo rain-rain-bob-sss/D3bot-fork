@@ -1,5 +1,35 @@
 D3bot.Basics = {}
 
+local toosmall = 1 / 1e9 / 1e9
+
+local normalize2d = function(vec)
+	local len = vec:Length2D()
+	local lennormal = 1 / (toosmall + len)
+	
+	vec.x = vec.x * lennormal
+	vec.y = vec.y * lennormal
+	vec.z = 0
+	
+	return len
+end
+
+function D3bot.Basics.AirStrafe(bot, forwardSpeed, sideSpeed)
+	if bot:OnGround() or bot:GetMoveType() ~= MOVETYPE_WALK then return forwardSpeed, sideSpeed end
+	local vForward,vRight = bot:EyeAngles():Forward(),bot:EyeAngles():Right()
+    normalize2d(vForward)
+    normalize2d(vRight)
+    
+    local wishVel = Vector(vForward.x * forwardSpeed + vRight.x * sideSpeed,vForward.y * forwardSpeed + vRight.y * sideSpeed,0)
+    local wishDir = wishVel:Angle()
+    local curDir = bot:GetVelocity():Angle()
+    local delta = math.NormalizeAngle(wishDir.y - curDir.y)
+    local rotation = math.rad((delta > 0 and -90 or 90) + delta)
+    local cosrot = math.cos(rotation)
+    local sinrot = math.sin(rotation)
+    
+    return cosrot * forwardSpeed - sinrot * sideSpeed,sinrot * forwardSpeed + cosrot * sideSpeed
+end
+
 ---Let the bot suicide or retarget, based on the node parameters of the current and next node.
 ---@param bot GPlayer
 function D3bot.Basics.SuicideOrRetarget(bot)
@@ -746,6 +776,10 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 				if math.random(D3bot.BotDuckAntichance) == 1 then
 					actions.Duck = true
 				end
+			end
+
+			if movementVector.z > (origin.z + 32) then
+				actions.Jump = true
 			end
 		else
 			actions.Duck = true
