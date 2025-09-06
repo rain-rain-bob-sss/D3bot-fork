@@ -5,6 +5,8 @@ ENT.Base = "status__base"
 
 ENT.Ephemeral = true
 
+ENT.NextHeal = 0
+
 AccessorFuncDT(ENT, "Duration", "Float", 0)
 AccessorFuncDT(ENT, "StartTime", "Float", 4)
 
@@ -36,6 +38,10 @@ if SERVER then
 		if pl:IsValidLivingHuman() then
 			pl:RemoveStatus("confusion", false, true)
 			pl:RemoveStatus("knockdown", false, true)
+			if self.NextHeal < CurTime() then
+				pl:SetHealth(math.min(math.max(pl:GetMaxHealth(),pl:Health()),pl:Health() + 50))
+				self.NextHeal = CurTime() + 0.5
+			end
 		end
 	end
 end
@@ -77,6 +83,7 @@ function ENT:OnRemove()
 	if IsValid(owner) then 
 		if SERVER then
 			owner:SetFriction(owner.OldFriction)
+			owner:GiveStatus("d3botunghost",10)
 		elseif owner == MySelf then
 			MySelf:EmitSound("weapons/physgun_off.wav",100,155,0.5,CHAN_STATIC)
 			util.WhiteOut(0.5)

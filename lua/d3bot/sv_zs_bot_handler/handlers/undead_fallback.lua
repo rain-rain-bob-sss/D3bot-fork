@@ -435,5 +435,5 @@ function HANDLER.RerollTarget(bot)
 		end
 	end
 
-	bot:D3bot_SetTgtOrNil(nil, false, nil)
+	--bot:D3bot_SetTgtOrNil(nil, false, nil)
 end
