@@ -14,6 +14,8 @@ local normalize2d = function(vec)
 end
 
 function D3bot.Basics.AirStrafe(bot, forwardSpeed, sideSpeed)
+	sideSpeed = sideSpeed or 0
+	forwardSpeed = forwardSpeed or 0
 	if bot:GetGroundEntity() ~= NULL or bot:GetMoveType() ~= MOVETYPE_WALK then return forwardSpeed, sideSpeed end
 	local vForward,vRight = bot:EyeAngles():Forward(),bot:EyeAngles():Right()
     normalize2d(vForward)
@@ -113,7 +115,6 @@ function D3bot.Basics.FindNestPoint(bot,check)
 	
 	if D3bot.UsingSourceNav then return false end
 
-
 	local nestCount = 0
 	local pnestCount = 0
 	local nestedNodes = {}
@@ -140,16 +141,7 @@ function D3bot.Basics.FindNestPoint(bot,check)
 	if not check then
 		for _, human in pairs(team.GetPlayers(TEAM_HUMAN)) do
 			if human:IsFlagSet(FL_NOTARGET) then continue end
-			local distract = 0
-			for _,otherbot in ipairs(player.GetAll())do 
-				if otherbot ~= bot and otherbot.D3bot_Mem and otherbot:GetZombieClassTable().Name ~= "Flesh Creeper" then
-					local mem = otherbot.D3bot_Mem
-					if IsValid(mem.TgtOrNil) and mem.TgtOrNil == human then
-						distract = distract + 1
-					end
-				end
-			end
-			if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 500 and distract <= 2 and not bot:D3bot_CanSeeTarget(0.5,human) then
+			if util.SkewedDistance(human:GetPos(), bot:GetPos(), 1.5) <= 500 and bot:D3bot_CanSeeTarget(0.5,human) then
 				return false
 			end
 		end
@@ -778,8 +770,9 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 				end
 			end
 
-			if movementVector.z > (origin.z + 32) then
+			if ((movementVector.z > (origin.z + 32)) or math.random(1,100) <= 10) and ((mem.LastJumpTime or 0) + math.Rand(0.5,1.9) < CurTime()) then
 				actions.Jump = true
+				mem.LastJumpTime = CurTime()
 			end
 		else
 			actions.Duck = true

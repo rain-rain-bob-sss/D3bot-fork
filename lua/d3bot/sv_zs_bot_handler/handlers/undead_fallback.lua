@@ -130,15 +130,20 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		end
 	end
 	
-	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, mem.NodeOrNil ~= nestNode and fleshcreeper)
-	if fleshcreeper and actions.Reload and IsValid(bot:GetActiveWeapon()) then bot:GetActiveWeapon():Reload() end --WHAT THE FUCK,STUPID HACK
+	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.PounceAuto(bot, false, fleshcreeper and mem.NodeOrNil ~= nestNode)
+	if fleshcreeper then
+		if (mem.LastPounceTime or 0) + 5 > CurTime() then
+			result = false
+		end
+	end
+	if result and fleshcreeper and actions.Reload and IsValid(bot:GetActiveWeapon()) then bot:GetActiveWeapon():Reload() mem.LastPounceTime = CurTime() end --WHAT THE FUCK,STUPID HACK
 	if not result then
 		result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.WalkAttackAuto(bot)
 		if not result then
 			return
 		end
 	end
-	
+
 	forwardSpeed,sideSpeed = D3bot.Basics.AirStrafe(bot,forwardSpeed,sideSpeed)
 
 	-- If facesHindrance is true, let the bot search for nearby barricade objects.
