@@ -14,7 +14,7 @@ local normalize2d = function(vec)
 end
 
 function D3bot.Basics.AirStrafe(bot, forwardSpeed, sideSpeed)
-	if bot:OnGround() or bot:GetMoveType() ~= MOVETYPE_WALK then return forwardSpeed, sideSpeed end
+	if bot:GetGroundEntity() ~= NULL or bot:GetMoveType() ~= MOVETYPE_WALK then return forwardSpeed, sideSpeed end
 	local vForward,vRight = bot:EyeAngles():Forward(),bot:EyeAngles():Right()
     normalize2d(vForward)
     normalize2d(vRight)

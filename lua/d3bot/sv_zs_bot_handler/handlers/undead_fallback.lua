@@ -138,7 +138,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 			return
 		end
 	end
-
+	
 	forwardSpeed,sideSpeed = D3bot.Basics.AirStrafe(bot,forwardSpeed,sideSpeed)
 
 	-- If facesHindrance is true, let the bot search for nearby barricade objects.
