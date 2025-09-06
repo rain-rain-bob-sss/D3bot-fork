@@ -66,7 +66,7 @@ HANDLER.StatusCreateMoves = {
 	["disorientation"] = function(self, pl, cmd)
 		local curtime = CurTime()
 		local frametime = FrameTime()
-		local power = self and self:GetPower() or 80
+		local power = self and (self.GetPower and self:GetPower() * 2) or 80
 		power = power * 4
 
 		local ang = cmd:GetViewAngles()

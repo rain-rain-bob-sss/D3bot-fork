@@ -39,7 +39,7 @@ if SERVER then
 			pl:RemoveStatus("confusion", false, true)
 			pl:RemoveStatus("knockdown", false, true)
 			if self.NextHeal < CurTime() then
-				pl:SetHealth(math.min(math.max(pl:GetMaxHealth(),pl:Health()),pl:Health() + 50))
+				pl:SetHealth(math.min(math.max(pl:GetMaxHealth(),0--[[,pl:Health()]]),pl:Health() + 50))
 				self.NextHeal = CurTime() + 0.35
 			end
 		end
