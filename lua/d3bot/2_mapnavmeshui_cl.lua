@@ -147,8 +147,8 @@ return function(lib)
 	}
 
 	function lib.SetIsMapNavMeshViewEnabled(bool)
-		local forceDrawInSkybox = false
-		local forceDrawInSkyboxCounter = 0
+		--local forceDrawInSkybox = false
+		--local forceDrawInSkyboxCounter = 0
 		if isEnabled == bool then return end
 		isEnabled = bool
 		if isEnabled then
@@ -190,6 +190,7 @@ return function(lib)
 				
 			end)
 			hook.Add("PostDrawOpaqueRenderables", hooksId, function(bDrawingDepth, bDrawingSkybox)
+				--[[
 				if forceDrawInSkyboxCounter > 1 then
 					forceDrawInSkybox = true
 					print("D3bot: Force drawing of navmesh in skybox, it won't draw correctly otherwise.")
@@ -199,6 +200,10 @@ return function(lib)
 					return
 				end
 				forceDrawInSkyboxCounter = 0
+				]]
+
+				if bDrawingSkybox and not D3bot.Convar_Navmeshing_DrawSkyBox:GetBool() then return end
+
 				local smartDraw = D3bot.Convar_Navmeshing_SmartDraw:GetBool()
 				local previewDraw = D3bot.Convar_Navmeshing_PreviewTool:GetBool()
 				local maxDrawingDistanceSqr = math.pow(D3bot.Convar_Navmeshing_DrawDistance:GetInt(), 2)

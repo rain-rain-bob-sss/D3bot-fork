@@ -88,19 +88,22 @@ function D3bot.Basics.AttackStrat(bot,cade)
 
 	local target = bot.TgtOrNil
 
+	local nodeOrNil = mem.NodeOrNil
+	local nextNodeOrNil = mem.NextNodeOrNil
+	local currentLinkOrNil
+	if D3bot.UsingSourceNav then
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil)
+	else
+		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
+	end
+
 	if cade then
 		if target and target:GetClass() == "prop_obj_sigil" then return 0 end
+		if (nodeorNil and nodeOrNil.Params.CadeAttackStrat == "Disabled") or (nextNodeOrNil and nextNodeOrNil.Params.CadeAttackStrat == "Disabled") then
+			return 0
+		end
 		return mem.CadeAttackStrat
 	else
-		local nodeOrNil = mem.NodeOrNil
-		local nextNodeOrNil = mem.NextNodeOrNil
-		local currentLinkOrNil
-		if D3bot.UsingSourceNav then
-			currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil:SharesLink(nodeOrNil)
-		else
-			currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
-		end
-
 		if (nodeorNil and nodeOrNil.Params.AttackStrat == "Disabled") or (nextNodeOrNil and nextNodeOrNil.Params.AttackStrat == "Disabled") then
 			return 0
 		end
