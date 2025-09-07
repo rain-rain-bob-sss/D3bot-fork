@@ -498,7 +498,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			canusestrat1 = false
 			mem.LastJumpTime = CurTime()
 		end
-	elseif attackType == "Cade" and D3bot.Basics.AttackStrat(bot,true) == 1 and canusestrat1 then
+	elseif attackType == "Cade" and D3bot.Basics.AttackStrat(bot,true) == 1 and canusestrat1 and not jumpParam and not jumpToParam then
 		actions.Jump = false
 	end
 
