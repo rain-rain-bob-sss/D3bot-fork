@@ -81,7 +81,7 @@ function D3bot.MaintainBotRoles()
 		table.sort(botsByTeam[TEAM_UNDEAD], function(a, b) return (a:GetZombieClassTable().Boss and 1 or 0) > (b:GetZombieClassTable().Boss and 1 or 0) end)
 	end
 	for team, botByTeam in pairs(botsByTeam) do
-		table.sort(botByTeam, function(a, b) return a:Frags() < b:Frags() end)
+		table.sort(botByTeam, function(a, b) return a:Frags() > b:Frags() end)
 	end
 	
 	-- Stop managing survivor bots, after round started. Except on ZE or obj maps, where survivors are managed to be 0
@@ -129,8 +129,10 @@ function D3bot.MaintainBotRoles()
 	-- Remove bots out of managed teams to maintain desired counts
 	for team, desiredCount in pairs(desiredCountByTeam) do
 		if #(playersByTeam[team] or {}) > desiredCount and botsByTeam[team] then
-			local randomBot = table.remove(botsByTeam[team], 1)
+			local randomBot = table.remove(botsByTeam[team], #botsByTeam[team])
+			randomBot:RemoveAllAmmo()
 			randomBot:StripWeapons()
+			randomBot:Kill()
 			return randomBot and randomBot:Kick(D3bot.BotKickReason)
 		end
 	end
@@ -138,8 +140,10 @@ function D3bot.MaintainBotRoles()
 	if player.GetCount() > allowedTotal then
 		for team, desiredCount in pairs(desiredCountByTeam) do
 			if not desiredCountByTeam[team] and botsByTeam[team] then
-				local randomBot = table.remove(botsByTeam[team], 1)
+				local randomBot = table.remove(botsByTeam[team], #botsByTeam[team])
+				randomBot:RemoveAllAmmo()
 				randomBot:StripWeapons()
+				randomBot:Kill()
 				return randomBot and randomBot:Kick(D3bot.BotKickReason)
 			end
 		end

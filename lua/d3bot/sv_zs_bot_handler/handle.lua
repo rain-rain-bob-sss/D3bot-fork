@@ -116,22 +116,26 @@ end)
 local hadBonusByPl = {}
 hook.Add("PlayerSpawn", D3bot.BotHooksId.."PlayerSpawn", function(pl)
 	if not D3bot.IsEnabledCached then return end
-	timer.Simple(0,function()
-		if IsValid(pl) and pl.D3bot_Mem and pl:Team() == TEAM_SURVIVOR and pl:IsBot() then
-			GAMEMODE.CheckedOut[pl:UniqueID()] = false
-			gamemode.Call("GiveRandomEquipment", pl)
-			local skills = {}
-			for id,v in RandomPairs(GAMEMODE.Skills) do
-				if not v.Trinket and not v.Disabled then
-					skills[#skills + 1] = id
-					if #skills >= math.random(15,50) then break end
-				end
-			end
-			pl:ApplySkills(skills)
-		end
-	end)
 	if pl.D3bot_Mem then 
 		pl:D3bot_InitializeOrReset()
+	end
+	if IsValid(pl) and pl.D3bot_Mem and pl:Team() == TEAM_SURVIVOR and pl:IsBot() then
+		local skills = {}
+		local skillscount = math.random(20,35)
+		for id,v in RandomPairs(GAMEMODE.Skills) do
+			if not v.Trinket and not v.Disabled then
+				skills[#skills + 1] = id
+				if #skills >= skillscount then break end
+			end
+		end
+		pl:SetDesiredActiveSkills(skills)
+		pl:ApplySkills(skills)
+		timer.Simple(0,function()
+			if IsValid(pl) and pl.D3bot_Mem and pl:Team() == TEAM_SURVIVOR and pl:IsBot() then
+				GAMEMODE.CheckedOut[pl:UniqueID()] = false
+				gamemode.Call("GiveRandomEquipment", pl)
+			end
+		end)
 	end
 	if D3bot.IsEnabledCached and D3bot.StartBonus and D3bot.StartBonus > 0 and pl:Team() == TEAM_SURVIVOR then
 		local hadBonus = hadBonusByPl[pl]

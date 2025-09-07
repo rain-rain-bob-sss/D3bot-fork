@@ -9,6 +9,7 @@ ENT.NextHeal = 0
 
 AccessorFuncDT(ENT, "Duration", "Float", 0)
 AccessorFuncDT(ENT, "StartTime", "Float", 4)
+AccessorFuncDT(ENT, "Redeem", "Bool", 0)
 
 function ENT:PlayerSet(ply)
 	self:SetStartTime(CurTime())
@@ -40,7 +41,7 @@ if SERVER then
 			pl:RemoveStatus("knockdown", false, true)
 			if self.NextHeal < CurTime() then
 				pl:SetHealth(math.min(math.max(pl:GetMaxHealth(),0--[[,pl:Health()]]),pl:Health() + 50))
-				self.NextHeal = CurTime() + 0.35
+				self.NextHeal = CurTime() + (self:GetRedeem() and 0.1 or 0.35)
 			end
 		end
 	end
@@ -83,7 +84,7 @@ function ENT:OnRemove()
 	if IsValid(owner) then 
 		if SERVER then
 			owner:SetFriction(owner.OldFriction)
-			owner:GiveStatus("d3botunghost",10)
+			owner:GiveStatus("d3botunghost",self:GetRedeem() and 25 or 10)
 		elseif owner == MySelf then
 			MySelf:EmitSound("weapons/physgun_off.wav",100,155,0.5,CHAN_STATIC)
 			util.WhiteOut(0.5)

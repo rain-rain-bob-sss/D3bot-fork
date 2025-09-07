@@ -42,7 +42,7 @@ if SERVER then
 			if self.NextBreakDoors < CurTime() then
 				for _,ent in ipairs(util.BlastAlloc(self, pl, pl:GetPos(), 24)) do
 					if ent:GetClass() == "prop_door_rotating" then
-						ent:TakeDamage(200,pl,self)
+						ent:TakeDamage(500,pl,self)
 					end
 				end
 				self.NextBreakDoors = CurTime() + 0.1
