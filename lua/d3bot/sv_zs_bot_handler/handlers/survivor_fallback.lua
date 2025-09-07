@@ -33,12 +33,12 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 	else
 		currentLinkOrNil = nodeOrNil and nextNodeOrNil and nextNodeOrNil.LinkByLinkedNode[nodeOrNil]
 	end
-	
+
 	local memAngs = mem.Angs or angle_zero
 	local result, actions, forwardSpeed, sideSpeed, upSpeed, aimAngle, minorStuck, majorStuck, facesHindrance = D3bot.Basics.Walk(bot, nextNodeOrNil and nextNodeOrNil.Pos or bot:GetPos(), nil)--D3bot.Basics.WalkAttackAuto(bot)
 	local result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2
 	if result and (math.abs(forwardSpeed or 0) + math.abs(sideSpeed or 0) + math.abs(upSpeed or 0)) >= 30 then
-		if not mem.Dangerous then
+		if not mem.InDanger then
 			local walkAngs = mem.Angs
 			mem.Angs = memAngs
 			result2, actions2, forwardSpeed2, sideSpeed2, upSpeed2, aimAngle2 = D3bot.Basics.AimAndShoot(bot, mem.AttackTgtOrNil, mem.MaxShootingDistance)
@@ -119,9 +119,9 @@ function HANDLER.ThinkFunction(bot)
 		local closerEnemies = D3bot.From(closeEnemies):Where(function(k, v) return botPos:DistToSqr(v:GetPos()) < 600*600 end).R -- TODO: Constant for the distance
 		local ownTeam = bot:Team()
 		local canDamageTeam = PlayerCanDamageTeam or function() end
-		local dangerousdist = (100 * math.Clamp(1 / 1 - (bot:Health() / bot:GetMaxHealth()),1,2)) ^ 2
-		local dangerouscloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return (botPos:DistToSqr(v:GetPos()) < dangerousdist) or v.SpawnProtection end).R -- TODO: Constant for the distance
-		local newAttackTarget = table.Random(dangerouscloseEnemies)
+		local dangerdist = (100 * math.Clamp(1 / 1 - (bot:Health() / bot:GetMaxHealth()),1,2)) ^ 2
+		local dangercloseEnemies = D3bot.From(closerEnemies):Where(function(k, v) return (botPos:DistToSqr(v:GetPos()) < dangerdist) or v.SpawnProtection end).R -- TODO: Constant for the distance
+		local newAttackTarget = table.Random(dangercloseEnemies)
 		local try = function(e)
 			if not HANDLER.CanShootTarget(bot, newAttackTarget) then
 				newAttackTarget = table.Random(e)
@@ -131,17 +131,20 @@ function HANDLER.ThinkFunction(bot)
 		try(closeEnemies)
 		try(enemies)
 		if HANDLER.CanShootTarget(bot, newAttackTarget) then mem.AttackTgtOrNil = newAttackTarget end
-		if table.Count(dangerouscloseEnemies) > 0 then
+
+		mem.dangercloseEnemies = dangercloseEnemies
+
+		if table.Count(dangercloseEnemies) > 0 then
 			local faster = false
 			local speed = bot:GetWalkSpeed()
-			for _, v in ipairs(dangerouscloseEnemies) do
+			for _, v in ipairs(dangercloseEnemies) do
 				if v:GetWalkSpeed() >= speed then
 					faster = true
 					break
 				end
 			end
-			mem.Dangerous = not faster
-			local rand = table.Random(dangerouscloseEnemies)
+			mem.InDanger = not faster
+			local rand = table.Random(dangercloseEnemies)
 			--if HANDLER.CanShootTarget(bot, rand) then
 				mem.AttackTgtOrNil = rand
 			--end
@@ -156,15 +159,15 @@ function HANDLER.ThinkFunction(bot)
 				end
 			end
 		else
-			mem.Dangerous = false
+			mem.InDanger = false
 			if not mem.holdPathTime or mem.holdPathTime < CurTime() then
 				bot:D3bot_ResetTgt()
 			end
 			if not mem.NextNodeOrNil and ((mem.nextHumanPath or 0) < CurTime() or bot:WaterLevel() == 3) then
-				mem.nextHumanPath = CurTime() + 5
-				local path = HANDLER.FindPathToRandomNode(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))--HANDLER.FindPathToHuman(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))
+				mem.nextHumanPath = CurTime() + 2
+				local path = (table.Count(closeEnemies) > 0) and HANDLER.FindEscapePath(bot, D3bot.MapNavMesh:GetNearestNodeOrNil(botPos), (table.Count(closerEnemies) > 0) and closerEnemies or closeEnemies) or HANDLER.FindPathToRandomNode(D3bot.MapNavMesh:GetNearestNodeOrNil(botPos))
 				if path then
-					mem.holdPathTime = CurTime() + 5
+					mem.holdPathTime = CurTime() + 2
 					bot:D3bot_SetPath(path, false)
 				end
 			end
@@ -201,7 +204,7 @@ function HANDLER.ThinkFunction(bot)
 			end
 			local weaponType, rating, maxDistance = HANDLER.WeaponRatingFunction(v, enemyDistance)
 
-			rating = rating + math.random(-1000,1000)
+			rating = rating + math.random(-5,5)
 			
 			local ammoType = v:GetPrimaryAmmoType()
 			local ammo = v:Clip1() + bot:GetAmmoCount(ammoType)
@@ -209,6 +212,7 @@ function HANDLER.ThinkFunction(bot)
 				bestRating, bestWeapon, bestMaxDistance = rating, v.ClassName, maxDistance
 			end
 		end
+
 		if bestWeapon then
 			bot:SelectWeapon(bestWeapon)
 			mem.MaxShootingDistance = math.max(1000,bestMaxDistance)
@@ -293,8 +297,8 @@ function HANDLER.WeaponRatingFunction(weapon, targetDistance)
 		weaponType = HANDLER.Weapon_Types.RANGED
 	end
 	
-	local targetDiameter = 6
-	local targetArea = math.pi * math.pow(targetDiameter / 2, 2)
+	--local targetDiameter = 6
+	--local targetArea = math.pi * math.pow(targetDiameter / 2, 2)
 	
 	local numShots = sweptable.Primary.NumShots or 1
 	local damage = (sweptable.Damage or sweptable.Primary.Damage or 0)
@@ -302,12 +306,12 @@ function HANDLER.WeaponRatingFunction(weapon, targetDistance)
 	local cone = weapon.GetCone and weapon:GetCone() or ((weapon.ConeMax or 45) + (weapon.ConeMin or 45)*6) / 7
 	
 	local dmgPerSec = damage * numShots / delay -- TODO: Use more parameters like reload time.
-	local maxDistance = targetDiameter / math.tan(math.rad(cone)) / 2
-	local spreadArea = math.pi * math.pow(math.tan(math.rad(cone)) * targetDistance, 2)
+	--local maxDistance = targetDiameter / math.tan(math.rad(cone)) / 2
+	--local spreadArea = math.pi * math.pow(math.tan(math.rad(cone)) * targetDistance, 2)
 	
-	local areaIntersection = math.min(targetArea, spreadArea) / spreadArea
+	--local areaIntersection = math.min(targetArea, spreadArea) / spreadArea
 	
-	local rating = dmgPerSec * areaIntersection
+	local rating = dmgPerSec - (cone * 0.06 * math.min(3,targetDistance / 500))-- * areaIntersection
 	
 	return weaponType, rating, weaponType == HANDLER.Weapon_Types.MELEE and 32 or 2048 --maxDistance
 end

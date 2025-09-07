@@ -4,7 +4,8 @@ local HANDLER = D3bot.Handlers.Undead_Fallback
 HANDLER.AngOffshoot = 30
 HANDLER.BotTgtFixationDistMin = 250
 HANDLER.BotClasses = {
-	"Zombie", "Zombie", "Zombie",
+	"Agile Dead","Agile Dead",
+	"Zombie", "Zombie", "Zombie","Zombie",
 	"Gore Blaster Zombie","Gore Blaster Zombie","Gore Blaster Zombie",
 	"Chem Burster","Chem Burster",
 	"Ghoul","Ghoul",
@@ -30,6 +31,7 @@ HANDLER.RandomSecondaryAttack = {
 	Ghoul = {MinTime = 5, MaxTime = 7},
 	["Elder Ghoul"] = {MinTime = 5, MaxTime = 7},
 	["Noxious Ghoul"] = {MinTime = 5, MaxTime = 7},
+	["Frigid Ghoul"] = {MinTime = 5, MaxTime = 7},
 	["Frigid Revenant"] = {MinTime = 5, MaxTime = 7},
 	["Devourer"] = {MinTime = 5, MaxTime = 7},
 	Charger = {MinTime = 4, MaxTime = 5, SeeTarget = true},
@@ -173,6 +175,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		if (not secAttack.SeeTarget or bot:D3bot_CanSeeTargetCached()) and (not secAttack.Range or inRange) and (not secAttack.TargetVelMax or secAttack.TargetVelMax >= targetvel) then
 			if not mem.NextThrowPoisonTime or mem.NextThrowPoisonTime <= CurTime() then
 				mem.NextThrowPoisonTime = CurTime() + secAttack.MinTime + math.random() * (secAttack.MaxTime - secAttack.MinTime)
+				mem.ThrowingPoison = CurTime() + 2
 				actions.Attack = false
 				actions.Attack2 = true
 			end
@@ -305,13 +308,24 @@ function HANDLER.ThinkFunction(bot)
 
 	if mem.nextUpdateOffshoot and mem.nextUpdateOffshoot < CurTime() or not mem.nextUpdateOffshoot then
 		mem.nextUpdateOffshoot = CurTime() + 0.4 + math.random() * 0.2
-		bot:D3bot_UpdateAngsOffshoot(HANDLER.AngOffshoot)
+		bot:D3bot_UpdateAngsOffshoot((mem.ThrowingPoison and mem.ThrowingPoison > CurTime()) and 0 or HANDLER.AngOffshoot)
 	end
 
 	if mem.nextUpdateCadeAttackStrat and mem.nextUpdateCadeAttackStrat < CurTime() or not mem.nextUpdateCadeAttackStrat then
-		mem.nextUpdateCadeAttackStrat = CurTime() + 7
+		mem.nextUpdateCadeAttackStrat = CurTime() + math.Rand(4,7)
 		mem.CadeAttackStrat = math.min(1,math.random(0,3))
 		--print("strat: ",mem.CadeAttackStrat)
+	end
+
+	if mem.nextUpdateAttackStrat and mem.nextUpdateAttackStrat < CurTime() or not mem.nextUpdateAttackStrat then
+		mem.nextUpdateAttackStrat = CurTime() + 2 + math.Rand(1,4)
+		mem.AttackStrat = math.min(3,math.random(0,3))
+		--print("strat: ",mem.AttackStrat)
+	end
+
+	if mem.nextUpdateAttackStrat3 and mem.nextUpdateAttackStrat3 < CurTime() or not mem.nextUpdateAttackStrat3 then
+		mem.nextUpdateAttackStrat3 = CurTime() + math.Rand(2,6)
+		mem.AttackStrat3Dir = (mem.AttackStrat3Dir or 1) * - 1
 	end
 
 	local pathCostFunction

@@ -107,7 +107,7 @@ function D3bot.Basics.AttackStrat(bot,cade)
 		if (nodeorNil and nodeOrNil.Params.AttackStrat == "Disabled") or (nextNodeOrNil and nextNodeOrNil.Params.AttackStrat == "Disabled") then
 			return 0
 		end
-		return 1
+		return mem.AttackStrat or 1
 	end
 end
 
@@ -409,6 +409,10 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 					actions.Duck = true
 				end
 			end
+
+			if mem.HumanBot and mem.InDanger and (table.Count(mem.dangercloseEnemies or {}) > 0) and math.random(1,25) == 1 then
+				actions.Jump = true
+			end
 		else
 			actions.Duck = true
 		end
@@ -681,7 +685,45 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
 	-- Positive x is forward, positive y is left and positive z is upwards.
 	---@type GVector
-	local movePosOffset = (attackType == "Target" and D3bot.Basics.AttackStrat(bot) == 1) and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.65) or vector_origin
+	local movePosOffset = vector_origin--(attackType == "Target" and D3bot.Basics.AttackStrat(bot) == 1) and (Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.65) or vector_origin
+	
+	local lessJump = false
+
+	if (attackType == "Target") then
+		if D3bot.Basics.AttackStrat(bot) == 1 then
+			movePosOffset = Vector(math.sin(CurTime() * 2.5 + bot:EntIndex() * 80),math.cos(CurTime() * 2.5 + bot:EntIndex() * 80)) * range * 0.65
+		elseif D3bot.Basics.AttackStrat(bot) == 2 then
+
+			local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
+			local swingtime = math.Clamp(swingendtime - CurTime(),0,10)
+			local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime)
+
+			local f = 1
+
+			if meleedelay then
+				if (swingendtime ~= 0) then
+					f = swingtime <= 0.5 and 1 or 1.25
+				end
+			end
+
+			local tgt = mem.TgtOrNil
+			if IsValid(tgt) and tgt:IsPlayer() then
+				local dir = tgt:GetPos() - bot:GetPos()
+				normalize2d(dir)
+				movePosOffset = -dir * range * (not bot:OnGround() and 0.5 or 0.85) * f
+				lessJump = true
+			else
+				movePosOffset = movePos + VectorRand(-10,10)
+			end
+		elseif D3bot.Basics.AttackStrat(bot) == 3 then
+			local tgt = mem.TgtOrNil
+			if IsValid(tgt) and tgt:IsPlayer() then
+				movePosOffset = tgt:EyeAngles():Right() * range * 0.7 * (mem.AttackStrat3Dir or -1)
+			else
+				movePosOffset = movePos + VectorRand(-10,10)
+			end
+		end
+	end
 	local movementVector = (movePos + movePosOffset) - origin
 	-- Slow down bot when close to target (2D distance).
 	local invProximity = math.Clamp((movementVector:Length2D() - 10) / 60, 0.95, 1)
@@ -776,7 +818,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 				end
 			end
 
-			if (((movementVector.z > (origin.z + 32)) or math.random(1,100) <= 10) and ((mem.LastJumpTime or 0) + math.Rand(0.5,1.9) < CurTime())) or D3bot.BHOPMode then
+			if (((movementVector.z > (origin.z + range)) or math.random(1,300 * (lessJump and 15 or 1)) <= 5) and ((mem.LastJumpTime or 0) + 2.5 < CurTime())) or D3bot.BHOPMode then
 				actions.Jump = true
 				mem.LastJumpTime = CurTime()
 			end

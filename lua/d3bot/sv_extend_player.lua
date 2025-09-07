@@ -407,6 +407,7 @@ function meta:D3bot_InitializeOrReset(inittype)
 
 	mem.CadeAttackStrat = 0
 	mem.nextUpdateCadeAttackStrat = CurTime()
+	mem.HumanBot = self:Team() == TEAM_HUMAN
 
 	timer.Simple(0, function()
 		if not IsValid(self) then return end -- also make sure bot still exists
