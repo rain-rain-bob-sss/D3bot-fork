@@ -392,7 +392,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 			if (jumpToParam == "Close" or jumpToParam == "Close2") and nextNodeOrNil then
 				local _, hullTop = bot:GetHull() -- Assume the hull is symmetrical.
 				local hullX, hullY, _ = hullTop:Unpack()
-				local halfHullWidth = (math.max(hullX, hullY) + 5) + (jumpToParam == "Close2" and 32 or 0) -- Just add a small margin to let the bot jump before it "touches" the next node's area.
+				local halfHullWidth = (math.max(hullX, hullY) + 5) + (jumpToParam == "Close2" and 16 or 0) -- Just add a small margin to let the bot jump before it "touches" the next node's area.
 
 				---@type GVector
 				local closestDiff = origin - nextNodeOrNil:GetClosestPointOnArea(origin)
@@ -673,6 +673,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 	end
 
 	local duckParam, duckToParam, jumpParam, jumpToParam
+	local BHOPParam
 	local maxHeightParam, nextMaxHeightParam
 	local pathParam, ladderParam
 
@@ -690,8 +691,10 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 		pathParam = currentLinkOrNil and currentLinkOrNil.Params.Path
 
 		if not jumpToParam and currentLinkOrNil and currentLinkOrNil.Params.Jumping == "Needed" and nextNodeOrNil and nodeOrNil and nextNodeOrNil.Pos.Z > nodeOrNil.Pos.Z then
-			jumpToParam = "Close"
+			jumpToParam = "Close2"
 		end
+
+		BHOPParam = nodeOrNil and nodeOrNil.Params.BHOP
 	end
 
 	-- Set up movement vector, which is relative to the player's 2D forward direction.
@@ -805,6 +808,12 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 
 	local BHOPMode = (D3bot.BHOPMode or (mem.BHOPModeEnable and mem.BHOPModeEnable > CurTime() and not lessJump))
 
+	if BHOPParam == "Disabled" then
+		BHOPMode = false
+	elseif BHOPParam == "Always" then
+		BHOPMode = true
+	end
+
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
 		mem.IsOnLadder = false
 
@@ -813,10 +822,10 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 				actions.Jump = true
 			end
 			-- If there is a JumpTo parameter with "Close" as the value, determine if we are close enough to jump.
-			if jumpToParam == "Close" and nextNodeOrNil then
+			if (jumpToParam == "Close" or jumpToParam == "Close2") and nextNodeOrNil then
 				local _, hullTop = bot:GetHull() -- Assume the hull is symmetrical.
 				local hullX, hullY, _ = hullTop:Unpack()
-				local halfHullWidth = math.max(hullX, hullY) + 5 -- Just add a small margin to let the bot jump before it "touches" the next node's area.
+				local halfHullWidth = math.max(hullX, hullY) + (jumpToParam == "Close2" and 16 or 5) -- Just add a small margin to let the bot jump before it "touches" the next node's area.
 
 				---@type GVector
 				local closestDiff = origin - nextNodeOrNil:GetClosestPointOnArea(origin)
