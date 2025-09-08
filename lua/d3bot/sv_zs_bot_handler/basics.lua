@@ -615,13 +615,25 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 	local origin = bot:GetShootPos()
 	local attackPos = bot:D3bot_GetAttackPosOrNilFuture(nil, math.Rand(0, D3bot.BotAimPosVelocityOffshoot)) -- Target attack position, for aiming.
 	local movePos = attackPos or bot:GetPos() -- Target movement position.
-	local diff = (movePos - origin - bot:D3bot_GetTargetVelocity() * meleedelay)
+
+	--[[
+	local diff = (movePos - origin - bot:D3bot_GetTargetVelocity() * meleedelay + bot:GetVelocity() * meleedelay * 2)
 
 	if diff:Length() >= range then
 		diff:Normalize() diff:Mul(range)
 	end
+	]]
 
-	local origin2 = bot:GetShootPos() + (diff * meleedelay * 2) -- Attack origin of the bot.
+	local diffDir = (movePos - origin) diffDir:Normalize()
+	local tVel = bot:D3bot_GetTargetVelocity()
+	local a = tVel:GetNormalized():Dot(diffDir) * 0.8
+	local diff = (diffDir * (bot:GetWalkSpeed() - tVel:Length() * a) * meleedelay)
+
+	--if diff:Length() >= range then
+	--	diff:Normalize() diff:Mul(range)
+	--end
+
+	local origin2 = bot:GetShootPos() + diff -- Attack origin of the bot.
 	--debugoverlay.Box(origin,Vector(-10,-10,-10),Vector(10,10,10),0.08,Color(0,255,0,56))
 
 	local inrange = attackPos and attackPos:DistToSqr(origin) < math.pow(range, 2)
@@ -655,7 +667,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 
 	--debugoverlay.Box(origin2,Vector(-10,-10,-10),Vector(10,10,10),0.08,preattack and Color(0,255,0) or Color(255,0,0,56))
 
-	local offshootAngle = bot:D3bot_GetOffshoot(offshoot or (facesTgt and D3bot.FaceTargetOffshootFactor or 1))
+	local offshootAngle = bot:D3bot_GetOffshoot(offshoot or ((facesTgt or shouldpreattack) and D3bot.FaceTargetOffshootFactor or 1))
 	if attackPos then
 		bot:D3bot_AngsRotateTo((attackPos - origin):Angle() + offshootAngle, D3bot.BotAttackAngLerpFactor)
 	end
@@ -700,15 +712,17 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 
 			local f = 1
 
-			if meleedelay then
+			if meleedelay and facesTgt then
 				if (swingendtime ~= 0) then
-					f = swingtime <= 0.5 and 1 or 1.25
+					f = swingtime <= 0.5 and 1 or 3
+				elseif swingendtime == 0 then
+					f = 2
 				end
 			end
 
 			local tgt = mem.TgtOrNil
 			if IsValid(tgt) and tgt:IsPlayer() then
-				local dir = tgt:GetPos() - bot:GetPos()
+				local dir = (tgt:GetPos() + tgt:GetVelocity() * meleedelay * FrameTime()) - bot:GetPos()
 				normalize2d(dir)
 				movePosOffset = -dir * range * (not bot:OnGround() and 0.5 or 0.85) * f
 				lessJump = true
@@ -789,6 +803,8 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 		mem.IsOnLadder = false
 	end
 
+	local BHOPMode = (D3bot.BHOPMode or (mem.BHOPModeEnable and mem.BHOPModeEnable > CurTime() and not lessJump))
+
 	if bot:GetMoveType() ~= MOVETYPE_LADDER then
 		mem.IsOnLadder = false
 
@@ -818,7 +834,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 				end
 			end
 
-			if (((movementVector.z > (origin.z + range)) or math.random(1,300 * (lessJump and 15 or 1)) <= 5) and ((mem.LastJumpTime or 0) + 2.5 < CurTime())) or D3bot.BHOPMode then
+			if ((movementVector.z > (origin.z + range)) and ((mem.LastJumpTime or 0) + 2.5 < CurTime())) or BHOPMode then
 				actions.Jump = true
 				mem.LastJumpTime = CurTime()
 			end
@@ -832,7 +848,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 		actions.Use = true
 	end
 
-	if duckParam == "Disabled" or duckToParam == "Disabled" or D3bot.BHOPMode then
+	if duckParam == "Disabled" or duckToParam == "Disabled" or BHOPMode then
 		actions.Duck = false
 	end
 	if math.random(1, 2) == 1 or jumpParam == "Disabled" or jumpToParam == "Disabled" or (not actions.Duck and bot:Crouching()) then

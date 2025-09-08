@@ -318,14 +318,28 @@ function HANDLER.ThinkFunction(bot)
 	end
 
 	if mem.nextUpdateAttackStrat and mem.nextUpdateAttackStrat < CurTime() or not mem.nextUpdateAttackStrat then
-		mem.nextUpdateAttackStrat = CurTime() + 2 + math.Rand(1,4)
 		mem.AttackStrat = math.min(3,math.random(0,3))
+		mem.nextUpdateAttackStrat = (mem.AttackStrat == 0) and (CurTime() + 2 + math.Rand(1,4)) or (CurTime() + 4 + math.Rand(4,7))
 		--print("strat: ",mem.AttackStrat)
 	end
 
 	if mem.nextUpdateAttackStrat3 and mem.nextUpdateAttackStrat3 < CurTime() or not mem.nextUpdateAttackStrat3 then
 		mem.nextUpdateAttackStrat3 = CurTime() + math.Rand(2,6)
 		mem.AttackStrat3Dir = (mem.AttackStrat3Dir or 1) * - 1
+	end
+
+	if not mem.BHOPModeEnableTimer or (mem.BHOPModeEnableTimer < CurTime()) then
+		mem.BHOPModeEnableTimer = CurTime() + math.Rand(7,16)
+		mem.BHOPModeEnable = CurTime() + math.Rand(4,6)
+	end
+
+	if mem.BHOPModeEnable and mem.BHOPModeEnable > CurTime() then
+		if not bot:OnGround() then
+			local vel2d = bot:GetVelocity():Length2DSqr()
+			if vel2d <= math.pow(bot:GetWalkSpeed() * 0.9,2) then
+				mem.BHOPModeEnable = mem.BHOPModeEnable - FrameTime() * 2
+			end
+		end
 	end
 
 	local pathCostFunction
