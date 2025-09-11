@@ -488,7 +488,16 @@ function HANDLER.RerollTarget(bot)
 
 	local potTargets = table.Add(players, potEntTargets)
 	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
-	local nums = {}
-	for i = 1,3 do if potTargets[i] then nums[i] = i else break end end
-	bot:D3bot_SetTgtOrNil(potTargets[1], false, nil)
+	
+	for i,v in pairs(potTargets) do
+		if not HANDLER.CanBeTgt(bot, v, potEntTargets2) then
+			table.remove(potTargets,i)
+		end
+	end
+
+	local tgt = potTargets[1]
+
+	if not tgt then return end
+	mem.TargetedAmounts[tgt] = (mem.TargetedAmounts[tgt] or 0) + 1
+	bot:D3bot_SetTgtOrNil(tgt, false, nil)
 end
