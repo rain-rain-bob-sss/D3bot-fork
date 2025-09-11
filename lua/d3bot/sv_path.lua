@@ -224,10 +224,10 @@ function D3bot.GetEscapeMeshPathOrNil(startNode, iterations, pathCostFunction, h
 
 			-- Block pathing if the wave is outside of the interval [BlockBeforeWave, BlockAfterWave]
 			if linkedNode.Params.BlockBeforeWave and tonumber(linkedNode.Params.BlockBeforeWave) then
-				if GAMEMODE:GetWave() < tonumber(linkedNode.Params.BlockBeforeWave) then blocked = true end
+				if (GAMEMODE.GetWave and GAMEMODE:GetWave() or 0) < tonumber(linkedNode.Params.BlockBeforeWave) then blocked = true end
 			end
 			if linkedNode.Params.BlockAfterWave and tonumber(linkedNode.Params.BlockAfterWave) then
-				if GAMEMODE:GetWave() > tonumber(linkedNode.Params.BlockAfterWave) then blocked = true end
+				if (GAMEMODE.GetWave and GAMEMODE:GetWave() or 0) > tonumber(linkedNode.Params.BlockAfterWave) then blocked = true end
 				-- TODO: Invert logic when BlockBeforeWave > BlockAfterWave. This way it's possible to describe a interval of blocked waves, instead of unblocked waves
 			end
 			

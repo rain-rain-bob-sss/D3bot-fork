@@ -3,14 +3,14 @@
 local meta = FindMetaTable("Player")
 
 function meta:D3bot_CallHandlerFunction(name,...)
-	local handler = FindHandler(self:GetZombieClass(), self:Team())
+	local handler = FindHandler(self.GetZombieClass and self:GetZombieClass(), self:Team())
 	if not handler then return false end
 	if not handler[name] then return false end
 	if not isfunction(handler[name]) then return false end
 	return true,handler[name](self,...)
 end
 function meta:D3bot_CallHandlerFunction2(name,...)
-	local handler = FindHandler(self:GetZombieClass(), self:Team())
+	local handler = FindHandler(self.GetZombieClass and self:GetZombieClass(), self:Team())
 	if not handler then return end
 	if not handler[name] then return end
 	if not isfunction(handler[name]) then return end
@@ -238,6 +238,40 @@ function meta:D3bot_FindBarricadeEntity(samples)
 	return nil, nil
 end
 
+---Finds a (nailed) barricade entity nearby.
+---This randomly traces/samples from the player's shoot position and looks for prop_door_rotating entities.
+---@param samples integer -- Maximum number of traces.
+---@return GEntity? foundBarricadeEntity -- A random nearby prop_door_rotating. Or nil if there was nothing found.
+---@return GVector? foundBarricadePos -- The trace position of that nearby entity. Or nil if there was nothing found.
+function meta:D3bot_FindDoor(samples)
+	local traceData = {
+		filter = self,
+		mask = MASK_SOLID,
+		collisiongroup = COLLISION_GROUP_DEBRIS_TRIGGER,
+		ignoreworld = true,
+	}
+
+	-- Get values from the players weapon to use for the trace.
+	---@type GWeapon|table
+	local weapon = self:GetActiveWeapon() or {}
+	traceData.start = self:GetShootPos()
+	local dir = self:GetAimVector()
+	local reach = weapon.MeleeReach or 30
+
+	for _ = 1, samples do
+		traceData.endpos = traceData.start + (dir + VectorRand(-1, 1)):GetNormalized() * reach
+
+		local tr = util.TraceLine(traceData)
+		---@type GEntity
+		local trEntity = tr.Entity
+		  if tr.Hit and trEntity and trEntity:IsValid() and trEntity:GetClass() == "prop_door_rotating" then
+			return trEntity, tr.HitPos
+		end
+	end
+
+	return nil, nil
+end
+
 function meta:D3bot_ShouldNest()
 	local can = D3bot.Basics.FindNestPoint(self,true)
 	return can
@@ -406,8 +440,9 @@ function meta:D3bot_InitializeOrReset(inittype)
 	mem.Type = inittype or mem.Type
 
 	mem.CadeAttackStrat = 0
-	mem.nextUpdateCadeAttackStrat = CurTime()
 	mem.HumanBot = self:Team() == TEAM_HUMAN
+
+	mem.TargetedAmounts = {}
 
 	timer.Simple(0, function()
 		if not IsValid(self) then return end -- also make sure bot still exists

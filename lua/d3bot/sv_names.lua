@@ -1,5 +1,6 @@
 D3bot.Names = {"Bot"}
 
+-- TODO: Make a mode that copys player's name.
 -- TODO: Make search path relative
 if D3bot.BotNameFile then
 	include("names/"..D3bot.BotNameFile..".lua")
@@ -18,6 +19,8 @@ function D3bot.GetUsername()
 	local usernames = getUsernames()
 	
 	if #names == 0 then names = table.Copy(D3bot.Names) end
+
+	local prefix = D3bot.NamePrefix or ""
 	local name = table.remove(names, math.random(#names))
 	
 	if usernames[name] then
@@ -27,5 +30,5 @@ function D3bot.GetUsername()
 		end
 		return name.."("..number..")"
 	end
-	return name
+	return prefix .. name
 end

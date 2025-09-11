@@ -398,6 +398,7 @@ return function(lib)
 	end
 
 	function lib.UpdateMapNavMeshUiSubscribers() lib.UploadMapNavMesh(subscribers) end
+	function lib.GetMapNavMeshUiSubscribers() return subscribers end
 	
 	local pathDebugTimerIdPrefix = tostring({}) .. "-"
 	local function getPathDebugTimerId(pl) return pathDebugTimerIdPrefix .. pl:EntIndex() end

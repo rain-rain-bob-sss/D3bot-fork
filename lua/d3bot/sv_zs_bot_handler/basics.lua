@@ -342,6 +342,18 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		mem.lastNoHindrance = CurTime()
 	end
 
+	local doorcrap = false
+	local stopusingdoor = false
+
+	if facesHindrance and mem.Door then
+		if IsValid(mem.Door) then
+			posdiff = (mem.DoorPos - origin) * 100
+			doorcrap = true
+		else
+			mem.Door = nil
+		end
+	end
+
 	-- Special case: We are walking towards a node with MaxHeight set, and the bot's standing height is larger than that.
 	-- This means we need to duck/crouch. Exception: If the navmesh has any other duck or jump parameters set, we do nothing.
 	if not duckParam and not duckToParam and not jumpParam and not jumpToParam then
@@ -461,7 +473,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		mem.AntiStuckCounter = nil
 	end
 
-	actions.Attack = facesHindrance and not shouldClimb or bot:IsHolding() -- If the bot should climb, but is using its primary attack, climing will fail.
+	actions.Attack = facesHindrance and not shouldClimb or (bot.IsHolding and bot:IsHolding()) -- If the bot should climb, but is using its primary attack, climing will fail.
 	actions.Use = actions.Use or facesHindrance
 
 	local canusestrat1 = weapon and ((weapon.MeleeDelay and weapon.MeleeDelay > 0.5) or (weapon.SwingTime and weapon.SwingTime > 0.5))
@@ -512,6 +524,8 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 	local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
 	local swingtime = math.Clamp(swingendtime - CurTime(),0,10)
 	local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime)
+
+
 	if bot:GetMoveType() ~= MOVETYPE_LADDER and attackType == "Cade" and (swingtime == 0 or swingtime > 0.5) and (D3bot.Basics.AttackStrat(bot,true) == 1) and canusestrat1 then 
 		movementVector = -posdiff
 		local speed = bot:GetMaxSpeed() * 0.5
@@ -519,7 +533,20 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 		movementVector:Normalize()
 		movementVector:Mul(speed)
 		movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
-		actions.Attack = true and not shouldClimb
+		actions.Attack = not shouldClimb
+	end
+
+	if doorcrap then
+		movementVector = -posdiff
+		local speed = bot:GetMaxSpeed()
+		movementVector.z = 0
+		movementVector:Normalize()
+		movementVector:Mul(speed)
+		movementVector:Rotate(Angle(0, offshootAngle.yaw - mem.Angs.yaw, 0))
+		actions.Attack = not shouldClimb
+		actions.Use = true
+	elseif stopusingdoor then
+		actions.Use = false
 	end
 
 	if movementVector.x > 0 then actions.MoveForward = true end
@@ -1098,7 +1125,7 @@ function D3bot.Basics.AimAndShoot(bot, target, maxDistance)
 		bot:D3bot_AngsRotateTo((targetPos - origin):Angle(), D3bot.BotAngLerpFactor * 2)
 	end
 
-	if (not maxDistance or dist > math.pow(400,2)) and weapon.SecondaryAttack then
+	if weapons.GetStored("weapon_zs_base") and (not maxDistance or dist > math.pow(400,2)) and weapon.SecondaryAttack then
 		local base = get_function_source(weapons.Get("weapon_zs_base").SecondaryAttack)
 		local wep = get_function_source(weapon.SecondaryAttack)
 		if base == wep then actions.Attack2 = true end

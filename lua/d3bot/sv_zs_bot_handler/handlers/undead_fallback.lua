@@ -150,10 +150,18 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 
 	-- If facesHindrance is true, let the bot search for nearby barricade objects.
 	-- But only if the bot didn't do damage for some time.
-	if facesHindrance and CurTime() - (bot.D3bot_LastDamage or 0) > 2 then
-		local entity, entityPos = bot:D3bot_FindBarricadeEntity(1) -- One random line trace per frame.
+	if facesHindrance then
+		if CurTime() - (bot.D3bot_LastDamage or 0) > 2 then
+			local entity, entityPos = bot:D3bot_FindBarricadeEntity(1) -- One random line trace per frame.
+			if entity and entityPos then
+				mem.BarricadeAttackEntity, mem.BarricadeAttackPos = entity, entityPos
+			end
+		end
+
+		local entity, entityPos = bot:D3bot_FindDoor(1)
 		if entity and entityPos then
-			mem.BarricadeAttackEntity, mem.BarricadeAttackPos = entity, entityPos
+			mem.DoorPos = entityPos
+			mem.Door = entity
 		end
 	end
 
@@ -263,16 +271,26 @@ function HANDLER.TargetScore(bot,target,botPos,maxDist,ignoreDist)
 	if (not IsValid(target)) then return -math.huge end
 	botPos = botPos or bot:GetPos()
 	local dist = ignoreDist and 1 or botPos:DistToSqr(target:GetPos())
-	local score = ((maxDist or 500*500) - math.min(maxDist or 500*500,dist)) * 0.5
+	if not ignoreDist and (dist > math.pow(maxDist or 500,2)) then
+		return -math.huge
+	end
+	local score = -dist * 0.1
 		+ (targetPriorities[target:GetClass()] or 0)
 	for _,otherbot in ipairs(player.GetAll())do 
 		if otherbot ~= bot and otherbot.D3bot_Mem then
 			local mem = otherbot.D3bot_Mem
 			if IsValid(mem.TgtOrNil) and mem.TgtOrNil == target then
-				score = score / 1.5
+				score = score - 300
 			end
 		end
 	end
+
+	local mem = bot.D3bot_Mem
+
+	if mem.TargetedAmounts and mem.TargetedAmounts[target] then
+		score = score - mem.TargetedAmounts[target] * 150
+	end
+
 	return score
 end
 
@@ -342,6 +360,11 @@ function HANDLER.ThinkFunction(bot)
 		end
 	end
 
+	if mem.TargetedAmounts and (not mem.ResetTargetedAmounts or mem.ResetTargetedAmounts < CurTime()) then
+		mem.TargetedAmounts = {}
+		mem.ResetTargetedAmounts = CurTime() + math.Rand(50,250)
+	end
+
 	local pathCostFunction
 
 	if D3bot.UsingSourceNav then
@@ -375,9 +398,9 @@ function HANDLER.OnTakeDamageFunction(bot, dmg)
 	local attacker = dmg:GetAttacker()
 	if not HANDLER.CanBeTgt(bot, attacker) then return end
 	local mem = bot.D3bot_Mem
-	if IsValid(mem.TgtOrNil) and mem.TgtOrNil:GetPos():DistToSqr(bot:GetPos()) >= math.pow(HANDLER.BotTgtFixationDistMin, 2) then
-		if HANDLER.CanBeTgt(bot,attacker) and (HANDLER.TargetScore(bot,mem.TgtOrNil,bot:GetPos(),5000,true) < HANDLER.TargetScore(bot,attacker,bot:GetPos(),5000,true)) then
-			if ((mem.LastChangeTgt or 0)) + 5 > CurTime() then return end
+	if IsValid(mem.TgtOrNil) then
+		if mem.TgtOrNil ~= attacker and HANDLER.CanBeTgt(bot,attacker) and (HANDLER.TargetScore(bot,mem.TgtOrNil,bot:GetPos(),5000,true) < HANDLER.TargetScore(bot,attacker,bot:GetPos(),5000,true)) then
+			if ((mem.LastChangeTgt or 0)) + 10 > CurTime() then return end
 			mem.TgtOrNil = attacker
 			mem.LastChangeTgt = CurTime()
 		end
@@ -460,23 +483,10 @@ function HANDLER.RerollTarget(bot)
 		end
 		return _ents
 	end)
+
 	local potTargets = table.Add(players, potEntTargets)
 	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
 	local nums = {}
 	for i = 1,3 do if potTargets[i] then nums[i] = i else break end end
-	for _,target in RandomPairs(nums) do
-		target = potTargets[target]
-		if HANDLER.CanBeTgt(bot, target, potEntTargets2) then
-			bot:D3bot_SetTgtOrNil(target, false, nil)
-			return
-		end
-	end
-
-	local target = table.Random(potTargets)
-	if HANDLER.CanBeTgt(bot, target, potEntTargets2) then
-		bot:D3bot_SetTgtOrNil(target, false, nil)
-		return
-	end
-
-	bot:D3bot_SetTgtOrNil(nil, false, nil)
+	bot:D3bot_SetTgtOrNil(potTargets[1], false, nil)
 end

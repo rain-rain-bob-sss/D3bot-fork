@@ -8,6 +8,7 @@ end
 local handlerLookup = {}
 
 function FindHandler(zombieClass, team)
+	zombieClass = zombieClass or "nil"
 	if handlerLookup[team] and handlerLookup[team][zombieClass] then -- TODO: Put cached handler into bot object
 		return handlerLookup[team][zombieClass]
 	end
@@ -95,7 +96,7 @@ end)
 
 hook.Add("PlayerDeath", D3bot.BotHooksId.."PlayerDeath", function(pl)
 	if D3bot.IsEnabledCached and pl.D3bot_Mem then
-		local handler = FindHandler(pl:GetZombieClass(), pl:Team())
+		local handler = FindHandler(pl.GetZombieClass and pl:GetZombieClass(), pl:Team())
 		handler.OnDeathFunction(pl)
 		-- Add death cost to the current link
 		local mem = pl.D3bot_Mem

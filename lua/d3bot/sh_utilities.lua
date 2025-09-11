@@ -88,7 +88,7 @@ end
 
 -- Remove spectating, meshing and dead players
 function D3bot.RemoveObsDeadTgts(tgts)
-	return D3bot.From(tgts):Where(function(k, v) return IsValid(v) and v:GetObserverMode() == OBS_MODE_NONE and not v:IsFlagSet(FL_NOTARGET) and v:Alive() end).R
+	return D3bot.From(tgts):Where(function(k, v) return IsValid(v) and v:GetObserverMode() == OBS_MODE_NONE and not v:IsFlagSet(FL_NOTARGET) and v:Alive() and not (v.GetStatus and v:GetStatus("d3botredeem")) end).R
 end
 
 ---Calculates a falloff on the given nodes.
