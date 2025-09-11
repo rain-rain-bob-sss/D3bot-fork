@@ -158,10 +158,12 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 			end
 		end
 
-		local entity, entityPos = bot:D3bot_FindDoor(1)
+		local entity, entityPos = bot:D3bot_FindDoor(3)
 		if entity and entityPos then
 			mem.DoorPos = entityPos
 			mem.Door = entity
+		else
+			mem.Door = nil
 		end
 	end
 

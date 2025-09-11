@@ -347,7 +347,7 @@ function D3bot.Basics.Walk(bot, pos, aimAngle, slowdown, proximity)
 
 	if facesHindrance and mem.Door then
 		if IsValid(mem.Door) then
-			posdiff = (mem.DoorPos - origin) * 100
+			--posdiff = (mem.DoorPos - origin):GetNormalized() * 52
 			doorcrap = true
 		else
 			mem.Door = nil
