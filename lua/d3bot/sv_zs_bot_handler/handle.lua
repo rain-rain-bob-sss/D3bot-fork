@@ -22,7 +22,7 @@ function FindHandler(zombieClass, team)
 			end
 		end
 	end
-	return D3Bot.Handlers["Sandbox_Fallback"]
+	return D3bot.Handlers["Sandbox_Fallback"]
 end
 local FindHandler = FindHandler
 
