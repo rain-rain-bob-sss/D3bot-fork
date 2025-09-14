@@ -445,10 +445,13 @@ end
 local potTargetEntClasses = {"prop_*turret*", "prop_arsenalcrate", "prop_manhack*", "prop_obj_sigil", "prop_zapper*"}
 local potTargetEntClasses_Obj = {"prop_*turret*", "prop_zapper*"}
 
+local potEntTargets2 = {}
+
 ---Returns whether a target is valid.
 ---@param bot GPlayer
 ---@param target GPlayer|GEntity|any
 function HANDLER.CanBeTgt(bot, target, potEntTargets)
+	potEntTargets = potEntTargets or potEntTargets2
 	if not target or not IsValid(target) then return false end
 	if target:IsPlayer() and target ~= bot and (target:Team() ~= TEAM_UNDEAD or GAMEMODE:GetEndRound()) and target:GetObserverMode() == OBS_MODE_NONE and not target:IsFlagSet(FL_NOTARGET) and target:Alive() and not target:GetStatus("d3botredeem") then return true end
 	if target:GetClass() == "prop_obj_sigil" and (LASTHUMAN or target:GetSigilCorrupted()) then return false end -- Special case to ignore useless sigils.
@@ -478,7 +481,7 @@ function HANDLER.RerollTarget(bot)
 	if #players == 0 then
 		players = D3bot.RemoveObsDeadTgts(player.GetAll())
 	end
-	local potEntTargets2 = {}
+	table.Empty(potEntTargets2)
 	local potEntTargets = D3bot.GetEntsOfClss(GAMEMODE.ObjectiveMap and potTargetEntClasses_Obj or potTargetEntClasses, function(class)
 		local _ents = {}
 		local c = 0
@@ -497,6 +500,7 @@ function HANDLER.RerollTarget(bot)
 	for i,v in pairs(potTargets) do
 		if HANDLER.CanBeTgt(bot, v, potEntTargets2) then
 			tgt = v
+			break
 		end
 	end
 
