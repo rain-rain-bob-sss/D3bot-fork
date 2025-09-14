@@ -238,6 +238,10 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		end
 	end
 
+	if bot:GetLegDamage() >= 0.5 then
+		actions.Jump = false
+	end
+
 	local buttons
 	if actions then
 		buttons = bit.bor(actions.MoveForward and IN_FORWARD or 0, actions.MoveBackward and IN_BACK or 0, actions.MoveLeft and IN_MOVELEFT or 0, actions.MoveRight and IN_MOVERIGHT or 0, actions.Attack and IN_ATTACK or 0, actions.Attack2 and IN_ATTACK2 or 0, actions.Duck and IN_DUCK or 0, actions.Jump and IN_JUMP or 0, actions.Use and IN_USE or 0, actions.Reload and IN_RELOAD or 0)
@@ -489,13 +493,12 @@ function HANDLER.RerollTarget(bot)
 	local potTargets = table.Add(players, potEntTargets)
 	table.sort(potTargets, function(a, b) return HANDLER.TargetScore(bot,a,_,65536) > HANDLER.TargetScore(bot,b,_,65536) end)
 	
+	local tgt
 	for i,v in pairs(potTargets) do
-		if not HANDLER.CanBeTgt(bot, v, potEntTargets2) then
-			table.remove(potTargets,i)
+		if HANDLER.CanBeTgt(bot, v, potEntTargets2) then
+			tgt = v
 		end
 	end
-
-	local tgt = potTargets[1]
 
 	if not tgt then return end
 	mem.TargetedAmounts[tgt] = (mem.TargetedAmounts[tgt] or 0) + 1
