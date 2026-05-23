@@ -33,9 +33,11 @@ D3bot.FaceTargetOffshootFactor = 0.2			-- Factor that reduces the offshoot when 
 D3bot.ZombiesPerPlayer = 0.3			-- Number of bot zombies per player.
 D3bot.ZombiesPerPlayerMax = 2.0			-- Limits amount of zombies to this zombie/player ratio. (Not including ZombiesCountAddition)
 D3bot.ZombiesPerPlayerWave = 0.20		-- Number of additional bot zombies every wave for every player on the server.
+D3bot.ZombiesAddMax = 2					-- Maximum amount of zombies, if there weren't any humans on
 D3bot.ZombiesPerMinute = 0				-- Number of additional bot zombies every minute.
 D3bot.ZombiesPerWave = 0.4				-- Number of additional bot zombies every wave.
 D3bot.ZombiesCountAddition = 0			-- Number of additional bot zombies.
+D3bot.ZombiesMax = 30					-- The absolute max of bot zombies, with exclusion of BotMod
 D3bot.SurvivorsPerPlayer = 0--1.2		-- Survivor bots per total player (non bot) amount. They will only spawn pre round.
 D3bot.SurvivorCountAddition = 0			-- BotMod for survivor bots.
 

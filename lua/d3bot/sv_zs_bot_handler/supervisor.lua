@@ -9,7 +9,12 @@ function D3bot.GetDesiredBotCount()
 	local mapParams = D3bot.MapNavMesh.Params
 	local zombieFormula = ((mapParams.ZPP or D3bot.ZombiesPerPlayer) + (mapParams.ZPPW or D3bot.ZombiesPerPlayerWave) * wave) * #player.GetHumans() + (mapParams.ZPM or D3bot.ZombiesPerMinute) * minutes + (mapParams.ZPW or D3bot.ZombiesPerWave) * wave
 	local zombiesCount = math.Clamp(
-		math.ceil(math.min(zombieFormula, (mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()) + D3bot.ZombiesCountAddition + (mapParams.BotMod or 0) + (D3bot.NodeZombiesCountAddition or 0)),
+		math.ceil(math.min(
+			zombieFormula,
+			D3bot.ZombiesMax,
+			D3bot.ZombiesAddMax + (D3bot.ZombiesPerPlayerMax * #player.GetHumans()),
+			(mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()
+		) + D3bot.ZombiesCountAddition + (mapParams.BotMod or 0) + (D3bot.NodeZombiesCountAddition or 0)),
 		0,
 		allowedBots)
 	local survivorFormula = (mapParams.SPP or D3bot.SurvivorsPerPlayer) * #player.GetHumans()
