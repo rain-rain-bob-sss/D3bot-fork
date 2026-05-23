@@ -57,6 +57,9 @@ return function(lib)
 
 		local textentry1 = vgui.Create( "DTextEntry", frame )
 		textentry1:Dock( TOP )
+		function textentry1:OnGetFocus()
+			self:OpenAutoComplete(self:GetAutoComplete(self:GetText()))
+		end
 
 		function textentry1:GetAutoComplete( text )
 			local text = string.Trim(text)
@@ -75,6 +78,9 @@ return function(lib)
 
 		local textentry2 = vgui.Create( "DTextEntry", frame )
 		textentry2:Dock( TOP )
+		function textentry2:OnGetFocus()
+			self:OpenAutoComplete(self:GetAutoComplete(self:GetText()))
+		end
 		function textentry2:GetAutoComplete( text )
 			local text = string.Trim(text)
 			local values = params[textentry1:GetValue()]
@@ -88,6 +94,7 @@ return function(lib)
 
 		local button = vgui.Create("DButton", frame)
 		button:Dock( TOP )
+		button:SetText("Apply")
 		function button:DoClick()
 			local key,value = textentry1:GetValue(),textentry2:GetValue()
 			RunConsoleCommand("d3bot","setparam",nodeid,key,value)

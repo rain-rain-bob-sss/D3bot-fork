@@ -63,7 +63,7 @@ function D3bot.MaintainBotRoles()
 	-- This can happen in some gamemodes, we fix that here.
 	-- See https://github.com/Dadido3/D3bot/issues/99 for details.
 	for _, bot in ipairs(bots) do
-		if  bot:Team() == TEAM_UNDEAD and bot:Alive() then
+		if bot:Team() == TEAM_UNDEAD and bot:Alive() then
 			if bot:GetBarricadeGhosting() then
 				--bot:Say(string.format("I was a nasty bot that noclips through barricades! (%s)", bot))
 				bot:SetBarricadeGhosting(false)

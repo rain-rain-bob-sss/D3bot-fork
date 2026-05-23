@@ -738,7 +738,7 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 
 			local swingendtime = weapon and (weapon.GetSwingEndTime and weapon:GetSwingEndTime()) or (weapon.GetSwingEnd and weapon:GetSwingEnd()) or 0
 			local swingtime = math.Clamp(swingendtime - CurTime(),0,10)
-			local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime)
+			local meleedelay = (weapon.MeleeDelay and weapon.MeleeDelay) or (weapon.SwingTime and weapon.SwingTime) or (weapon.Primary and weapon.Primary.Delay) or 0.5
 
 			local f = 1
 

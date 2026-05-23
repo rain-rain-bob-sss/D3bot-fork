@@ -18,7 +18,7 @@ D3bot.NodeBlockingMap = {
 D3bot.ValveNav = true						-- Enable the use of auto-generated nav-meshes ("SourceNav"). You can create these by using the console command "nav_generate".
 D3bot.ValveNavOverride = false				-- When true: Prefer auto-generated nav-meshes ("SourceNav") over manually created nav-meshes ("D3botNav").
 
-D3bot.NodeDamageEnts = {"prop_*turret", "prop_arsenalcrate", "prop_resupply"}
+D3bot.NodeDamageEnts = {"prop_*turret", "prop_arsenalcrate", "prop_resupplybox", "prop_remantler", "prop_aegisboard", "prop_*zapper*"}
 
 D3bot.LinkDeathCostRaise = 300
 D3bot.BotConsideringDeathCostAntichance = 3
@@ -41,6 +41,9 @@ D3bot.SurvivorCountAddition = 0			-- BotMod for survivor bots.
 
 -- Survivor (human) bots are currently not production ready.
 D3bot.SurvivorsEnabled = true			-- If true, survivor bots are allowed to exists by spawning at the beginning of a round (See SurvivorsPerPlayer and SurvivorCountAddition parameters) or by redeeming.
+
+D3bot.AllowUseSkills = true				-- If enabled, randomly chooses 20-35 skills for the bot.
+
 
 D3bot.IsSelfRedeemEnabled = true		-- Enable or disable the !human command.
 D3bot.SelfRedeemWaveMax = 1				-- The maximum wave a player can use !human. (Setting it to 2 would allow the players to redeem in the first and second wave)
