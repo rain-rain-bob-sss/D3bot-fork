@@ -164,7 +164,7 @@ function D3bot.Basics.FindNestPoint(bot,check)
 
 			local skip = false
 			for _, ent in pairs(ents.FindByClass("prop_creepernest")) do
-				if util.SkewedDistance(ent:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuildNest then
+				if util.SkewedDistance(ent:GetPos(), pos, 1.5) <= GAMEMODE.CreeperNestDistBuildNest and ent:GetNestBuilt() then
 					skip = true break
 				end
 			end
