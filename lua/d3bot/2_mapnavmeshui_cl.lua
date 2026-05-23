@@ -123,7 +123,18 @@ return function(lib)
 	local function getCursoredPosOrNil(pl)
 		local trR = pl:GetEyeTrace()
 		if not trR.Hit then return nil end
-		return trR.HitPos
+		local pos = trR.HitPos
+		local snap = lib.Convar_Navmeshing_SnapTo:GetFloat() or 0
+		local shouldsnapz = lib.Convar_Navmeshing_SnapZPos:GetBool()
+		if snap ~= 0 then
+			pos.x = math.Round(pos.x/snap)*snap
+			pos.y = math.Round(pos.y/snap)*snap
+
+			if shouldsnapz then
+				pos.z = math.Round(pos.z/snap)*snap
+			end
+		end
+		return pos
 	end
 
 	local function getCursoredDirection(ang) return math.Round(math.abs(math.abs(ang) - 90) / 90) end
@@ -553,7 +564,7 @@ return function(lib)
 				local editmodeid = lib.MapNavMeshEditMode
 				do
 					local y = 0
-					for i, mod in ipairs(editModes) do
+				for i, mod in ipairs(editModes) do
 						local text = string.format("[%s] %s", i, mod.Name)
 						draw.SimpleText(text, "HudDefault2" .. (editmodeid == i and "Large" or ""), 100, ScrH()/2+y, editmodeid == i and lib.Color.Red or lib.Color.White)
 						local w,h = surface.GetTextSize(text)

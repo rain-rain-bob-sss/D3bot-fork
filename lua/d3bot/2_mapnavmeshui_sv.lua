@@ -4,11 +4,23 @@ return function(lib)
 	util.AddNetworkString("d3bot_selecting")
 
 	local from = lib.From
+	local bit_band = bit.band
 
 	local function getCursoredPosOrNil(pl)
 		local trR = pl:GetEyeTrace()
-		if not trR.Hit then return end
-		return trR.HitPos
+		if not trR.Hit then return nil end
+		local pos = trR.HitPos
+		local snap = pl:GetInfoNum("d3bot_navmeshing_snapto", 0)
+		local shouldsnapz = tobool(pl:GetInfo("d3bot_navmeshing_snapzpos"))
+		if snap ~= 0 then
+			pos.x = math.Round(pos.x/snap)*snap
+			pos.y = math.Round(pos.y/snap)*snap
+
+			if shouldsnapz then
+				pos.z = math.Round(pos.z/snap)*snap
+			end
+		end
+		return pos
 	end
 	local function getCursoredNodeOrNil(pl,links)
 		local item = lib.MapNavMesh:GetCursoredItemOrNil(pl,links)

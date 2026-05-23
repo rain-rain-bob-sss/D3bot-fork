@@ -38,8 +38,9 @@ hook.Add("PlayerInitialSpawn", D3bot.BotHooksId, function(pl)
 	end
 end)
 
+local gm = engine.ActiveGamemode()
 function D3bot.MaintainBotRoles()
-	if engine.ActiveGamemode() ~= "zombiesurvival" then return end
+	if gm ~= "zombiesurvival" then return end
 	if #player.GetHumans() == 0 then return end
 	local desiredCountByTeam = {}
 	local allowedTotal

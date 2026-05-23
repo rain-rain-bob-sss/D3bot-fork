@@ -349,6 +349,18 @@ else
 	end)
 end
 
+registerSuperadminCmd("DeleteNodeArea", strParam, function(caller, id)
+	D3bot.TryCatch(function()
+		D3bot.MapNavMesh.ItemById[D3bot.DeserializeNavMeshItemId(id)]:SetParam("AreaXMin", nil)
+		D3bot.MapNavMesh.ItemById[D3bot.DeserializeNavMeshItemId(id)]:SetParam("AreaXMax", nil)
+		D3bot.MapNavMesh.ItemById[D3bot.DeserializeNavMeshItemId(id)]:SetParam("AreaYMin", nil)
+		D3bot.MapNavMesh.ItemById[D3bot.DeserializeNavMeshItemId(id)]:SetParam("AreaYMax", nil)
+
+		D3bot.MapNavMesh:InvalidateCache()
+		D3bot.UpdateMapNavMeshUiSubscribers()
+	end)
+end)
+
 registerSuperadminCmd("SetParam", strParam, strParam, optionalStrParam, function(caller, id, name, serializedNumOrStrOrEmpty)
 	D3bot.TryCatch(function()
 		name, serializedNumOrStrOrEmpty = a(name, serializedNumOrStrOrEmpty)

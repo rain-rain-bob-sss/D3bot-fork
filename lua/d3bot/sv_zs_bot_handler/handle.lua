@@ -122,11 +122,13 @@ hook.Add("PlayerSpawn", D3bot.BotHooksId.."PlayerSpawn", function(pl)
 	end
 	if IsValid(pl) and pl.D3bot_Mem and pl:Team() == TEAM_SURVIVOR and pl:IsBot() then
 		local skills = {}
-		local skillscount = math.random(20,35)
-		for id,v in RandomPairs(GAMEMODE.Skills) do
-			if not v.Trinket and not v.Disabled then
-				skills[#skills + 1] = id
-				if #skills >= skillscount then break end
+		if D3bot.AllowUseSkills then
+			local skillscount = math.random(20,35)
+			for id,v in RandomPairs(GAMEMODE.Skills) do
+				if not v.Trinket and not v.Disabled then
+					skills[#skills + 1] = id
+					if #skills >= skillscount then break end
+				end
 			end
 		end
 		pl:SetDesiredActiveSkills(skills)
