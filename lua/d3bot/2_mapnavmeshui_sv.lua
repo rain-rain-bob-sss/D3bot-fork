@@ -406,6 +406,24 @@ return function(lib)
 		if subscriptionTypeOrNil == "edit" then
 			editModeByPl[pl] = 1
 			pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. 1)
+
+			if not pl.D3bot_LoadedEditMeshOnce then
+				pl.D3bot_LoadedEditMeshOnce = true
+
+				local Directory = "d3bot/navmesh/backups"
+				local DirectoryToSaveIn = Directory.."/"..game.GetMap()..".txt"
+				local mapmesh = lib.MapNavMesh
+				local should_runfunction = not (#mapmesh.Params == 0 and #mapmesh.LinkById == 0 and #mapmesh.ItemById == 0 and #mapmesh.NodeById == 0)
+				if file.Exists(DirectoryToSaveIn, "DATA") and should_runfunction then
+					local saved = file.Read(lib.MapNavMeshPath, "DATA")
+					local savedbackup = file.Read(DirectoryToSaveIn, "DATA")
+	
+					if savedbackup ~= saved then
+						pl:PrintMessage(3, "This map has a backup navmesh data file.")
+						pl:PrintMessage(3, "To load the backup navmesh file, run \"d3bot loadmeshfrombackup\"")
+					end
+				end
+			end
 		end
 	end
 
