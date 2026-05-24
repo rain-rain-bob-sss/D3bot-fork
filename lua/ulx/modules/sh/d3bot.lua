@@ -300,13 +300,19 @@ registerSuperadminCmd("HideMesh", plsParam, function(caller, pls) for k, pl in p
 
 registerSuperadminCmd("SaveMesh", function(caller)
 	D3bot.SaveMapNavMesh()
-	caller:ChatPrint("Saved.")
+	if caller and caller:IsValid() then
+		caller:ChatPrint("Saved.")
+	end
+	print("D3bot Navmesh saved by ", caller == NULL and "Console" or caller)
 end)
 registerSuperadminCmd("ReloadMesh", function(caller)
 	D3bot.LoadMapNavMesh()
 	D3bot.MapNavMesh:InvalidateCache()
 	D3bot.UpdateMapNavMeshUiSubscribers()
-	caller:ChatPrint("Reloaded.")
+	if caller and caller:IsValid() then
+		caller:ChatPrint("Reloaded.")
+	end
+	print("D3bot Navmesh reloaded by ", caller == NULL and "Console" or caller)
 end)
 registerSuperadminCmd("GenerateMesh", function(caller)
 	D3bot.GenerateAndConvertNavmesh(caller:GetPos(), caller:IsOnGround(), function()
@@ -377,6 +383,49 @@ registerSuperadminCmd("DeleteNodeArea", strParam, function(caller, id)
 	end)
 end)
 
+registerSuperadminCmd("SplitNodeInHalf", function(caller)
+	D3bot.TryCatch(function()
+		local lib = D3bot
+		local function getCursoredDirection(ang) return math.Round(math.abs(math.abs(ang) - 90) / 90) end
+		local function getCursoredAxisName(pl, excludeZOrNil)
+			local angs = pl:EyeAngles()
+			if not excludeZOrNil and getCursoredDirection(angs.p) == 0 then return "Z" end
+			return getCursoredDirection(angs.y) == 1 and "X" or "Y"
+		end
+
+		pos = getCursoredAxisName(caller, true)
+		local node1 = lib.MapNavMesh:GetCursoredItemOrNil(caller)
+		-- local node1 = lib.MapNavMesh.ItemById[lib.DeserializeNavMeshItemId(item)]
+
+		local x = (node1.Params["AreaXMin"] + node1.Params["AreaXMax"]) / 2
+		local y = (node1.Params["AreaYMin"] + node1.Params["AreaYMax"]) / 2
+		local z = node1.Params["Z"]
+		local node2_startpos = Vector(x, y, z)
+		node1:Split(node2_startpos, pos)
+		-- local node1_areaposoldmin = node1.Params["Area"..pos.."Min"]
+		-- local node1_areaposoldmax = node1.Params["Area"..pos.."Max"]
+		-- node1:SetParam("Area"..pos.."Max", node2_startpos)
+		-- node1:SetParam("X", pos == "Y" and node1.Params["X"] or (node2_startpos + node1_areaposoldmax) / 2)
+		-- node1:SetParam("Y", pos == "X" and node1.Params["Y"] or (node2_startpos + node1_areaposoldmax) / 2)
+
+		-- local node2 = lib.MapNavMesh:NewNode()
+
+		-- node2:SetParam("X", pos == "Y" and node1.Params["X"] or (node2_startpos + node1_areaposoldmin) / 2)
+		-- node2:SetParam("Y", pos == "X" and node1.Params["Y"] or (node2_startpos + node1_areaposoldmin) / 2)
+		-- node2:SetParam("Z", node1.Params["Z"])
+		-- node2:SetParam("AreaXMin", pos == "Y" and node1.Params["AreaXMin"] or node2_startpos)
+		-- node2:SetParam("AreaXMax", pos == "Y" and node1.Params["AreaXMax"] or node1_areaposoldmax)
+		-- node2:SetParam("AreaYMin", pos == "X" and node1.Params["AreaYMin"] or node2_startpos)
+		-- node2:SetParam("AreaYMax", pos == "X" and node1.Params["AreaYMax"] or node1_areaposoldmax)
+
+		lib.MapNavMesh:InvalidateCache()
+		lib.UpdateMapNavMeshUiSubscribers()
+	end, function(errorMsg)
+		caller:ChatPrint("Error. Re-check your parameters.")
+		print(errorMsg)
+	end)
+end)
+
 registerSuperadminCmd("SetParam", strParam, strParam, optionalStrParam, function(caller, id, name, serializedNumOrStrOrEmpty)
 	D3bot.TryCatch(function()
 		name, serializedNumOrStrOrEmpty = a(name, serializedNumOrStrOrEmpty)
@@ -419,6 +468,21 @@ registerSuperadminCmd("SetMapParam", strParam, optionalStrParam, function(caller
 	end, function(errorMsg)
 		caller:ChatPrint("Error. Re-check your parameters.")
 	end)
+end)
+
+registerSuperadminCmd("MapParamsHelp", function(caller)
+	caller:ChatPrint(">>> Map params override D3bot's sv_config variables and only apply to a map where the mapparam was set to. <<<")
+	caller:ChatPrint("> Most of the variables below override D3bot's sv_config. <")
+	caller:ChatPrint("ZPP: Zombies Per Player.")
+	caller:ChatPrint("ZPPW: Zombies Per Player Wave.")
+	caller:ChatPrint("ZPPM: Zombies Per Player Max.")
+	caller:ChatPrint("ZPM: Zombies Per Minute.")
+	caller:ChatPrint("ZPW: Zombies Per Wave.")
+	caller:ChatPrint("SPP: Survivors Per Player.")
+
+	caller:ChatPrint("> The rest variables below do not override the config. <")
+	caller:ChatPrint("BotMod: Adds more zombie bots to this map.")
+	caller:ChatPrint("SCA: Survivors Count Addition. Adds more survivors to this map if Survivors are enabled.")
 end)
 
 registerSuperadminCmd("ViewPath", plsParam, strParam, strParam, function(caller, pls, startNodeId, endNodeId)
