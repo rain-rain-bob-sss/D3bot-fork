@@ -3,29 +3,35 @@ local HANDLER = D3bot.Handlers.Undead_Fallback
 
 HANDLER.AngOffshoot = 30
 HANDLER.BotTgtFixationDistMin = 250
-HANDLER.BotClasses = {
-	"Agile Dead","Agile Dead",
-	"Zombie", "Zombie", "Zombie","Zombie",
-	"Gore Blaster Zombie","Gore Blaster Zombie","Gore Blaster Zombie",
-	"Chem Burster","Chem Burster",
-	"Ghoul","Ghoul",
-	"Elder Ghoul","Elder Ghoul",
-	"Noxious Ghoul","Noxious Ghoul",
-	"Wraith", "Wraith", "Wraith",
-	"Skeletal Shambler",
-	"Skeletal Walker","Skeletal Walker",
-	"Frigid Ghoul","Frigid Ghoul",
-	"Shadow Walker","Shadow Walker","Shadow Walker",
-	"Shadow Lurker",
-	"Frigid Revenant","Frigid Revenant",
-	"Bloated Zombie", "Bloated Zombie", "Bloated Zombie",
-	"Fast Zombie", "Fast Zombie", "Fast Zombie", "Fast Zombie","Fast Zombie","Fast Zombie","Fast Zombie",
-	"Slingshot Zombie","Slingshot Zombie","Slingshot Zombie",
-	"Poison Zombie", "Poison Zombie", "Poison Zombie",
-	"Wild Poison Zombie","Wild Poison Zombie",
-	"Zombine", "Zombine", "Zombine", "Zombine", "Zombine",
-	"Charger","Charger","Charger",
-}
+
+--function to more effectively edit which classes should bots use
+local function addToSelectClasses(class, times)
+	for i=1,times do
+		HANDLER.BotClasses[#HANDLER.BotClasses + 1] = class
+	end
+end
+HANDLER.BotClasses = {}
+addToSelectClasses("Agile Dead", 2)
+addToSelectClasses("Zombie", 4)
+addToSelectClasses("Gore Blaster Zombie", 3)
+addToSelectClasses("Chem Burster", 2)
+addToSelectClasses("Ghoul", 2)
+addToSelectClasses("Elder Ghoul", 2)
+addToSelectClasses("Noxious Ghoul", 2)
+addToSelectClasses("Wraith", 3)
+addToSelectClasses("Skeletal Walker", 2)
+addToSelectClasses("Skeletal Shambler", 1)
+addToSelectClasses("Frigid Ghoul", 2)
+addToSelectClasses("Shadow Walker", 3)
+addToSelectClasses("Shadow Lurker", 1)
+addToSelectClasses("Frigid Revenant", 2)
+addToSelectClasses("Bloated Zombie", 3)
+addToSelectClasses("Fast Zombie", 7)
+addToSelectClasses("Slingshot Zombie", 3)
+addToSelectClasses("Poison Zombie", 3)
+addToSelectClasses("Wild Poison Zombie", 2)
+addToSelectClasses("Zombine", 5)
+addToSelectClasses("Charger", 3)
 
 HANDLER.RandomSecondaryAttack = {
 	Ghoul = {MinTime = 5, MaxTime = 7},
@@ -38,7 +44,10 @@ HANDLER.RandomSecondaryAttack = {
 	["Deadly Charger"] = {MinTime = 4, MaxTime = 5, SeeTarget = true}, --zs improved
 	["Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100}, -- Slows them too much
 	["Wild Poison Zombie"] = {MinTime = 5, MaxTime = 7, SeeTarget = true, Range = 100}, -- Slows them too much
+	["Devourer"] = {MinTime = 1, MaxTime = 1, SeeTarget = true},
+	["Howler"] = {MinTime = 4, MaxTime = 12},
 }
+
 HANDLER.PrimaryAttack = {
 	["Chem Burster"] = {AttackBarricade = true,NearTarget = true,Stuck = false}
 }
@@ -247,7 +256,7 @@ function HANDLER.UpdateBotCmdFunction(bot, cmd)
 		buttons = bit.bor(actions.MoveForward and IN_FORWARD or 0, actions.MoveBackward and IN_BACK or 0, actions.MoveLeft and IN_MOVELEFT or 0, actions.MoveRight and IN_MOVERIGHT or 0, actions.Attack and IN_ATTACK or 0, actions.Attack2 and IN_ATTACK2 or 0, actions.Duck and IN_DUCK or 0, actions.Jump and IN_JUMP or 0, actions.Use and IN_USE or 0, actions.Reload and IN_RELOAD or 0)
 	end
 
-	if majorStuck and GAMEMODE:GetWaveActive() then bot:Kill() end
+	if majorStuck and GAMEMODE:GetWaveActive() and not bot:GetZombieClassTable().Boss then bot:Kill() end
 
 	if aimAngle then bot:SetEyeAngles(aimAngle)	cmd:SetViewAngles(aimAngle) end
 	if forwardSpeed then cmd:SetForwardMove(forwardSpeed) end
@@ -276,7 +285,7 @@ local targetPriorities = {
 function HANDLER.TargetScore(bot,target,botPos,maxDist,ignoreDist)
 	if (not IsValid(target)) then return -math.huge end
 	botPos = botPos or bot:GetPos()
-	local dist = ignoreDist and 1 or botPos:DistToSqr(target:GetPos())
+	local dist = ignoreDist and 1 or (isvector(botPos) and botPos:DistToSqr(target:GetPos()) or bot:GetPos():DistToSqr(target:GetPos()))
 	if not ignoreDist and (dist > math.pow(maxDist or 500,2)) then
 		return -math.huge
 	end
@@ -442,7 +451,7 @@ end
 -- Custom functions and settings --
 -----------------------------------
 
-local potTargetEntClasses = {"prop_*turret*", "prop_arsenalcrate", "prop_manhack*", "prop_obj_sigil", "prop_zapper*"}
+local potTargetEntClasses = {"prop_*turret*", "prop_arsenalcrate", "prop_resupplybox", "prop_remantler", "prop_manhack*", "prop_obj_sigil", "prop_zapper*"}
 local potTargetEntClasses_Obj = {"prop_*turret*", "prop_zapper*"}
 
 local potEntTargets2 = {}

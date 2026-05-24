@@ -5,4 +5,6 @@ CreateClientConVar("d3bot_navmeshing_reloadmodecycle", "1", true, true, "Defines
 D3bot.Convar_Navmeshing_SmartDraw = CreateClientConVar("d3bot_navmeshing_smartdraw", "1", true, true, "Automatically hides obscured nodes and links.")
 D3bot.Convar_Navmeshing_PreviewTool = CreateClientConVar("d3bot_navmeshing_previewtool", "1", true, true, "Preview of changes in the mesh using the selected mod.")
 D3bot.Convar_Navmeshing_DrawDistance = CreateClientConVar("d3bot_navmeshing_drawdistance", "0", true, true, "The maximum drawing distance. Use 0 to disable this option.")
+D3bot.Convar_Navmeshing_SnapTo = CreateClientConVar("d3bot_navmeshing_snapto", "0", true, true, "Snap the node position.")
+D3bot.Convar_Navmeshing_SnapZPos = CreateClientConVar("d3bot_navmeshing_snapzpos", "0", true, true, "Snap node Z position too?.")
 D3bot.Convar_Navmeshing_DrawSkyBox = CreateClientConVar("d3bot_navmeshing_drawskybox", "1", true, true, "Draw in skybox.\nUseful on maps like zs_erosion_b1.")

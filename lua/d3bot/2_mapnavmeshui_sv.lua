@@ -4,11 +4,23 @@ return function(lib)
 	util.AddNetworkString("d3bot_selecting")
 
 	local from = lib.From
+	local bit_band = bit.band
 
 	local function getCursoredPosOrNil(pl)
 		local trR = pl:GetEyeTrace()
-		if not trR.Hit then return end
-		return trR.HitPos
+		if not trR.Hit then return nil end
+		local pos = trR.HitPos
+		local snap = pl:GetInfoNum("d3bot_navmeshing_snapto", 0)
+		local shouldsnapz = tobool(pl:GetInfo("d3bot_navmeshing_snapzpos"))
+		if snap ~= 0 then
+			pos.x = math.Round(pos.x/snap)*snap
+			pos.y = math.Round(pos.y/snap)*snap
+
+			if shouldsnapz then
+				pos.z = math.Round(pos.z/snap)*snap
+			end
+		end
+		return pos
 	end
 	local function getCursoredNodeOrNil(pl,links)
 		local item = lib.MapNavMesh:GetCursoredItemOrNil(pl,links)
@@ -394,6 +406,24 @@ return function(lib)
 		if subscriptionTypeOrNil == "edit" then
 			editModeByPl[pl] = 1
 			pl:SendLua(lib.GlobalK .. ".MapNavMeshEditMode = " .. 1)
+
+			if not pl.D3bot_LoadedEditMeshOnce then
+				pl.D3bot_LoadedEditMeshOnce = true
+
+				local Directory = "d3bot/navmesh/backups"
+				local DirectoryToSaveIn = Directory.."/"..game.GetMap()..".txt"
+				local mapmesh = lib.MapNavMesh
+				local should_runfunction = not (#mapmesh.Params == 0 and #mapmesh.LinkById == 0 and #mapmesh.ItemById == 0 and #mapmesh.NodeById == 0)
+				if file.Exists(DirectoryToSaveIn, "DATA") and should_runfunction then
+					local saved = file.Read(lib.MapNavMeshPath, "DATA")
+					local savedbackup = file.Read(DirectoryToSaveIn, "DATA")
+	
+					if savedbackup ~= saved then
+						pl:PrintMessage(3, "This map has a backup navmesh data file.")
+						pl:PrintMessage(3, "To load the backup navmesh file, run \"d3bot loadmeshfrombackup\"")
+					end
+				end
+			end
 		end
 	end
 

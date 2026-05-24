@@ -18,7 +18,7 @@ D3bot.NodeBlockingMap = {
 D3bot.ValveNav = true						-- Enable the use of auto-generated nav-meshes ("SourceNav"). You can create these by using the console command "nav_generate".
 D3bot.ValveNavOverride = false				-- When true: Prefer auto-generated nav-meshes ("SourceNav") over manually created nav-meshes ("D3botNav").
 
-D3bot.NodeDamageEnts = {"prop_*turret", "prop_arsenalcrate", "prop_resupply"}
+D3bot.NodeDamageEnts = {"prop_*turret", "prop_arsenalcrate", "prop_resupplybox", "prop_remantler", "prop_aegisboard", "prop_*zapper*"}
 
 D3bot.LinkDeathCostRaise = 300
 D3bot.BotConsideringDeathCostAntichance = 3
@@ -33,14 +33,19 @@ D3bot.FaceTargetOffshootFactor = 0.2			-- Factor that reduces the offshoot when 
 D3bot.ZombiesPerPlayer = 0.3			-- Number of bot zombies per player.
 D3bot.ZombiesPerPlayerMax = 2.0			-- Limits amount of zombies to this zombie/player ratio. (Not including ZombiesCountAddition)
 D3bot.ZombiesPerPlayerWave = 0.20		-- Number of additional bot zombies every wave for every player on the server.
+D3bot.ZombiesAddMax = 2					-- Maximum amount of zombies, if there weren't any humans on
 D3bot.ZombiesPerMinute = 0				-- Number of additional bot zombies every minute.
 D3bot.ZombiesPerWave = 0.4				-- Number of additional bot zombies every wave.
 D3bot.ZombiesCountAddition = 0			-- Number of additional bot zombies.
+D3bot.ZombiesMax = 30					-- The absolute max of bot zombies, with exclusion of BotMod
 D3bot.SurvivorsPerPlayer = 0--1.2		-- Survivor bots per total player (non bot) amount. They will only spawn pre round.
 D3bot.SurvivorCountAddition = 0			-- BotMod for survivor bots.
 
 -- Survivor (human) bots are currently not production ready.
 D3bot.SurvivorsEnabled = true			-- If true, survivor bots are allowed to exists by spawning at the beginning of a round (See SurvivorsPerPlayer and SurvivorCountAddition parameters) or by redeeming.
+
+D3bot.AllowUseSkills = true				-- If enabled, randomly chooses 20-35 skills for the bot.
+
 
 D3bot.IsSelfRedeemEnabled = true		-- Enable or disable the !human command.
 D3bot.SelfRedeemWaveMax = 1				-- The maximum wave a player can use !human. (Setting it to 2 would allow the players to redeem in the first and second wave)

@@ -9,7 +9,12 @@ function D3bot.GetDesiredBotCount()
 	local mapParams = D3bot.MapNavMesh.Params
 	local zombieFormula = ((mapParams.ZPP or D3bot.ZombiesPerPlayer) + (mapParams.ZPPW or D3bot.ZombiesPerPlayerWave) * wave) * #player.GetHumans() + (mapParams.ZPM or D3bot.ZombiesPerMinute) * minutes + (mapParams.ZPW or D3bot.ZombiesPerWave) * wave
 	local zombiesCount = math.Clamp(
-		math.ceil(math.min(zombieFormula, (mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()) + D3bot.ZombiesCountAddition + (mapParams.BotMod or 0) + (D3bot.NodeZombiesCountAddition or 0)),
+		math.ceil(math.min(
+			zombieFormula,
+			D3bot.ZombiesMax,
+			D3bot.ZombiesAddMax + (D3bot.ZombiesPerPlayerMax * #player.GetHumans()),
+			(mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()
+		) + D3bot.ZombiesCountAddition + (mapParams.BotMod or 0) + (D3bot.NodeZombiesCountAddition or 0)),
 		0,
 		allowedBots)
 	local survivorFormula = (mapParams.SPP or D3bot.SurvivorsPerPlayer) * #player.GetHumans()
@@ -38,8 +43,9 @@ hook.Add("PlayerInitialSpawn", D3bot.BotHooksId, function(pl)
 	end
 end)
 
+local gm = engine.ActiveGamemode()
 function D3bot.MaintainBotRoles()
-	if engine.ActiveGamemode() ~= "zombiesurvival" then return end
+	if gm ~= "zombiesurvival" then return end
 	if #player.GetHumans() == 0 then return end
 	local desiredCountByTeam = {}
 	local allowedTotal
@@ -63,7 +69,7 @@ function D3bot.MaintainBotRoles()
 	-- This can happen in some gamemodes, we fix that here.
 	-- See https://github.com/Dadido3/D3bot/issues/99 for details.
 	for _, bot in ipairs(bots) do
-		if  bot:Team() == TEAM_UNDEAD and bot:Alive() then
+		if bot:Team() == TEAM_UNDEAD and bot:Alive() then
 			if bot:GetBarricadeGhosting() then
 				--bot:Say(string.format("I was a nasty bot that noclips through barricades! (%s)", bot))
 				bot:SetBarricadeGhosting(false)

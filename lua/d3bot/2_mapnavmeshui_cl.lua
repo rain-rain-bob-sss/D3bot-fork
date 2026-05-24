@@ -57,6 +57,9 @@ return function(lib)
 
 		local textentry1 = vgui.Create( "DTextEntry", frame )
 		textentry1:Dock( TOP )
+		function textentry1:OnGetFocus()
+			self:OpenAutoComplete(self:GetAutoComplete(self:GetText()))
+		end
 
 		function textentry1:GetAutoComplete( text )
 			local text = string.Trim(text)
@@ -75,6 +78,9 @@ return function(lib)
 
 		local textentry2 = vgui.Create( "DTextEntry", frame )
 		textentry2:Dock( TOP )
+		function textentry2:OnGetFocus()
+			self:OpenAutoComplete(self:GetAutoComplete(self:GetText()))
+		end
 		function textentry2:GetAutoComplete( text )
 			local text = string.Trim(text)
 			local values = params[textentry1:GetValue()]
@@ -88,6 +94,7 @@ return function(lib)
 
 		local button = vgui.Create("DButton", frame)
 		button:Dock( TOP )
+		button:SetText("Apply")
 		function button:DoClick()
 			local key,value = textentry1:GetValue(),textentry2:GetValue()
 			RunConsoleCommand("d3bot","setparam",nodeid,key,value)
@@ -116,7 +123,18 @@ return function(lib)
 	local function getCursoredPosOrNil(pl)
 		local trR = pl:GetEyeTrace()
 		if not trR.Hit then return nil end
-		return trR.HitPos
+		local pos = trR.HitPos
+		local snap = lib.Convar_Navmeshing_SnapTo:GetFloat() or 0
+		local shouldsnapz = lib.Convar_Navmeshing_SnapZPos:GetBool()
+		if snap ~= 0 then
+			pos.x = math.Round(pos.x/snap)*snap
+			pos.y = math.Round(pos.y/snap)*snap
+
+			if shouldsnapz then
+				pos.z = math.Round(pos.z/snap)*snap
+			end
+		end
+		return pos
 	end
 
 	local function getCursoredDirection(ang) return math.Round(math.abs(math.abs(ang) - 90) / 90) end
@@ -546,7 +564,7 @@ return function(lib)
 				local editmodeid = lib.MapNavMeshEditMode
 				do
 					local y = 0
-					for i, mod in ipairs(editModes) do
+				for i, mod in ipairs(editModes) do
 						local text = string.format("[%s] %s", i, mod.Name)
 						draw.SimpleText(text, "HudDefault2" .. (editmodeid == i and "Large" or ""), 100, ScrH()/2+y, editmodeid == i and lib.Color.Red or lib.Color.White)
 						local w,h = surface.GetTextSize(text)
