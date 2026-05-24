@@ -12,8 +12,7 @@ function D3bot.GetDesiredBotCount()
 		math.ceil(math.min(
 			zombieFormula,
 			D3bot.ZombiesMax,
-			D3bot.ZombiesAddMax + (D3bot.ZombiesPerPlayerMax * #player.GetHumans()),
-			(mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()
+			D3bot.ZombiesAddMax + (mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()
 		) + D3bot.ZombiesCountAddition + (mapParams.BotMod or 0) + (D3bot.NodeZombiesCountAddition or 0)),
 		0,
 		allowedBots)
