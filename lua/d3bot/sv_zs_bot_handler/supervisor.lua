@@ -12,8 +12,7 @@ function D3bot.GetDesiredBotCount()
 		math.ceil(math.min(
 			zombieFormula,
 			D3bot.ZombiesMax,
-			D3bot.ZombiesAddMax + (D3bot.ZombiesPerPlayerMax * #player.GetHumans()),
-			(mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()
+			D3bot.ZombiesAddMax + (mapParams.ZPPM or D3bot.ZombiesPerPlayerMax) * #player.GetHumans()
 		) + D3bot.ZombiesCountAddition + (mapParams.BotMod or 0) + (D3bot.NodeZombiesCountAddition or 0)),
 		0,
 		allowedBots)
@@ -102,7 +101,8 @@ function D3bot.MaintainBotRoles()
 	
 	-- Move (kill) survivors to undead if possible
 	if desiredCountByTeam[TEAM_SURVIVOR] and desiredCountByTeam[TEAM_UNDEAD] then
-		if #(playersByTeam[TEAM_SURVIVOR] or {}) > desiredCountByTeam[TEAM_SURVIVOR] and #(playersByTeam[TEAM_UNDEAD] or {}) < desiredCountByTeam[TEAM_UNDEAD] and botsByTeam[TEAM_SURVIVOR] then
+		if (#(playersByTeam[TEAM_SURVIVOR] or {}) > desiredCountByTeam[TEAM_SURVIVOR] and #(playersByTeam[TEAM_UNDEAD] or {}) < desiredCountByTeam[TEAM_UNDEAD] and botsByTeam[TEAM_SURVIVOR]) or
+			(D3bot.FreezeBotCount and botsByTeam[TEAM_SURVIVOR]) then
 			local randomBot = table.remove(botsByTeam[TEAM_SURVIVOR], 1)
 			randomBot:StripWeapons()
 			randomBot:RemoveAllAmmo()
@@ -112,45 +112,47 @@ function D3bot.MaintainBotRoles()
 		end
 	end
 	-- Add bots out of managed teams to maintain desired counts
-	if player.GetCount() < allowedTotal then
-		for team, desiredCount in pairs(desiredCountByTeam) do
-			if #(playersByTeam[team] or {}) < desiredCount then
-				if D3bot.UseConsoleBots then
-					spawnAsTeam = team
-					RunConsoleCommand("bot")
-					spawnAsTeam = nil
-				else
-					spawnAsTeam = team
-					---@type GPlayer|table
-					local bot = player.CreateNextBot(D3bot.GetUsername())
-					spawnAsTeam = nil
-					if IsValid(bot) then
-						bot:D3bot_InitializeOrReset()
+	if not D3bot.FreezeBotCount then
+		if player.GetCount() < allowedTotal then
+			for team, desiredCount in pairs(desiredCountByTeam) do
+				if #(playersByTeam[team] or {}) < desiredCount then
+					if D3bot.UseConsoleBots then
+						spawnAsTeam = team
+						RunConsoleCommand("bot")
+						spawnAsTeam = nil
+					else
+						spawnAsTeam = team
+						---@type GPlayer|table
+						local bot = player.CreateNextBot(D3bot.GetUsername())
+						spawnAsTeam = nil
+						if IsValid(bot) then
+							bot:D3bot_InitializeOrReset()
+						end
 					end
+					return
 				end
-				return
 			end
 		end
-	end
-	-- Remove bots out of managed teams to maintain desired counts
-	for team, desiredCount in pairs(desiredCountByTeam) do
-		if #(playersByTeam[team] or {}) > desiredCount and botsByTeam[team] then
-			local randomBot = table.remove(botsByTeam[team], #botsByTeam[team])
-			randomBot:RemoveAllAmmo()
-			randomBot:StripWeapons()
-			randomBot:Kill()
-			return randomBot and randomBot:Kick(D3bot.BotKickReason)
-		end
-	end
-	-- Remove bots out of non managed teams if the server is getting too full
-	if player.GetCount() > allowedTotal then
+		-- Remove bots out of managed teams to maintain desired counts
 		for team, desiredCount in pairs(desiredCountByTeam) do
-			if not desiredCountByTeam[team] and botsByTeam[team] then
+			if #(playersByTeam[team] or {}) > desiredCount and botsByTeam[team] then
 				local randomBot = table.remove(botsByTeam[team], #botsByTeam[team])
 				randomBot:RemoveAllAmmo()
 				randomBot:StripWeapons()
 				randomBot:Kill()
 				return randomBot and randomBot:Kick(D3bot.BotKickReason)
+			end
+		end
+		-- Remove bots out of non managed teams if the server is getting too full
+		if player.GetCount() > allowedTotal then
+			for team, desiredCount in pairs(desiredCountByTeam) do
+				if not desiredCountByTeam[team] and botsByTeam[team] then
+					local randomBot = table.remove(botsByTeam[team], #botsByTeam[team])
+					randomBot:RemoveAllAmmo()
+					randomBot:StripWeapons()
+					randomBot:Kill()
+					return randomBot and randomBot:Kick(D3bot.BotKickReason)
+				end
 			end
 		end
 	end
