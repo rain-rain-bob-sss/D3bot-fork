@@ -757,14 +757,14 @@ function D3bot.Basics.WalkAttackAuto(bot,offshoot)
 				movePosOffset = -dir * range * (not bot:OnGround() and 0.5 or 0.85) * f
 				lessJump = true
 			else
-				movePosOffset = movePos + VectorRand(-10,10)
+				movePosOffset = VectorRand(-10,10)
 			end
 		elseif D3bot.Basics.AttackStrat(bot) == 3 then
 			local tgt = mem.TgtOrNil
 			if IsValid(tgt) and tgt:IsPlayer() then
 				movePosOffset = tgt:EyeAngles():Right() * range * 0.7 * (mem.AttackStrat3Dir or -1)
 			else
-				movePosOffset = movePos + VectorRand(-10,10)
+				movePosOffset = VectorRand(-10,10)
 			end
 		end
 	end
